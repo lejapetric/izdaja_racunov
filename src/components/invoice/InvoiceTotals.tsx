@@ -14,7 +14,7 @@ interface InvoiceTotalsProps {
 export function InvoiceTotals({ totals }: InvoiceTotalsProps) {
   return (
     <div className="mt-6 flex justify-end">
-      <div className="w-96 space-y-2">
+      <div className="w-150 space-y-2">
         <div className="pt-2 border-t">
           <div className="text-xs font-medium text-gray-500 mb-1">DDV po stopnjah:</div>
           {Object.entries(totals.vatBreakdown).map(([rate, amount]) => amount > 0 && (
@@ -30,7 +30,7 @@ export function InvoiceTotals({ totals }: InvoiceTotalsProps) {
           <span className="font-medium">{formatCurrency(totals.totalVat)}</span>
         </div>
 
-        <div className="flex justify-between text-primary font-bold text-lg pt-2 border-t">
+        <div className="flex justify-between text-primary font-bold text-lg pt-2 border-t gap-8">
           <span>SKUPNI ZNESEK ZA PLAČILO (z DDV):</span>
           <span>{formatCurrency(totals.totalGross)}</span>
         </div>

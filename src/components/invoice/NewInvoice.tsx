@@ -81,51 +81,65 @@ export function NewInvoice({ editingInvoice, clearEditing }: NewInvoiceProps) {
     setDueDate(null)
   }
 
-  // Validation based on invoice type
-  const getRequiredFieldsMessage = () => {
-    if (invoiceType === 'draft') {
-      if (!selectedCustomer && items.length === 0) {
-        return 'Osnutek mora vsebovati vsaj kupca ali eno postavko'
-      }
-      return null
-    }
-    if (invoiceType === 'estimate') {
-      const missing = []
-      if (!selectedCustomer) missing.push('kupec')
-      if (items.length === 0) missing.push('vsaj ena postavka')
-      if (!issueDate) missing.push('datum izdaje')
-      if (!serviceDateFrom) missing.push('datum storitve (od)')
-      if (!serviceDateTo) missing.push('datum storitve (do)')
-      if (dateError) missing.push(dateError)
-      if (missing.length > 0) return `Manjkajo podatki: ${missing.join(', ')}`
-      return null
-    }
-    if (invoiceType === 'invoice') {
-      const missing = []
-      if (!selectedCustomer) missing.push('kupec')
-      if (items.length === 0) missing.push('vsaj ena postavka')
-      if (!issueDate) missing.push('datum izdaje')
-      if (!serviceDateFrom) missing.push('datum storitve (od)')
-      if (!serviceDateTo) missing.push('datum storitve (do)')
-      if (!dueDate) missing.push('rok plačila')
-      if (dateError) missing.push(dateError)
-      if (missing.length > 0) return `Manjkajo podatki: ${missing.join(', ')}`
-      return null
-    }
+// Validation based on invoice type
+const getRequiredFieldsMessage = () => {
+  if (invoiceType === 'draft') {
+    const missing = []
+    if (!selectedCustomer) missing.push('kupec')
+    if (items.length === 0) missing.push('vsaj ena postavka')
+    if (missing.length > 0) return `Osnutek mora vsebovati: ${missing.join(' in ')}`
     return null
   }
-
-  const isFormValid = () => {
-    if (invoiceType === 'draft') {
-      return selectedCustomer !== null || items.length > 0
-    }
-    if (invoiceType === 'estimate') {
-      return selectedCustomer !== null && items.length > 0 && issueDate !== null && 
-             serviceDateFrom !== null && serviceDateTo !== null && !dateError
-    }
-    return selectedCustomer !== null && items.length > 0 && issueDate !== null && 
-           serviceDateFrom !== null && serviceDateTo !== null && dueDate !== null && !dateError
+  if (invoiceType === 'estimate') {
+    const missing = []
+    if (!selectedCustomer) missing.push('kupec')
+    if (items.length === 0) missing.push('vsaj ena postavka')
+    if (!issueDate) missing.push('datum izdaje')
+    if (!serviceDateFrom) missing.push('datum storitve (od)')
+    if (!serviceDateTo) missing.push('datum storitve (do)')
+    if (dateError) missing.push(dateError)
+    if (missing.length > 0) return `Manjkajo podatki: ${missing.join(', ')}`
+    return null
   }
+  if (invoiceType === 'invoice') {
+    const missing = []
+    if (!selectedCustomer) missing.push('kupec')
+    if (items.length === 0) missing.push('vsaj ena postavka')
+    if (!issueDate) missing.push('datum izdaje')
+    if (!serviceDateFrom) missing.push('datum storitve (od)')
+    if (!serviceDateTo) missing.push('datum storitve (do)')
+    if (!dueDate) missing.push('rok plačila')
+    if (dateError) missing.push(dateError)
+    if (missing.length > 0) return `Manjkajo podatki: ${missing.join(', ')}`
+    return null
+  }
+  return null
+}
+
+// Check if form is valid for current invoice type
+const isFormValid = () => {
+  if (invoiceType === 'draft') {
+    return selectedCustomer !== null && items.length > 0
+  }
+  if (invoiceType === 'estimate') {
+    return selectedCustomer !== null && 
+           items.length > 0 && 
+           issueDate !== null && 
+           serviceDateFrom !== null && 
+           serviceDateTo !== null && 
+           !dateError
+  }
+  if (invoiceType === 'invoice') {
+    return selectedCustomer !== null && 
+           items.length > 0 && 
+           issueDate !== null && 
+           serviceDateFrom !== null && 
+           serviceDateTo !== null && 
+           dueDate !== null && 
+           !dateError
+  }
+  return false
+}
 
   const getButtonText = () => {
     switch (invoiceType) {
@@ -215,10 +229,18 @@ export function NewInvoice({ editingInvoice, clearEditing }: NewInvoiceProps) {
   }
 
   const handleAddOrUpdateItem = (item: InvoiceItem) => {
+    // Prepričajte se, da so vsi podatki za DDV 0% pravilno shranjeni
+    const processedItem = {
+      ...item,
+      // Če je DDV 0%, shranimo razlog, sicer ga odstranimo
+      vatExemptionReason: item.vatRate === 0 ? item.vatExemptionReason : undefined,
+      reverseCharge: item.vatRate === 0 ? item.reverseCharge : false,
+    }
+    
     if (editingItem) {
-      setItems(items.map(i => i.id === editingItem.id ? item : i))
+      setItems(items.map(i => i.id === editingItem.id ? processedItem : i))
     } else {
-      setItems([...items, item])
+      setItems([...items, processedItem])
     }
     setModalOpen(false)
     setEditingItem(null)
@@ -367,7 +389,7 @@ export function NewInvoice({ editingInvoice, clearEditing }: NewInvoiceProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Opis storitve</TableHead>
+                <TableHead>Storitev</TableHead>
                 <TableHead className="text-right">Količina</TableHead>
                 <TableHead>En.</TableHead>
                 <TableHead className="text-right">Cena/enoto (€)</TableHead>
@@ -386,10 +408,16 @@ export function NewInvoice({ editingInvoice, clearEditing }: NewInvoiceProps) {
                     <div className="font-medium">{item.description}</div>
                     {(item.parcelNumber || item.cadastralMunicipality) && (
                       <div className="text-xs text-gray-500 mt-1">
-                        {[item.parcelNumber && `št. parcele: ${item.parcelNumber}`, item.cadastralMunicipality && `kat.občina: ${item.cadastralMunicipality}`].filter(Boolean).join(' | ')}
+                        {[
+                          item.parcelNumber && `št. parcele: ${item.parcelNumber}`,
+                          item.cadastralMunicipality && `kat.občina: ${item.cadastralMunicipality}`
+                        ].filter(Boolean).join(' | ')}
                       </div>
                     )}
                     {item.itemNote && <div className="text-xs text-gray-500 mt-1">{item.itemNote}</div>}
+                    {item.vatRate === 0 && item.vatExemptionReason && (
+                      <div className="text-xs text-gray-500 mt-1">{item.vatExemptionReason}</div>
+                    )}
                   </TableCell>
                   <TableCell className="text-right">{item.quantity}</TableCell>
                   <TableCell>{item.unit}</TableCell>
@@ -407,7 +435,11 @@ export function NewInvoice({ editingInvoice, clearEditing }: NewInvoiceProps) {
                   </TableCell>
                 </TableRow>
               ))}
-              {items.length === 0 && <TableRow><TableCell colSpan={10} className="text-center text-gray-400">Ni postavk. Kliknite "Dodaj postavko".</TableCell></TableRow>}
+              {items.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={10} className="text-center text-gray-400">Ni postavk. Kliknite "Dodaj postavko".</TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
 
@@ -416,24 +448,28 @@ export function NewInvoice({ editingInvoice, clearEditing }: NewInvoiceProps) {
       </Card>
 
       <div className="flex justify-between items-center">
-        {validationMessage && invoiceType !== 'draft' && (
+        {validationMessage && (
           <div className="text-sm text-amber-600 flex items-center gap-2">
             <AlertCircle className="w-4 h-4" />
             {validationMessage}
           </div>
         )}
-        <Button onClick={saveInvoice} className="min-w-[200px] ml-auto">
+        <Button 
+          onClick={saveInvoice} 
+          className="min-w-[200px] ml-auto"
+          disabled={!isFormValid()}
+        >
           {getButtonText()}
         </Button>
       </div>
 
-      <InvoiceItemModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        editingItem={editingItem}
-        onSave={handleAddOrUpdateItem}
-        services={services}
-      />
-    </div>
-  )
+            <InvoiceItemModal
+              open={modalOpen}
+              onOpenChange={setModalOpen}
+              editingItem={editingItem}
+              onSave={handleAddOrUpdateItem}
+              services={services}
+            />
+          </div>
+     )
 }

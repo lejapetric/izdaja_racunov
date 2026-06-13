@@ -60,7 +60,16 @@ export const statusColors: Record<string, string> = {
 }
 
 // Helper function to create invoice items
-const createItems = (itemsConfig: Array<{ serviceId: string; quantity: number; discountPercent?: number; parcelNumber?: string; cadastralMunicipality?: string; itemNote?: string }>): InvoiceItem[] => {
+const createItems = (itemsConfig: Array<{ 
+  serviceId: string; 
+  quantity: number; 
+  discountPercent?: number; 
+  parcelNumber?: string; 
+  cadastralMunicipality?: string; 
+  cadastreName?: string;
+  landRegisterId?: string;
+  itemNote?: string 
+}>): InvoiceItem[] => {
   return itemsConfig.map((config, index) => {
     const service = mockServices.find(s => s.id === config.serviceId) || mockServices[0]
     const price = service.price
@@ -88,8 +97,8 @@ const createItems = (itemsConfig: Array<{ serviceId: string; quantity: number; d
       gross,
       parcelNumber: config.parcelNumber,
       cadastralMunicipality: config.cadastralMunicipality,
-      cadastreName: config.parcelNumber ? 'Kataster stavb' : undefined,
-      landRegisterId: config.parcelNumber ? `1434 ${config.parcelNumber}` : undefined,
+      cadastreName: config.cadastreName || (config.parcelNumber ? 'Kataster stavb' : undefined),
+      landRegisterId: config.landRegisterId || (config.parcelNumber && config.cadastralMunicipality ? `${config.cadastralMunicipality.split(' ')[0]} ${config.parcelNumber}` : undefined),
       reverseCharge: false,
       vatExemptionReason: service.vatRate === 0 ? '91. člen ZDDV-1 – oprostitev pri izvozu' : undefined,
       itemNote: config.itemNote,
@@ -124,21 +133,40 @@ export const initialInvoices: Invoice[] = [
     customerId: 'c1',
     customerName: 'Občina Kranj',
     customerTaxId: '12345678',
+    customerRegistrationNumber: '99887123',
     customerAddress: 'Slovenski trg 1, 4000 Kranj',
     issueDate: '2025-06-09',
     serviceDateFrom: '2025-06-05',
     serviceDateTo: '2025-06-05',
     dueDate: '2025-07-09',
     paymentTermDays: 30,
-    items: createItems([{ serviceId: 's2', quantity: 1, discountPercent: 3, parcelNumber: '325/4', cadastralMunicipality: '1434 Šiška' }]),
+    items: createItems([{ 
+      serviceId: 's2', 
+      quantity: 1, 
+      discountPercent: 3, 
+      parcelNumber: '325/4', 
+      cadastralMunicipality: '1434 Šiška',
+      cadastreName: 'Kataster stavb',
+      landRegisterId: '1434 325/4',
+      itemNote: 'Izdelava elaborata za legalizacijo'
+    }]),
     discountPercent: 0,
     ...(() => {
-      const items = createItems([{ serviceId: 's2', quantity: 1, discountPercent: 3, parcelNumber: '325/4', cadastralMunicipality: '1434 Šiška' }])
+      const items = createItems([{ 
+        serviceId: 's2', 
+        quantity: 1, 
+        discountPercent: 3, 
+        parcelNumber: '325/4', 
+        cadastralMunicipality: '1434 Šiška',
+        cadastreName: 'Kataster stavb',
+        landRegisterId: '1434 325/4',
+        itemNote: 'Izdelava elaborata za legalizacijo'
+      }])
       const totals = calculateTotalsForInvoice(items, 0)
       return { totalNet: totals.totalNetAfterItemDiscounts, totalVat: totals.totalVat, totalGross: totals.totalGross, vatBreakdown: totals.vatBreakdown, totalNetBeforeDiscount: totals.totalNetBeforeDiscount, totalItemDiscounts: totals.totalItemDiscounts, invoiceDiscountAmount: totals.invoiceDiscountAmount, finalNetBase: totals.finalNetBase }
     })(),
     status: 'paid',
-    note: 'Račun plačan po predračunu P-2405-12',
+    note: 'Račun plačan po predračunu P-2405-12.',
     createdAt: '2025-06-09T10:00:00Z',
     updatedAt: '2025-07-10T14:00:00Z',
     paidAt: '2025-07-10T14:00:00Z',
@@ -149,21 +177,30 @@ export const initialInvoices: Invoice[] = [
     customerId: 'c2',
     customerName: 'Gradbena družba Zlato d.o.o.',
     customerTaxId: 'SI98765432',
+    customerRegistrationNumber: '99886767',
     customerAddress: 'Cesta 24. junija 15, 4000 Kranj',
     issueDate: '2025-06-15',
     serviceDateFrom: '2025-06-10',
     serviceDateTo: '2025-06-14',
     dueDate: '2025-07-15',
     paymentTermDays: 30,
-    items: createItems([{ serviceId: 's4', quantity: 3 }, { serviceId: 's1', quantity: 4, discountPercent: 5 }, { serviceId: 's5', quantity: 2 }]),
+    items: createItems([ 
+      { serviceId: 's4', quantity: 3, parcelNumber: '125/2', cadastralMunicipality: '1434 Šiška', itemNote: 'Terenske meritve' },
+      { serviceId: 's1', quantity: 4, discountPercent: 5, parcelNumber: '125/2', cadastralMunicipality: '1434 Šiška', itemNote: 'Snemanje obstoječega stanja' },
+      { serviceId: 's5', quantity: 2, itemNote: 'Terenski del' }
+    ]),
     discountPercent: 8,
     ...(() => {
-      const items = createItems([{ serviceId: 's4', quantity: 3 }, { serviceId: 's1', quantity: 4, discountPercent: 5 }, { serviceId: 's5', quantity: 2 }])
+      const items = createItems([ 
+        { serviceId: 's4', quantity: 3, parcelNumber: '125/2', cadastralMunicipality: '1434 Šiška', itemNote: 'Terenske meritve' },
+        { serviceId: 's1', quantity: 4, discountPercent: 5, parcelNumber: '125/2', cadastralMunicipality: '1434 Šiška', itemNote: 'Snemanje obstoječega stanja' },
+        { serviceId: 's5', quantity: 2, itemNote: 'Terenski del' }
+      ])
       const totals = calculateTotalsForInvoice(items, 8)
       return { totalNet: totals.totalNetAfterItemDiscounts, totalVat: totals.totalVat, totalGross: totals.totalGross, vatBreakdown: totals.vatBreakdown, totalNetBeforeDiscount: totals.totalNetBeforeDiscount, totalItemDiscounts: totals.totalItemDiscounts, invoiceDiscountAmount: totals.invoiceDiscountAmount, finalNetBase: totals.finalNetBase }
     })(),
     status: 'overdue',
-    note: 'Prosimo za čimprejšnje plačilo',
+    note: 'Prosimo za čimprejšnje plačilo.',
     createdAt: '2025-06-15T09:00:00Z',
     updatedAt: '2025-06-15T09:00:00Z',
   } as Invoice,
@@ -173,16 +210,25 @@ export const initialInvoices: Invoice[] = [
     customerId: 'c3',
     customerName: 'Stanislav Horvat',
     customerTaxId: 'SI11223344',
+    customerRegistrationNumber: '99887766',
     customerAddress: 'Cesta v Mestni log 8, 1000 Ljubljana',
     issueDate: '2025-06-20',
     serviceDateFrom: '2025-06-15',
     serviceDateTo: '2025-06-19',
     dueDate: '2025-07-20',
     paymentTermDays: 30,
-    items: createItems([{ serviceId: 's1', quantity: 2, discountPercent: 5 }, { serviceId: 's3', quantity: 3 }, { serviceId: 's5', quantity: 1 }]),
+    items: createItems([ 
+      { serviceId: 's1', quantity: 2, discountPercent: 5, parcelNumber: '888/1', cadastralMunicipality: '1234 Ljubljana', itemNote: 'Snemanje za gradbeno dovoljenje' },
+      { serviceId: 's3', quantity: 3, parcelNumber: '888/1', cadastralMunicipality: '1234 Ljubljana', itemNote: 'Parcelacija zemljišča' },
+      { serviceId: 's5', quantity: 1 }
+    ]),
     discountPercent: 0,
     ...(() => {
-      const items = createItems([{ serviceId: 's1', quantity: 2, discountPercent: 5 }, { serviceId: 's3', quantity: 3 }, { serviceId: 's5', quantity: 1 }])
+      const items = createItems([ 
+        { serviceId: 's1', quantity: 2, discountPercent: 5, parcelNumber: '888/1', cadastralMunicipality: '1234 Ljubljana', itemNote: 'Snemanje za gradbeno dovoljenje' },
+        { serviceId: 's3', quantity: 3, parcelNumber: '888/1', cadastralMunicipality: '1234 Ljubljana', itemNote: 'Parcelacija zemljišča' },
+        { serviceId: 's5', quantity: 1 }
+      ])
       const totals = calculateTotalsForInvoice(items, 0)
       return { totalNet: totals.totalNetAfterItemDiscounts, totalVat: totals.totalVat, totalGross: totals.totalGross, vatBreakdown: totals.vatBreakdown, totalNetBeforeDiscount: totals.totalNetBeforeDiscount, totalItemDiscounts: totals.totalItemDiscounts, invoiceDiscountAmount: totals.invoiceDiscountAmount, finalNetBase: totals.finalNetBase }
     })(),
@@ -198,21 +244,30 @@ export const initialInvoices: Invoice[] = [
     customerId: 'c4',
     customerName: 'Občina Ljubljana',
     customerTaxId: '56789012',
+    customerRegistrationNumber: '99886767',
     customerAddress: 'Mestni trg 1, 1000 Ljubljana',
     issueDate: '2025-06-25',
     serviceDateFrom: '2025-06-20',
     serviceDateTo: '2025-06-24',
     dueDate: '2025-07-25',
     paymentTermDays: 30,
-    items: createItems([{ serviceId: 's2', quantity: 2, discountPercent: 15 }, { serviceId: 's4', quantity: 5 }, { serviceId: 's1', quantity: 3 }]),
+    items: createItems([ 
+      { serviceId: 's2', quantity: 2, discountPercent: 15, parcelNumber: '1000/1', cadastralMunicipality: '1000 Ljubljana', itemNote: 'Elaborat za zazidalni načrt' },
+      { serviceId: 's4', quantity: 5, parcelNumber: '1000/1', cadastralMunicipality: '1000 Ljubljana' },
+      { serviceId: 's1', quantity: 3 }
+    ]),
     discountPercent: 0,
     ...(() => {
-      const items = createItems([{ serviceId: 's2', quantity: 2, discountPercent: 15 }, { serviceId: 's4', quantity: 5 }, { serviceId: 's1', quantity: 3 }])
+      const items = createItems([ 
+        { serviceId: 's2', quantity: 2, discountPercent: 15, parcelNumber: '1000/1', cadastralMunicipality: '1000 Ljubljana', itemNote: 'Elaborat za zazidalni načrt' },
+        { serviceId: 's4', quantity: 5, parcelNumber: '1000/1', cadastralMunicipality: '1000 Ljubljana' },
+        { serviceId: 's1', quantity: 3 }
+      ])
       const totals = calculateTotalsForInvoice(items, 0)
       return { totalNet: totals.totalNetAfterItemDiscounts, totalVat: totals.totalVat, totalGross: totals.totalGross, vatBreakdown: totals.vatBreakdown, totalNetBeforeDiscount: totals.totalNetBeforeDiscount, totalItemDiscounts: totals.totalItemDiscounts, invoiceDiscountAmount: totals.invoiceDiscountAmount, finalNetBase: totals.finalNetBase }
     })(),
     status: 'issued',
-    note: 'Račun bo poslan po elektronski pošti',
+    note: 'Račun bo poslan po elektronski pošti.',
     createdAt: '2025-06-25T13:00:00Z',
     updatedAt: '2025-06-25T13:00:00Z',
   } as Invoice,
@@ -222,21 +277,28 @@ export const initialInvoices: Invoice[] = [
     customerId: 'c5',
     customerName: 'Gradnja Marles d.o.o.',
     customerTaxId: 'SI44332211',
+    customerRegistrationNumber: '99887766',
     customerAddress: 'Poslovna cona A 12, 2000 Maribor',
     issueDate: '2025-06-28',
     serviceDateFrom: '2025-06-25',
     serviceDateTo: '2025-06-27',
     dueDate: '2025-07-28',
     paymentTermDays: 30,
-    items: createItems([{ serviceId: 's1', quantity: 3 }, { serviceId: 's3', quantity: 2 }]),
+    items: createItems([ 
+      { serviceId: 's1', quantity: 3, parcelNumber: '333/7', cadastralMunicipality: '2000 Maribor', itemNote: 'Geodetsko snemanje za gradnjo' },
+      { serviceId: 's3', quantity: 2, parcelNumber: '333/7', cadastralMunicipality: '2000 Maribor', itemNote: 'Parcelacija za gradbeno parcelo' }
+    ]),
     discountPercent: 0,
     ...(() => {
-      const items = createItems([{ serviceId: 's1', quantity: 3 }, { serviceId: 's3', quantity: 2 }])
+      const items = createItems([ 
+        { serviceId: 's1', quantity: 3, parcelNumber: '333/7', cadastralMunicipality: '2000 Maribor', itemNote: 'Geodetsko snemanje za gradnjo' },
+        { serviceId: 's3', quantity: 2, parcelNumber: '333/7', cadastralMunicipality: '2000 Maribor', itemNote: 'Parcelacija za gradbeno parcelo' }
+      ])
       const totals = calculateTotalsForInvoice(items, 0)
       return { totalNet: totals.totalNetAfterItemDiscounts, totalVat: totals.totalVat, totalGross: totals.totalGross, vatBreakdown: totals.vatBreakdown, totalNetBeforeDiscount: totals.totalNetBeforeDiscount, totalItemDiscounts: totals.totalItemDiscounts, invoiceDiscountAmount: totals.invoiceDiscountAmount, finalNetBase: totals.finalNetBase }
     })(),
     status: 'draft',
-    note: 'Osnutek - čaka na pregled',
+    note: 'Osnutek - čaka na pregled.',
     createdAt: '2025-06-28T09:30:00Z',
     updatedAt: '2025-06-28T09:30:00Z',
   } as Invoice,
@@ -246,25 +308,126 @@ export const initialInvoices: Invoice[] = [
     customerId: 'c2',
     customerName: 'Gradbena družba Zlato d.o.o.',
     customerTaxId: 'SI98765432',
+    customerRegistrationNumber: '99887766',
     customerAddress: 'Cesta 24. junija 15, 4000 Kranj',
     issueDate: '2025-05-20',
     serviceDateFrom: '2025-05-15',
     serviceDateTo: '2025-05-19',
     dueDate: '2025-06-19',
     paymentTermDays: 30,
-    items: createItems([{ serviceId: 's2', quantity: 1 }]),
+    items: createItems([{ 
+      serviceId: 's2', 
+      quantity: 1,
+      parcelNumber: '525/8',
+      cadastralMunicipality: '1434 Šiška',
+      itemNote: 'Elaborat za gradbeno dovoljenje (stornirano)'
+    }]),
     discountPercent: 0,
     ...(() => {
-      const items = createItems([{ serviceId: 's2', quantity: 1 }])
+      const items = createItems([{ 
+        serviceId: 's2', 
+        quantity: 1,
+        parcelNumber: '525/8',
+        cadastralMunicipality: '1434 Šiška',
+        itemNote: 'Elaborat za gradbeno dovoljenje (stornirano)'
+      }])
       const totals = calculateTotalsForInvoice(items, 0)
       return { totalNet: totals.totalNetAfterItemDiscounts, totalVat: totals.totalVat, totalGross: totals.totalGross, vatBreakdown: totals.vatBreakdown, totalNetBeforeDiscount: totals.totalNetBeforeDiscount, totalItemDiscounts: totals.totalItemDiscounts, invoiceDiscountAmount: totals.invoiceDiscountAmount, finalNetBase: totals.finalNetBase }
     })(),
     status: 'cancelled',
-    cancelledReason: 'Kupec je podvojil naročilo - stornirano',
+    cancelledReason: 'Kupec je podvojil naročilo - stornirano.',
     note: 'Stornirano na zahtevo kupca',
     createdAt: '2025-05-20T10:00:00Z',
     updatedAt: '2025-05-25T09:00:00Z',
   } as Invoice,
+{
+  id: 'inv7',
+  number: 'R-2025-0051',
+  customerId: 'c3',
+  customerName: 'Stanislav Horvat',
+  customerTaxId: 'SI11223344',
+  customerRegistrationNumber: '99887766',
+  customerAddress: 'Cesta v Mestni log 8, 1000 Ljubljana',
+  issueDate: '2025-06-30',
+  serviceDateFrom: '2025-06-25',
+  serviceDateTo: '2025-06-29',
+  dueDate: '2025-07-30',
+  paymentTermDays: 30,
+  items: [
+    {
+      id: 'item-zero-vat-1',
+      description: 'Strokovno mnenje za tujino',
+      quantity: 1,
+      unit: 'kos',
+      price: 500,
+      discountPercent: 0,
+      discountAmount: 0,
+      netBeforeDiscount: 500,
+      net: 500,
+      vatRate: 0 as VatRate,
+      vatAmount: 0,
+      gross: 500,
+      parcelNumber: '999/1',
+      cadastralMunicipality: '1000 Ljubljana',
+      cadastreName: 'Kataster stavb',
+      landRegisterId: '1000 999/1',
+      reverseCharge: false,
+      vatExemptionReason: '91. člen ZDDV-1 – oprostitev pri izvozu',
+      itemNote: 'Storitev opravljena za naročnika v tujini'
+    } as InvoiceItem,
+    {
+      id: 'item-1',
+      description: 'Geodetsko snemanje',
+      quantity: 2,
+      unit: 'ura',
+      price: 150,
+      discountPercent: 0,
+      discountAmount: 0,
+      netBeforeDiscount: 300,
+      net: 300,
+      vatRate: 22 as VatRate,
+      vatAmount: 66,
+      gross: 366,
+      parcelNumber: '999/1',
+      cadastralMunicipality: '1000 Ljubljana',
+      cadastreName: 'Kataster stavb',
+      landRegisterId: '1000 999/1',
+      reverseCharge: false,
+      itemNote: 'Geodetsko snemanje za izvoz v Avstrijo'
+    } as InvoiceItem,
+    {
+      id: 'item-2',
+      description: 'Izdelava elaborata',
+      quantity: 1,
+      unit: 'kos',
+      price: 300,
+      discountPercent: 0,
+      discountAmount: 0,
+      netBeforeDiscount: 300,
+      net: 300,
+      vatRate: 22 as VatRate,
+      vatAmount: 66,
+      gross: 366,
+      parcelNumber: '999/1',
+      cadastralMunicipality: '1000 Ljubljana',
+      itemNote: 'Izdelava elaborata za izvoz - oprostitev DDV'
+    } as InvoiceItem
+  ],
+  discountPercent: 0,
+  totalNet: 1100,
+  totalVat: 132,
+  totalGross: 1232,
+  totalNetBeforeDiscount: 1100,
+  totalItemDiscounts: 0,
+  totalNetAfterItemDiscounts: 1100,
+  invoiceDiscountAmount: 0,
+  finalNetBase: 1100,
+  vatBreakdown: { 22: 132, 9.5: 0, 5: 0, 0: 0 },
+  status: 'issued',
+  note: 'Račun za izvozne storitve - oprostitev DDV po 91. členu ZDDV-1.',
+  createdAt: '2025-06-30T10:00:00Z',
+  updatedAt: '2025-06-30T10:00:00Z',
+} as Invoice,
 ]
 
 export const mockAuditLogs: AuditLogEntry[] = []

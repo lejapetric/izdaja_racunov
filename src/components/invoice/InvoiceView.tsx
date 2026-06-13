@@ -3,7 +3,7 @@ import { useInvoices } from '@/hooks/useInvoices'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { Printer, X, Edit, Mail, CheckCircle, Ban, Trash2, FileText } from 'lucide-react'
+import { Printer, X, Edit, Mail, CheckCircle, Ban, Trash2, FileText, Package } from 'lucide-react'
 import { useRef } from 'react'
 import { companyData, statusLabels, statusColors } from '@/data/mockData'
 import { InvoiceActions } from './InvoiceActions'
@@ -14,6 +14,7 @@ interface InvoiceViewProps {
   onClose: () => void
   onEdit?: (invoice: any) => void
   onSendEmail?: (invoice: any) => void
+  onSendPost?: (invoice: any) => void  // DODAJTE TO
   onMarkAsPaid?: (invoiceId: string) => void
   onCancel?: (invoice: any) => void
   onAudit?: (invoice: any) => void
@@ -417,9 +418,12 @@ const handlePrint = () => {
                 <Button variant="outline" className="w-full justify-start" onClick={() => onEdit?.(invoice)}>
                   <Edit className="w-4 h-4 mr-2" /> Uredi
                 </Button>
-                <Button variant="outline" className="w-full justify-start" onClick={() => onSendEmail?.(invoice)}>
-                  <Mail className="w-4 h-4 mr-2" /> Pošlji email
-                </Button>
+<Button variant="outline" className="w-full justify-start" onClick={() => onSendEmail?.(invoice)}>
+  <Mail className="w-4 h-4 mr-2" /> Pošlji email
+</Button>
+<Button variant="outline" className="w-full justify-start" onClick={() => onSendPost?.(invoice)}>
+  <Package className="w-4 h-4 mr-2" /> Pošlji po pošti
+</Button>
                 {invoice.status !== 'paid' && (
                   <Button variant="outline" className="w-full justify-start" onClick={() => onMarkAsPaid?.(invoice.id)}>
                     <CheckCircle className="w-4 h-4 mr-2" /> Označi kot plačano

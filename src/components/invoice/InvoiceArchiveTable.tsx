@@ -3,7 +3,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { Eye } from 'lucide-react'
 import { Invoice } from '@/types'
 import { statusLabels, statusColors } from '@/data/mockData'
 
@@ -64,11 +63,11 @@ export function InvoiceArchiveTable({ invoices, customers, onInvoiceClick }: Inv
               <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
                 <Button 
                   size="sm" 
-                  variant="ghost" 
-                  title="Več o računu"
+                  variant="outline"
+                  className="text-xs h-7 px-2"
                   onClick={() => onInvoiceClick(inv)}
                 >
-                  <Eye className="w-4 h-4" />
+                  Več o računu
                 </Button>
               </TableCell>
             </TableRow>

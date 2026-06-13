@@ -81,65 +81,65 @@ export function NewInvoice({ editingInvoice, clearEditing }: NewInvoiceProps) {
     setDueDate(null)
   }
 
-// Validation based on invoice type
-const getRequiredFieldsMessage = () => {
-  if (invoiceType === 'draft') {
-    const missing = []
-    if (!selectedCustomer) missing.push('kupec')
-    if (items.length === 0) missing.push('vsaj ena postavka')
-    if (missing.length > 0) return `Osnutek mora vsebovati: ${missing.join(' in ')}`
+  // Validation based on invoice type
+  const getRequiredFieldsMessage = () => {
+    if (invoiceType === 'draft') {
+      const missing = []
+      if (!selectedCustomer) missing.push('kupec')
+      if (items.length === 0) missing.push('vsaj ena postavka')
+      if (missing.length > 0) return `Manjkajo podatki: ${missing.join(', ')}`
+      return null
+    }
+    if (invoiceType === 'estimate') {
+      const missing = []
+      if (!selectedCustomer) missing.push('kupec')
+      if (items.length === 0) missing.push('vsaj ena postavka')
+      if (!issueDate) missing.push('datum izdaje')
+      if (!serviceDateFrom) missing.push('datum storitve (od)')
+      if (!serviceDateTo) missing.push('datum storitve (do)')
+      if (dateError) missing.push(dateError)
+      if (missing.length > 0) return `Manjkajo podatki: ${missing.join(', ')}`
+      return null
+    }
+    if (invoiceType === 'invoice') {
+      const missing = []
+      if (!selectedCustomer) missing.push('kupec')
+      if (items.length === 0) missing.push('vsaj ena postavka')
+      if (!issueDate) missing.push('datum izdaje')
+      if (!serviceDateFrom) missing.push('datum storitve (od)')
+      if (!serviceDateTo) missing.push('datum storitve (do)')
+      if (!dueDate) missing.push('rok plačila')
+      if (dateError) missing.push(dateError)
+      if (missing.length > 0) return `Manjkajo podatki: ${missing.join(', ')}`
+      return null
+    }
     return null
   }
-  if (invoiceType === 'estimate') {
-    const missing = []
-    if (!selectedCustomer) missing.push('kupec')
-    if (items.length === 0) missing.push('vsaj ena postavka')
-    if (!issueDate) missing.push('datum izdaje')
-    if (!serviceDateFrom) missing.push('datum storitve (od)')
-    if (!serviceDateTo) missing.push('datum storitve (do)')
-    if (dateError) missing.push(dateError)
-    if (missing.length > 0) return `Manjkajo podatki: ${missing.join(', ')}`
-    return null
-  }
-  if (invoiceType === 'invoice') {
-    const missing = []
-    if (!selectedCustomer) missing.push('kupec')
-    if (items.length === 0) missing.push('vsaj ena postavka')
-    if (!issueDate) missing.push('datum izdaje')
-    if (!serviceDateFrom) missing.push('datum storitve (od)')
-    if (!serviceDateTo) missing.push('datum storitve (do)')
-    if (!dueDate) missing.push('rok plačila')
-    if (dateError) missing.push(dateError)
-    if (missing.length > 0) return `Manjkajo podatki: ${missing.join(', ')}`
-    return null
-  }
-  return null
-}
 
-// Check if form is valid for current invoice type
-const isFormValid = () => {
-  if (invoiceType === 'draft') {
-    return selectedCustomer !== null && items.length > 0
+  // Check if form is valid for current invoice type
+  const isFormValid = () => {
+    if (invoiceType === 'draft') {
+      return selectedCustomer !== null && items.length > 0
+    }
+    if (invoiceType === 'estimate') {
+      return selectedCustomer !== null && 
+             items.length > 0 && 
+             issueDate !== null && 
+             serviceDateFrom !== null && 
+             serviceDateTo !== null && 
+             !dateError
+    }
+    if (invoiceType === 'invoice') {
+      return selectedCustomer !== null && 
+             items.length > 0 && 
+             issueDate !== null && 
+             serviceDateFrom !== null && 
+             serviceDateTo !== null && 
+             dueDate !== null && 
+             !dateError
+    }
+    return false
   }
-  if (invoiceType === 'estimate') {
-    return selectedCustomer !== null && 
-           items.length > 0 && 
-           issueDate !== null && 
-           serviceDateFrom !== null && 
-           serviceDateTo !== null && 
-           !dateError
-  }
-  if (invoiceType === 'invoice') {
-    return selectedCustomer !== null && 
-           items.length > 0 && 
-           issueDate !== null && 
-           serviceDateFrom !== null && 
-           serviceDateTo !== null && 
-           dueDate !== null && 
-           !dateError
-  }
-  return false
-}
 
   const getButtonText = () => {
     switch (invoiceType) {
@@ -448,7 +448,7 @@ const isFormValid = () => {
       </Card>
 
       <div className="flex justify-between items-center">
-        {validationMessage && (
+        {validationMessage && invoiceType !== 'draft' && (
           <div className="text-sm text-amber-600 flex items-center gap-2">
             <AlertCircle className="w-4 h-4" />
             {validationMessage}
@@ -457,19 +457,19 @@ const isFormValid = () => {
         <Button 
           onClick={saveInvoice} 
           className="min-w-[200px] ml-auto"
-          disabled={!isFormValid()}
+          disabled={!isValid}
         >
           {getButtonText()}
         </Button>
       </div>
 
-            <InvoiceItemModal
-              open={modalOpen}
-              onOpenChange={setModalOpen}
-              editingItem={editingItem}
-              onSave={handleAddOrUpdateItem}
-              services={services}
-            />
-          </div>
-     )
+      <InvoiceItemModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        editingItem={editingItem}
+        onSave={handleAddOrUpdateItem}
+        services={services}
+      />
+    </div>
+  )
 }

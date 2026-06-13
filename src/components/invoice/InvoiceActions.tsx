@@ -1,7 +1,7 @@
 // src/components/invoice/InvoiceActions.tsx
 import React from 'react'
 import { Button } from '@/components/ui/button'
-import { Printer, Mail, CheckCircle, Ban, Trash2, Pencil, History, Eye } from 'lucide-react'
+import { Printer, Mail, CheckCircle, Ban, Trash2, Pencil, History, Eye, Send, Package } from 'lucide-react'
 import { Invoice } from '@/types'
 
 interface InvoiceActionsProps {
@@ -9,6 +9,7 @@ interface InvoiceActionsProps {
   onPrint: (invoice: Invoice) => void
   onEdit: (invoice: Invoice) => void
   onSendEmail: (invoice: Invoice) => void
+  onSendPost: (invoice: Invoice) => void
   onMarkAsPaid: (invoiceId: string) => void
   onCancel: (invoice: Invoice) => void
   onDelete: (invoiceId: string) => void
@@ -17,7 +18,7 @@ interface InvoiceActionsProps {
 }
 
 export const InvoiceActions: React.FC<InvoiceActionsProps> = ({
-  invoice, onPrint, onEdit, onSendEmail, onMarkAsPaid, onCancel, onDelete, onAudit, onView
+  invoice, onPrint, onEdit, onSendEmail, onSendPost, onMarkAsPaid, onCancel, onDelete, onAudit, onView
 }) => {
   return (
     <div className="flex gap-1 flex-wrap">
@@ -25,9 +26,21 @@ export const InvoiceActions: React.FC<InvoiceActionsProps> = ({
       <Button size="sm" variant="ghost" title="Natisni račun" onClick={() => onPrint(invoice)}><Printer className="w-4 h-4" /></Button>
       <Button size="sm" variant="ghost" title="Dnevnik sprememb" onClick={() => onAudit(invoice)}><History className="w-4 h-4" /></Button>
       <Button size="sm" variant="ghost" title="Uredi račun" onClick={() => onEdit(invoice)}><Pencil className="w-4 h-4" /></Button>
+      
+      {/* E-pošta - samo za izdane in zapadle račune */}
       {(invoice.status === 'issued' || invoice.status === 'overdue') && (
-        <Button size="sm" variant="ghost" title="Pošlji po e-pošti" onClick={() => onSendEmail(invoice)}><Mail className="w-4 h-4" /></Button>
+        <Button size="sm" variant="ghost" title="Pošlji po e-pošti" onClick={() => onSendEmail(invoice)}>
+          <Mail className="w-4 h-4" />
+        </Button>
       )}
+      
+      {/* Navadna pošta - samo za izdane in zapadle račune */}
+      {(invoice.status === 'issued' || invoice.status === 'overdue') && (
+        <Button size="sm" variant="ghost" title="Pošlji po navadni pošti" onClick={() => onSendPost(invoice)}>
+          <Package className="w-4 h-4" />
+        </Button>
+      )}
+      
       {invoice.status !== 'paid' && invoice.status !== 'draft' && invoice.status !== 'cancelled' && (
         <Button size="sm" variant="ghost" title="Označi plačano" onClick={() => onMarkAsPaid(invoice.id)}><CheckCircle className="w-4 h-4 text-green-600" /></Button>
       )}

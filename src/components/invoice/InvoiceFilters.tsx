@@ -170,7 +170,7 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
             </div>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 lg:grid-cols-8 gap-1">
             <div>
               <label className="text-sm font-medium mb-1 block flex items-center gap-1"><Calendar className="w-4 h-4" /> Datum izdaje od</label>
               <DatePicker

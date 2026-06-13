@@ -170,7 +170,7 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
             </div>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="text-sm font-medium mb-1 block flex items-center gap-1"><Calendar className="w-4 h-4" /> Datum izdaje od</label>
               <DatePicker
@@ -219,7 +219,7 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
         </div>
       )}
 
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-5 flex-wrap my-4">
         <Button size="sm" variant="secondary" onClick={clearAllFilters}>Počisti vse filtre</Button>
       </div>
     </>

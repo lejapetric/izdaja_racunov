@@ -128,7 +128,6 @@ export function InvoiceArchive({ onEditInvoice: _onEditInvoice }: InvoiceArchive
           </Tabs>
         </CardContent>
       </Card>
-<<<<<<< HEAD
 
       {/* Dialogi */}
       <Dialog open={emailModalOpen} onOpenChange={setEmailModalOpen}>
@@ -222,74 +221,6 @@ export function InvoiceArchive({ onEditInvoice: _onEditInvoice }: InvoiceArchive
     setSelectedInvoiceId(null)
   }}
 />
-=======
-
-      {/* Dialogi */}
-      <Dialog open={emailModalOpen} onOpenChange={setEmailModalOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Pošlji račun po e-pošti</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div><label>Prejemnik</label><Input value={emailInvoice?.customerName || ''} disabled /></div>
-            <div><label>Zadeva</label><Input value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} /></div>
-            <div><label>Sporočilo</label><Textarea value={emailBody} onChange={(e) => setEmailBody(e.target.value)} rows={6} /></div>
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setEmailModalOpen(false)}>Prekliči</Button>
-            <Button onClick={handleSendEmail}><Send className="w-4 h-4 mr-2" />Pošlji</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Storniraj račun</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div><label>Številka računa</label><Input value={cancelInvoice?.number || ''} disabled /></div>
-            <div><label>Razlog za stornacijo *</label><Textarea value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} placeholder="Vpišite razlog..." rows={3} /></div>
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setCancelModalOpen(false)}>Prekliči</Button>
-            <Button variant="destructive" onClick={handleCancelInvoice}><Ban className="w-4 h-4 mr-2" />Storniraj</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Urejanje računa</DialogTitle></DialogHeader>
-          {editingInvoiceData && <NewInvoice editingInvoice={editingInvoiceData} clearEditing={() => { setEditModalOpen(false); setEditingInvoiceData(null) }} />}
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={auditModalOpen} onOpenChange={setAuditModalOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <History className="w-5 h-5" />Dnevnik sprememb - {auditInvoice?.number}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            {auditInvoice && getAuditLogsForInvoice(auditInvoice.id).map(log => (
-              <div key={log.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg mb-2">
-                <div className="px-2 py-1 rounded-md text-xs font-medium bg-blue-100">{log.action}</div>
-                <div className="flex-1">
-                  <div className="flex justify-between">
-                    <span className="font-medium">{log.user}</span>
-                    <span className="text-xs text-gray-500">{formatDate(log.timestamp)}</span>
-                  </div>
-                  <p className="text-sm text-gray-600">{log.details}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setAuditModalOpen(false)}>Zapri</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <InvoiceView invoiceId={selectedInvoiceId} open={!!selectedInvoiceId} onClose={() => setSelectedInvoiceId(null)} />
->>>>>>> 05236327940023e2526089c926dd317a354021d4
     </div>
   )
 }

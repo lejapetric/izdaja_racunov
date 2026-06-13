@@ -11,10 +11,11 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 import { Filter, Send, Ban, History, Package, Mail, X, FileText, Badge } from 'lucide-react'
 import { Invoice, InvoiceStatus } from '@/types'
 import { InvoiceView } from './InvoiceView'
-import { NewInvoice } from './NewInvoice'
 import { InvoiceFilters } from './InvoiceFilters'
 import { statusLabels, mockAuditLogs } from '@/data/mockData'
 import { InvoiceArchiveTable } from './InvoiceArchiveTable'
+import { cn } from '@/lib/utils'
+import { EditInvoice } from './EditInvoice'
 
 const statusOptions: { value: InvoiceStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'Vsi' }, { value: 'draft', label: 'Osnutki' }, { value: 'issued', label: 'Izdani' },
@@ -142,10 +143,6 @@ export function InvoiceArchive({ onEditInvoice: _onEditInvoice }: InvoiceArchive
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Seznam računov</h1>
-        <Button onClick={() => setShowFilters(!showFilters)}>
-          <Filter className="w-4 h-4 mr-2" />
-          {showFilters ? 'Skrij filtre' : 'Pokaži filtre'}
-        </Button>
       </div>
       
       <Card>
@@ -363,12 +360,60 @@ export function InvoiceArchive({ onEditInvoice: _onEditInvoice }: InvoiceArchive
         </DialogContent>
       </Dialog>
 
-      <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Urejanje računa</DialogTitle></DialogHeader>
-          {editingInvoiceData && <NewInvoice editingInvoice={editingInvoiceData} clearEditing={() => { setEditModalOpen(false); setEditingInvoiceData(null) }} />}
-        </DialogContent>
-      </Dialog>
+{editModalOpen && (
+  <>
+      {/* Overlay - zatemnitev ozadja */}
+    <div 
+      className="fixed top-0 left-0 bottom-0 z-40 w-64 bg-black/30 backdrop-blur-sm"
+      onClick={() => {
+        // Zapremo edit modal
+        setEditModalOpen(false);
+        setEditingInvoiceData(null);
+        // Odpremo InvoiceView za isti račun
+        if (editingInvoiceData) {
+          setSelectedInvoiceId(editingInvoiceData.id);
+        }
+      }}
+    />
+    
+    {/* Modal */}
+    <div className="fixed inset-0 z-50 bg-white overflow-y-auto md:left-64">
+      <div className="sticky top-0 bg-white border-b z-10 px-4 md:px-6 py-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-bold text-gray-800">Uredi račun</h2>
+          <button
+            onClick={() => {
+              setEditModalOpen(false);
+              setEditingInvoiceData(null);
+            }}
+            className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+      
+      <div className="p-4 md:p-6">
+        {editingInvoiceData && (
+          <EditInvoice 
+  editingInvoice={editingInvoiceData} 
+  onClose={() => { 
+    setEditModalOpen(false); 
+    setEditingInvoiceData(null);
+    // Po zaprtju edit modala odpremo InvoiceView
+    if (editingInvoiceData) {
+      setSelectedInvoiceId(editingInvoiceData.id);
+    }
+  }} 
+  onSaved={() => {
+    // Opcijsko: dodatna logika po shranjevanju
+  }}
+/>
+        )}
+      </div>
+    </div>
+  </>
+)}
 
       <Dialog open={auditModalOpen} onOpenChange={setAuditModalOpen}>
         <DialogContent className="max-w-3xl">

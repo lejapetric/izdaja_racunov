@@ -11,9 +11,9 @@ import DatePicker from 'react-datepicker'
 import { sl } from 'date-fns/locale'
 import 'react-datepicker/dist/react-datepicker.css'
 import { CustomDateInput } from '@/components/ui/CustomDateInput'
-import { CustomerSelector } from '../CustomerSelector'
-import { InvoiceItemModal } from '../InvoiceItemModal'
-import { InvoiceTotals } from '../InvoiceTotals'
+import { CustomerSelector } from './CustomerSelector'
+import { InvoiceItemModal } from './InvoiceItemModal'
+import { InvoiceTotals } from './InvoiceTotals'
 import { formatDateForStorage } from '@/lib/utils'
 
 interface EditInvoiceProps {
@@ -140,64 +140,64 @@ export function EditInvoice({ editingInvoice, onClose, onSaved }: EditInvoicePro
 
   const totals = calculateTotals()
 
-  // Shrani spremembe
-  const handleSave = () => {
-    if (!isFormValid()) {
-      alert(getValidationMessage())
-      return
-    }
-
-    const hasReverseCharge = items.some(item => item.reverseCharge)
-    const reverseChargeClause = hasReverseCharge ? '\n\nObrnjena davčna obveznost – DDV obračuna kupec.' : ''
-    const selfBillingClause = selectedCustomer?.selfBilling ? '\n\nSamofakturiranje – račun izdal kupec v imenu in za račun dobavitelja.' : ''
-
-    const updatedInvoice = {
-      ...editingInvoice,
-      customerId: selectedCustomer?.id || '',
-      customerName: selectedCustomer?.name || '',
-      customerTaxId: selectedCustomer?.taxId || '',
-      issueDate: issueDate ? formatDateForStorage(issueDate) : '',
-      serviceDateFrom: serviceDateFrom ? formatDateForStorage(serviceDateFrom) : '',
-      serviceDateTo: serviceDateTo ? formatDateForStorage(serviceDateTo) : '',
-      dueDate: dueDate ? formatDateForStorage(dueDate) : '',
-      items,
-      totalNet: totals.totalNet,
-      totalVat: totals.totalVat,
-      totalGross: totals.totalGross,
-      vatBreakdown: totals.vatBreakdown,
-      note: note + reverseChargeClause + selfBillingClause,
-      updatedAt: new Date().toISOString(),
-    }
-
-    updateInvoice(editingInvoice!.id, updatedInvoice)
-    alert(`Račun ${editingInvoice!.number} uspešno posodobljen!`)
-    
-    if (onSaved) onSaved()
-    onClose()
+// Shrani spremembe
+const handleSave = () => {
+  if (!isFormValid()) {
+    alert(getValidationMessage())
+    return
   }
 
-  // Pretvori predračun v račun
-  const handleConvertToInvoice = () => {
-    if (!isFormValid()) {
-      alert(getValidationMessage())
-      return
-    }
+  const hasReverseCharge = items.some(item => item.reverseCharge)
+  const reverseChargeClause = hasReverseCharge ? '\n\nObrnjena davčna obveznost – DDV obračuna kupec.' : ''
+  const selfBillingClause = selectedCustomer?.selfBilling ? '\n\nSamofakturiranje – račun izdal kupec v imenu in za račun dobavitelja.' : ''
 
-    const newInvoiceNumber = `2026-${String(Math.floor(Math.random() * 1000)).padStart(4, '0')}`
-    
-    const convertedInvoice = {
-      ...editingInvoice,
-      number: newInvoiceNumber,
-      status: 'issued' as const,
-      updatedAt: new Date().toISOString(),
-    }
-
-    updateInvoice(editingInvoice!.id, convertedInvoice)
-    alert(`Predračun ${editingInvoice!.number} je bil spremenjen v račun ${newInvoiceNumber}!`)
-    
-    if (onSaved) onSaved()
-    onClose()
+  const updatedInvoice = {
+    ...editingInvoice,
+    customerId: selectedCustomer?.id || '',
+    customerName: selectedCustomer?.name || '',
+    customerTaxId: selectedCustomer?.taxId || '',
+    issueDate: issueDate ? formatDateForStorage(issueDate) : '',
+    serviceDateFrom: serviceDateFrom ? formatDateForStorage(serviceDateFrom) : '',
+    serviceDateTo: serviceDateTo ? formatDateForStorage(serviceDateTo) : '',
+    dueDate: dueDate ? formatDateForStorage(dueDate) : '',
+    items,
+    totalNet: totals.totalNet,
+    totalVat: totals.totalVat,
+    totalGross: totals.totalGross,
+    vatBreakdown: totals.vatBreakdown,
+    note: note + reverseChargeClause + selfBillingClause,
+    updatedAt: new Date().toISOString(),
   }
+
+  updateInvoice(editingInvoice!.id, updatedInvoice)
+  // Odstranjen alert - tiho shranjevanje
+  
+  if (onSaved) onSaved()
+  onClose() // Zapre edit modal in se vrne nazaj
+}
+
+// Pretvori predračun v račun
+const handleConvertToInvoice = () => {
+  if (!isFormValid()) {
+    alert(getValidationMessage())
+    return
+  }
+
+  const newInvoiceNumber = `2026-${String(Math.floor(Math.random() * 1000)).padStart(4, '0')}`
+  
+  const convertedInvoice = {
+    ...editingInvoice,
+    number: newInvoiceNumber,
+    status: 'issued' as const,
+    updatedAt: new Date().toISOString(),
+  }
+
+  updateInvoice(editingInvoice!.id, convertedInvoice)
+  // Odstranjen alert - tiho pretvarjanje
+  
+  if (onSaved) onSaved()
+  onClose() // Zapre edit modal in se vrne nazaj
+}
 
   const handleAddOrUpdateItem = (item: InvoiceItem) => {
     const processedItem = {
@@ -221,9 +221,7 @@ export function EditInvoice({ editingInvoice, onClose, onSaved }: EditInvoicePro
   }
 
   const deleteItem = (id: string) => {
-    if (confirm('Ali ste prepričani, da želite izbrisati to postavko?')) {
-      setItems(items.filter(i => i.id !== id))
-    }
+    setItems(items.filter(i => i.id !== id))
   }
 
   const validationMessage = getValidationMessage()
@@ -231,8 +229,6 @@ export function EditInvoice({ editingInvoice, onClose, onSaved }: EditInvoicePro
 
   // Pridobi naslov glede na tip
   const getTitle = () => {
-    if (currentType === 'draft') return `Urejanje osnutka: ${editingInvoice?.number}`
-    if (currentType === 'estimate') return `Urejanje predračuna: ${editingInvoice?.number}`
     return `Urejanje računa: ${editingInvoice?.number}`
   }
 
@@ -240,10 +236,10 @@ export function EditInvoice({ editingInvoice, onClose, onSaved }: EditInvoicePro
   const getTitleColor = () => {
     if (currentType === 'draft') return 'text-gray-700'
     if (currentType === 'estimate') return 'text-blue-700'
-    return 'text-green-700'
+    return 'text-gray-700'
   }
 
-  return (
+return (
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-4 border border-primary/20">
@@ -256,18 +252,26 @@ export function EditInvoice({ editingInvoice, onClose, onSaved }: EditInvoicePro
               <div className={`text-md font-bold ${getTitleColor()}`}>
                 {getTitle()}
               </div>
-              <div className="text-xs text-gray-500">
+              <div className="text-sm text-gray-500">
                 {currentType === 'draft' && 'Osnutek - podatki še niso dokončni'}
                 {currentType === 'estimate' && 'Predračun - nima pravne veljave'}
-                {currentType === 'invoice' && 'Račun - pravno veljaven dokument'}
+                {currentType === 'invoice' && editingInvoice?.status === 'sent' && 'Poslan račun'}
+                {currentType === 'invoice' && editingInvoice?.status === 'paid' && 'Plačan račun'}
+                {currentType === 'invoice' && editingInvoice?.status === 'overdue' && 'Zapadel račun'}
+                {currentType === 'invoice' && editingInvoice?.status === 'cancelled' && 'Storniran račun'}
+                {currentType === 'invoice' && editingInvoice?.status === 'issued' && 'Izdan račun - pravno veljaven dokument'}
               </div>
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose} className="text-gray-500">
-            <X className="w-4 h-4 mr-1" /> Zapri
-          </Button>
+          {/* Okvir na desni strani s tipom računa */}
+          <div className="px-6 py-2 rounded-lg border-2 border-gray-500 bg-gray-300 font-semibold text-sm text-black">
+            {currentType === 'draft' && 'OSNUTEK'}
+            {currentType === 'estimate' && 'PREDRAČUN'}
+            {currentType === 'invoice' && 'RAČUN'}
+          </div>
         </div>
       </div>
+      
 
       <Card>
         <CardHeader><CardTitle>Podatki o računu</CardTitle></CardHeader>
@@ -394,7 +398,7 @@ export function EditInvoice({ editingInvoice, onClose, onSaved }: EditInvoicePro
                     )}
                     {item.itemNote && <div className="text-xs text-gray-500 mt-1">{item.itemNote}</div>}
                     {item.vatRate === 0 && item.vatExemptionReason && (
-                      <div className="text-xs text-green-600 mt-1">{item.vatExemptionReason}</div>
+                      <div className="text-xs text-gray-600 mt-1">{item.vatExemptionReason}</div>
                     )}
                   </TableCell>
                   <TableCell className="text-right">{item.quantity}</TableCell>
@@ -425,46 +429,115 @@ export function EditInvoice({ editingInvoice, onClose, onSaved }: EditInvoicePro
         </CardContent>
       </Card>
 
-      {/* Footer z gumbi */}
-      <div className="flex justify-between items-center">
-        {validationMessage && (
-          <div className="text-sm text-amber-600 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4" />
-            {validationMessage}
-          </div>
-        )}
-        <div className="flex gap-3 ml-auto">
-          <Button variant="outline" onClick={onClose}>
-            Prekliči
-          </Button>
-          
-          {/* Za osnutek - samo shrani */}
-          {currentType === 'draft' && (
-            <Button onClick={handleSave} disabled={!isValid}>
-              <Save className="w-4 h-4 mr-2" /> Shrani osnutek
-            </Button>
-          )}
-          
-          {/* Za predračun - shrani in pretvori v račun */}
-          {currentType === 'estimate' && (
-            <>
-              <Button onClick={handleSave} disabled={!isValid} variant="outline">
-                <Save className="w-4 h-4 mr-2" /> Shrani predračun
-              </Button>
-              <Button onClick={handleConvertToInvoice} disabled={!isValid} className="bg-green-600 hover:bg-green-700">
-                <CheckCircle className="w-4 h-4 mr-2" /> Izdaj račun
-              </Button>
-            </>
-          )}
-          
-          {/* Za račun - samo shrani */}
-          {currentType === 'invoice' && (
-            <Button onClick={handleSave} disabled={!isValid}>
-              <Save className="w-4 h-4 mr-2" /> Shrani račun
-            </Button>
-          )}
-        </div>
-      </div>
+{/* Footer z gumbi */}
+<div className="flex justify-between items-center">
+  {validationMessage && (
+    <div className="text-sm text-amber-600 flex items-center gap-2">
+      <AlertCircle className="w-4 h-4" />
+      {validationMessage}
+    </div>
+  )}
+  <div className="flex gap-3 ml-auto">
+    <Button variant="outline" onClick={onClose}>
+      Prekliči
+    </Button>
+    
+    {/* Za osnutek - shrani osnutek, ustvari predračun, izdaj račun */}
+    {currentType === 'draft' && (
+      <>
+        <Button 
+          onClick={handleSave} 
+          disabled={!selectedCustomer || items.length === 0}
+          variant="default"
+        >
+          <Save className="w-4 h-4 mr-2" /> Shrani osnutek
+        </Button>
+        <Button 
+          onClick={() => {
+            const newNumber = `PR-2026-${String(Math.floor(Math.random() * 1000)).padStart(4, '0')}`;
+            const updatedInvoice = {
+              ...editingInvoice,
+              number: newNumber,
+              status: 'draft' as const,
+              issueDate: issueDate ? formatDateForStorage(issueDate) : '',
+              serviceDateFrom: serviceDateFrom ? formatDateForStorage(serviceDateFrom) : '',
+              serviceDateTo: serviceDateTo ? formatDateForStorage(serviceDateTo) : '',
+              items,
+              totalNet: totals.totalNet,
+              totalVat: totals.totalVat,
+              totalGross: totals.totalGross,
+              vatBreakdown: totals.vatBreakdown,
+              updatedAt: new Date().toISOString(),
+            };
+            updateInvoice(editingInvoice!.id, updatedInvoice);
+            onClose();
+          }} 
+          disabled={!selectedCustomer || items.length === 0 || !issueDate || !serviceDateFrom || !serviceDateTo || !!dateError}
+          variant="default"
+        >
+          <FileText className="w-4 h-4 mr-2" /> Ustvari predračun
+        </Button>
+        <Button 
+          onClick={() => {
+            const newNumber = `2026-${String(Math.floor(Math.random() * 1000)).padStart(4, '0')}`;
+            const updatedInvoice = {
+              ...editingInvoice,
+              number: newNumber,
+              status: 'issued' as const,
+              issueDate: issueDate ? formatDateForStorage(issueDate) : '',
+              serviceDateFrom: serviceDateFrom ? formatDateForStorage(serviceDateFrom) : '',
+              serviceDateTo: serviceDateTo ? formatDateForStorage(serviceDateTo) : '',
+              dueDate: dueDate ? formatDateForStorage(dueDate) : '',
+              items,
+              totalNet: totals.totalNet,
+              totalVat: totals.totalVat,
+              totalGross: totals.totalGross,
+              vatBreakdown: totals.vatBreakdown,
+              updatedAt: new Date().toISOString(),
+            };
+            updateInvoice(editingInvoice!.id, updatedInvoice);
+            onClose();
+          }} 
+          disabled={!selectedCustomer || items.length === 0 || !issueDate || !serviceDateFrom || !serviceDateTo || !dueDate || !!dateError}
+          variant="default"
+        >
+          <CheckCircle className="w-4 h-4 mr-2" /> Izdaj račun
+        </Button>
+      </>
+    )}
+    
+    {/* Za predračun - shrani predračun in izdaj račun */}
+    {currentType === 'estimate' && (
+      <>
+        <Button 
+          onClick={handleSave} 
+          disabled={!selectedCustomer || items.length === 0 || !issueDate || !serviceDateFrom || !serviceDateTo || !!dateError}
+          variant="default"
+        >
+          <Save className="w-4 h-4 mr-2" /> Shrani predračun
+        </Button>
+        <Button 
+          onClick={handleConvertToInvoice} 
+          disabled={!selectedCustomer || items.length === 0 || !issueDate || !serviceDateFrom || !serviceDateTo || !dueDate || !!dateError}
+          variant="default"
+        >
+          <CheckCircle className="w-4 h-4 mr-2" /> Izdaj račun
+        </Button>
+      </>
+    )}
+    
+    {/* Za račun - samo shrani račun */}
+    {currentType === 'invoice' && (
+      <Button 
+        onClick={handleSave} 
+        disabled={!selectedCustomer || items.length === 0 || !issueDate || !serviceDateFrom || !serviceDateTo || !dueDate || !!dateError}
+        variant="default"
+      >
+        <Save className="w-4 h-4 mr-2" /> Shrani račun
+      </Button>
+    )}
+  </div>
+</div>
 
       <InvoiceItemModal
         open={modalOpen}

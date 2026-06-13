@@ -31,7 +31,9 @@ function App() {
   return (
     <div className="flex h-screen">
       <Sidebar activeView={activeView} setActiveView={setActiveView} userRole={userRole} />
-      <main className="flex-1 overflow-auto bg-gray-50"><div className="p-6">{renderView()}</div></main>
+      <main className="flex-1 overflow-auto bg-gray-50">
+        <div className="p-4 md:p-6">{renderView()}</div>
+      </main>
     </div>
   )
 }

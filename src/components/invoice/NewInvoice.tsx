@@ -262,6 +262,12 @@ export function NewInvoice({ editingInvoice, clearEditing }: NewInvoiceProps) {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Ustvari račun</h1>
+
+      </div>
+
+
       {/* Invoice Type Selector */}
       <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-4 border border-primary/20">
         <div className="flex items-center justify-between flex-wrap gap-4">
@@ -269,7 +275,7 @@ export function NewInvoice({ editingInvoice, clearEditing }: NewInvoiceProps) {
             <div className="bg-primary/20 rounded-lg p-2"><ReceiptText className="w-6 h-6 text-primary" /></div>
             <div>
               <div className="text-md font-bold text-primary">
-                {editingInvoice ? editingInvoice.number : (invoiceType === 'invoice' ? 'Nov račun' : invoiceType === 'estimate' ? 'Nov predračun' : 'Nov osnutek')}
+                {editingInvoice ? editingInvoice.number : (invoiceType === 'invoice' ? 'Ustvari račun' : invoiceType === 'estimate' ? 'Ustvari predračun' : 'Ustvari osnutek')}
               </div>
               {!editingInvoice && <div className="text-xs text-gray-500">Številka bo dodeljena ob shranjevanju</div>}
             </div>
@@ -289,7 +295,7 @@ export function NewInvoice({ editingInvoice, clearEditing }: NewInvoiceProps) {
             </button>
             <button
               onClick={() => setInvoiceType('invoice')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${invoiceType === 'invoice' ? 'bg-green-100 text-green-700' : 'text-gray-500 hover:bg-gray-100'}`}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${invoiceType === 'invoice' ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:bg-gray-100'}`}
             >
               <CheckCircle className="w-4 h-4" /> Izdaj račun
             </button>

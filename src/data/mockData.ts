@@ -410,6 +410,9 @@ export const initialInvoices: Invoice[] = [
       gross: 366,
       parcelNumber: '999/1',
       cadastralMunicipality: '1000 Ljubljana',
+      cadastreName: 'Kataster stavb',
+      landRegisterId: '1000 999/1',
+      reverseCharge: false,
       itemNote: 'Izdelava elaborata za izvoz - oprostitev DDV'
     } as InvoiceItem
   ],

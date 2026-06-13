@@ -1,8 +1,8 @@
 // src/components/invoice/InvoiceFilters.tsx
-import React, { useRef, useEffect } from 'react'
+import React, { useRef, useEffect, useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Search, X, ChevronDown, Calendar, DollarSign, Percent, Clock } from 'lucide-react'
+import { Search, X, ChevronDown, Calendar, DollarSign, Percent, Clock, Filter, ChevronUp } from 'lucide-react'
 import DatePicker from 'react-datepicker'
 import { sl } from 'date-fns/locale'
 import { CustomDateInput } from '@/components/ui/CustomDateInput'
@@ -45,7 +45,7 @@ interface InvoiceFiltersProps {
   uniqueMunicipalities: string[]
   statusOptions: { value: InvoiceStatus | 'all'; label: string }[]
   clearAllFilters: () => void
-  showFilters: boolean
+  showFiltersProp: boolean
 }
 
 export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
@@ -58,7 +58,7 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
   dueDateFrom, setDueDateFrom, dueDateTo, setDueDateTo,
   selectedStatus, setSelectedStatus,
   uniqueNumbers, uniqueCustomers, uniqueMunicipalities, statusOptions,
-  clearAllFilters, showFilters
+  clearAllFilters, showFiltersProp
 }) => {
   const numberDropdownRef = useRef<HTMLDivElement>(null)
   const customerDropdownRef = useRef<HTMLDivElement>(null)
@@ -68,6 +68,7 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
   const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = React.useState(false)
   const [isMunicipalityDropdownOpen, setIsMunicipalityDropdownOpen] = React.useState(false)
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = React.useState(false)
+  const [showAdditionalFilters, setShowAdditionalFilters] = useState(false)
 
   // Clear date handlers
   const clearDateFrom = () => setDateFrom(null)
@@ -92,6 +93,23 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
 
   return (
     <>
+      {/* Naslov FILTRI in gumb */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <h3 className="text-2xl font-bold text-black">FILTRI</h3>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => setShowAdditionalFilters(!showAdditionalFilters)}
+          className="text-primary border-primary hover:bg-primary hover:text-white"
+        >
+          <Filter className="w-4 h-4 mr-2" />
+          {showAdditionalFilters ? 'Skrij dodatne filtre' : 'Pokaži dodatne filtre'}
+        </Button>
+      </div>
+
+      {/* Osnovni filtri - vedno vidni */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div><label className="text-sm font-medium mb-1 block">Številka računa</label>
           <div className="relative" ref={numberDropdownRef}>
@@ -139,7 +157,8 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
         </div>
       </div>
 
-      {showFilters && (
+      {/* Dodatni filtri - prikažejo se samo ko je showAdditionalFilters true */}
+      {showAdditionalFilters && (
         <div className="space-y-4 mb-4 pt-4 border-t">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
@@ -170,7 +189,7 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
             </div>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-8 gap-4">
             <div>
               <label className="text-sm font-medium mb-1 block flex items-center gap-1"><Calendar className="w-4 h-4" /> Datum izdaje od</label>
               <DatePicker
@@ -219,8 +238,11 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
         </div>
       )}
 
+      {/* Gumb za čiščenje filtrov */}
       <div className="flex gap-5 flex-wrap my-4">
-        <Button size="sm" variant="secondary" onClick={clearAllFilters}>Počisti vse filtre</Button>
+        <Button size="sm" variant="secondary" onClick={clearAllFilters}>
+          Počisti vse filtre
+        </Button>
       </div>
     </>
   )

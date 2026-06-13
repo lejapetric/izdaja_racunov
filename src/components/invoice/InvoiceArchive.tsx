@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { Filter, Send, Ban, History, Package, Mail, X } from 'lucide-react'
+import { Filter, Send, Ban, History, Package, Mail, X, FileText, Badge } from 'lucide-react'
 import { Invoice, InvoiceStatus } from '@/types'
 import { InvoiceView } from './InvoiceView'
 import { NewInvoice } from './NewInvoice'
@@ -88,15 +88,20 @@ export function InvoiceArchive({ onEditInvoice: _onEditInvoice }: InvoiceArchive
   
   const handleSendEmail = () => { 
     if (!emailInvoice) return; 
-    alert(`📧 E-pošta poslana na naslov kupca ${emailInvoice.customerName}\n\nZadeva: ${emailSubject}\n\nPriloga: Racun_${emailInvoice.number}.pdf`); 
+    
+    // Obvestilo v konzoli za debugging (ne bo prikazano uporabniku)
+    console.log(`📧 E-pošta poslana na naslov kupca ${emailInvoice.customerName}\nZadeva: ${emailSubject}\nPriloga: Racun_${emailInvoice.number}.pdf`);
+    
     updateInvoice(emailInvoice.id, { 
       status: 'sent', 
       sentAt: new Date().toISOString(),
-      note: emailInvoice.note ? `${emailInvoice.note}\n\n[${new Date().toLocaleDateString('sl-SI')}] Račun poslan po e-pošti.` : `[${new Date().toLocaleDateString('sl-SI')}] Račun poslan po e-pošti.`
+      note: emailInvoice.note 
+        ? `${emailInvoice.note}\n\n[${new Date().toLocaleDateString('sl-SI')}] Račun poslan po e-pošti.` 
+        : `[${new Date().toLocaleDateString('sl-SI')}] Račun poslan po e-pošti.`
     }); 
+    
     setEmailModalOpen(false); 
     setEmailInvoice(null);
-    // Zapremo tudi InvoiceView če je odprt
     setSelectedInvoiceId(null);
   }
   
@@ -215,61 +220,73 @@ export function InvoiceArchive({ onEditInvoice: _onEditInvoice }: InvoiceArchive
         </CardContent>
       </Card>
 
-      {/* MODAL ZA E-POŠTO - POBOLJŠAN */}
-      <Dialog open={emailModalOpen} onOpenChange={setEmailModalOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-blue-700">
-              <Mail className="w-5 h-5 text-blue-600" />
-              Pošlji račun po e-pošti
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            
-            <div>
-              <label className="text-sm font-medium block mb-1 text-gray-700">📧 Prejemnik (e-pošta) *</label>
-              <Input 
-                value={customers.find(c => c.id === emailInvoice?.customerId)?.email || 'E-pošta ni vpisan'} 
-                disabled 
-                className="bg-gray-50 border-gray-200" 
-              />
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium block mb-1 text-gray-700">Zadeva *</label>
-              <Input 
-                value={emailSubject} 
-                onChange={(e) => setEmailSubject(e.target.value)} 
-                className="border-gray-200 focus:border-blue-400 focus:ring-blue-400"
-              />
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium block mb-1 text-gray-700">Sporočilo *</label>
-              <Textarea 
-                value={emailBody} 
-                onChange={(e) => setEmailBody(e.target.value)} 
-                rows={10} 
-                className="font-normal text-sm border-gray-200 focus:border-blue-400 focus:ring-blue-400"
-              />
-            </div>
-          </div>
-          <DialogFooter className="gap-2 border-t pt-4">
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setEmailModalOpen(false)
-                setEmailInvoice(null)
-              }}
-            >
-              <X className="w-4 h-4 mr-2" /> Prekliči
-            </Button>
-            <Button onClick={handleSendEmail} className="bg-blue-600 hover:bg-blue-700">
-              <Send className="w-4 h-4 mr-2" /> Pošlji po e-pošti
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      
+{/* MODAL ZA E-POŠTO - POBOLJŠAN */}
+<Dialog open={emailModalOpen} onOpenChange={setEmailModalOpen}>
+  <DialogContent className="max-w-2xl">
+    <DialogHeader>
+      <DialogTitle className="flex items-center gap-2 text-blue-700">
+        <Mail className="w-5 h-5 text-blue-600" />
+        Pošlji račun po e-pošti
+      </DialogTitle>
+    </DialogHeader>
+    <div className="space-y-4 py-4">
+      
+      <div>
+        <label className="text-sm font-medium block mb-1 text-gray-700">📧 Prejemnik (e-pošta) *</label>
+        <Input 
+          value={customers.find(c => c.id === emailInvoice?.customerId)?.email || 'E-pošta ni vpisan'} 
+          disabled 
+          className="bg-gray-50 border-gray-200" 
+        />
+      </div>
+      
+      <div>
+        <label className="text-sm font-medium block mb-1 text-gray-700">Zadeva *</label>
+        <Input 
+          value={emailSubject} 
+          onChange={(e) => setEmailSubject(e.target.value)} 
+          className="border-gray-200 focus:border-blue-400 focus:ring-blue-400"
+        />
+      </div>
+      
+      <div>
+        <label className="text-sm font-medium block mb-1 text-gray-700">Sporočilo *</label>
+        <Textarea 
+          value={emailBody} 
+          onChange={(e) => setEmailBody(e.target.value)} 
+          rows={8} 
+          className="font-normal text-sm border-gray-200 focus:border-blue-400 focus:ring-blue-400"
+        />
+      </div>
+      
+      {/* Priponka */}
+      <div className="mt-2 px-3 py-1.5 bg-gray-50 rounded border border-gray-200 inline-block">
+        <div className="flex items-center gap-2">
+          <FileText className="w-4 h-4 text-gray-600" />
+          <span className="text-sm text-gray-700">
+            Priponka: <span className="font-medium">{emailInvoice?.invoiceNumber || 'racun'}.pdf</span>
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    <DialogFooter className="gap-2 pt-4">
+      <Button 
+        variant="outline" 
+        onClick={() => {
+          setEmailModalOpen(false)
+          setEmailInvoice(null)
+        }}
+      >
+        <X className="w-4 h-4 mr-2" /> Prekliči
+      </Button>
+      <Button onClick={handleSendEmail} className="bg-blue-600 hover:bg-blue-700">
+        <Send className="w-4 h-4 mr-2" /> Pošlji po e-pošti
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
 
       {/* MODAL ZA NAVADNO POŠTO - POBOLJŠAN */}
       <Dialog open={postModalOpen} onOpenChange={setPostModalOpen}>

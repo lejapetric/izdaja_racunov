@@ -106,6 +106,7 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
         >
           <Filter className="w-4 h-4 mr-2" />
           {showAdditionalFilters ? 'Skrij dodatne filtre' : 'Pokaži dodatne filtre'}
+          {showAdditionalFilters ? <ChevronUp className="w-4 h-4 ml-2" /> : <ChevronDown className="w-4 h-4 ml-2" />}
         </Button>
       </div>
 
@@ -189,11 +190,7 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
             </div>
           </div>
           
-<<<<<<< HEAD
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-8 gap-4">
-=======
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 lg:grid-cols-8 gap-1">
->>>>>>> fa26dff8aa678af62b38d6c1f14e7d7e9ca78599
             <div>
               <label className="text-sm font-medium mb-1 block flex items-center gap-1"><Calendar className="w-4 h-4" /> Datum izdaje od</label>
               <DatePicker

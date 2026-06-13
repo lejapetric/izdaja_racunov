@@ -123,7 +123,6 @@ export function InvoiceItemModal({ open, onOpenChange, editingItem, onSave, serv
             </Select>
           </div>
 
-
           <div><label className="text-sm font-medium mb-1 block">Količina *</label>
             <NumberInput value={newItem.quantity || 1} onChange={(val) => setNewItem({ ...newItem, quantity: val })} min={0} step={0.5} />
           </div>
@@ -176,10 +175,22 @@ export function InvoiceItemModal({ open, onOpenChange, editingItem, onSave, serv
 
           <div className="col-span-2 bg-gray-50 p-3 rounded-md">
             <div className="grid grid-cols-4 gap-4">
-              <div><label className="text-sm font-medium mb-1 block">Neto pred popustom</label><div className="text-md font-semibold">{formatCurrency(netBeforeDiscount)}</div></div>
-              <div><label className="text-sm font-medium mb-1 block">Neto po popustu</label><div className="text-md font-semibold text-primary">{formatCurrency(net)}</div></div>
-              <div><label className="text-sm font-medium mb-1 block">Znesek DDV</label><div className="text-md font-medium">{formatCurrency(vatAmount)}</div></div>
-              <div><label className="text-sm font-medium mb-1 block">Bruto znesek</label><div className="text-md font-bold text-green-600">{formatCurrency(gross)}</div></div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Neto pred popustom</label>
+                <div className="text-md font-semibold">{formatCurrency(netBeforeDiscount)}</div>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Neto po popustu</label>
+                <div className="text-md font-semibold text-primary">{formatCurrency(net)}</div>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Znesek DDV</label>
+                <div className="text-md font-medium">{formatCurrency(vatAmount)}</div>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Bruto znesek</label>
+                <div className="text-md font-bold text-green-600">{formatCurrency(gross)}</div>
+              </div>
             </div>
           </div>
 
@@ -192,7 +203,6 @@ export function InvoiceItemModal({ open, onOpenChange, editingItem, onSave, serv
               <div><label className="text-sm font-medium mb-1 block">ID zaznambe</label><Input placeholder="npr. 1434 325/4" value={newItem.landRegisterId || ''} onChange={e => setNewItem({ ...newItem, landRegisterId: e.target.value.replace(/[^0-9/\-\s]/g, '') })} /></div>
             </div>
           </div>
-
 
           <div className="col-span-2">
             <label className="text-sm font-medium mb-1 block flex items-center gap-1"><AlertCircle className="w-4 h-4" /> Opombe k postavki</label>

@@ -7,7 +7,19 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('sl-SI', { style: 'currency', currency: 'EUR' }).format(amount)
+  // Roka zaokrožimo na 2 decimalki
+  const roundedAmount = Math.round(amount * 100) / 100
+  
+  // Ločimo celi in decimalni del
+  const [integerPart, decimalPart] = roundedAmount.toFixed(2).split('.')
+  
+  // Dodamo pike za tisočice (vsake 3 števke)
+  const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+  
+  // Sestavimo nazaj z vejico za decimalke
+  const formattedNumber = `${formattedInteger},${decimalPart}`
+  
+  return `${formattedNumber} €`
 }
 
 export const formatDate = (dateStr: string) => {

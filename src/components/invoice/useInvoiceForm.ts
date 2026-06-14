@@ -49,7 +49,6 @@ export function useInvoiceForm(editingInvoice: Invoice | null | undefined, custo
       const cust = customers.find(c => c.id === editingInvoice.customerId)
       setSelectedCustomer(cust || null)
       setItems(editingInvoice.items)
-      setDiscountPercent(editingInvoice.discountPercent)
       setIssueDate(new Date(editingInvoice.issueDate))
       setServiceDateFrom(new Date(editingInvoice.serviceDateFrom))
       setServiceDateTo(new Date(editingInvoice.serviceDateTo))

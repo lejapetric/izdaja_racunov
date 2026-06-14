@@ -66,7 +66,7 @@ export interface Invoice {
   dueDate: string
   paymentTermDays: number
   items: InvoiceItem[]
-  discountPercent: number
+  discountPercent?: number
   totalNet: number
   totalVat: number
   totalGross: number
@@ -84,6 +84,7 @@ export interface Invoice {
   cancelledReason?: string
   createdAt: string
   updatedAt: string
+  customerRegistrationNumber?: string
 }
 
 export interface Estimate extends Invoice {
@@ -103,7 +104,7 @@ export interface AuditLogEntry {
   id: string
   invoiceId: string
   invoiceNumber: string
-  action: 'created' | 'edited' | 'sent' | 'paid' | 'cancelled' | 'status_changed' | 'printed'
+  action: 'created' | 'edited' | 'sent' | 'paid' | 'cancelled' | 'status_changed' | 'printed' | 'converted'
   user: string
   userRole: string
   timestamp: string

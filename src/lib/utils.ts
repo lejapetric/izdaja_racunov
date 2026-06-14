@@ -22,9 +22,18 @@ export const formatCurrency = (amount: number) => {
   return `${formattedNumber} €`
 }
 
-export const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString('sl-SI')
+// src/lib/utils.ts
+export const formatDate = (date: string | Date | null | undefined): string => {
+  if (!date) return '/'
+  const d = typeof date === 'string' ? new Date(date) : date
+  if (isNaN(d.getTime())) return '/'
+  return d.toLocaleDateString('sl-SI', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
 }
+
 
 export const formatDateForStorage = (date: Date | null): string => {
   if (!date) return ''

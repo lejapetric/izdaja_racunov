@@ -1,6 +1,5 @@
 // src/components/invoice/InvoiceFilters.tsx
 import React, { useRef, useEffect, useState } from 'react'
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Search, X, ChevronDown, Calendar, DollarSign, Percent, Clock, Filter, ChevronUp } from 'lucide-react'
 import DatePicker from 'react-datepicker'
@@ -45,7 +44,6 @@ interface InvoiceFiltersProps {
   uniqueMunicipalities: string[]
   statusOptions: { value: InvoiceStatus | 'all'; label: string }[]
   clearAllFilters: () => void
-  showFiltersProp: boolean
 }
 
 export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
@@ -58,7 +56,7 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
   dueDateFrom, setDueDateFrom, dueDateTo, setDueDateTo,
   selectedStatus, setSelectedStatus,
   uniqueNumbers, uniqueCustomers, uniqueMunicipalities, statusOptions,
-  clearAllFilters, showFiltersProp
+  clearAllFilters
 }) => {
   const numberDropdownRef = useRef<HTMLDivElement>(null)
   const customerDropdownRef = useRef<HTMLDivElement>(null)
@@ -169,9 +167,9 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
               <NumberInput placeholder="Maksimalni znesek €" value={priceMax} onChange={setPriceMax} />
             </div>
             <div>
-              <label className="text-sm font-medium mb-1 block flex items-center gap-1"><Percent className="w-4 h-4" /> Popust % od</label>
+              <label className="text-sm font-medium mb-1 block flex items-center gap-1"><Percent className="w-4 h-4" /> Popust od</label>
               <NumberInput placeholder="Minimalni popust %" value={discountMin} onChange={setDiscountMin} />
-              <label className="text-sm font-medium mt-2 mb-1 block flex items-center gap-1"><Percent className="w-4 h-4" /> Popust % do</label>
+              <label className="text-sm font-medium mt-2 mb-1 block flex items-center gap-1"><Percent className="w-4 h-4" /> Popust do</label>
               <NumberInput placeholder="Maksimalni popust %" value={discountMax} onChange={setDiscountMax} />
             </div>
             <div>

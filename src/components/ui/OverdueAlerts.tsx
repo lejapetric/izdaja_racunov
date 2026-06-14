@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { formatCurrency, formatDate } from '@/lib/utils'
@@ -50,7 +50,7 @@ export function OverdueAlerts() {
 
   const handleSendEmail = () => {
     if (!emailInvoice) return
-    alert(`📧 Opomin poslan po e-pošti na naslov kupca ${emailInvoice.customerName}\n\nZadeva: ${emailSubject}\n\nRačun: ${emailInvoice.number}`)
+    console.log(`📧 Opomin poslan po e-pošti na naslov kupca ${emailInvoice.customerName}`)
     updateInvoice(emailInvoice.id, {
       note: emailInvoice.note ? `${emailInvoice.note}\n\n[${new Date().toLocaleDateString('sl-SI')}] Poslan opomin po e-pošti.` : `[${new Date().toLocaleDateString('sl-SI')}] Poslan opomin po e-pošti.`
     })
@@ -70,15 +70,9 @@ export function OverdueAlerts() {
 
   const handleSendPost = () => {
     if (!postInvoice) return
-    
-    const postMessage = `📮 Opomin poslan po navadni pošti na naslov:\n${postAddress}\n\n${postNote ? `Opomba: ${postNote}\n\n` : ''}Datum pošiljanja: ${new Date().toLocaleDateString('sl-SI')}\n\nRačun: ${postInvoice.number}`
-    
-    alert(postMessage)
-    
     updateInvoice(postInvoice.id, {
       note: postInvoice.note ? `${postInvoice.note}\n\n[${new Date().toLocaleDateString('sl-SI')}] Poslan opomin po navadni pošti na naslov: ${postAddress}${postNote ? ` (${postNote})` : ''}` : `[${new Date().toLocaleDateString('sl-SI')}] Poslan opomin po navadni pošti na naslov: ${postAddress}${postNote ? ` (${postNote})` : ''}`
     })
-    
     setPostModalOpen(false)
     setPostInvoice(null)
     setPostAddress('')
@@ -139,10 +133,10 @@ export function OverdueAlerts() {
                   const daysLate = Math.floor((new Date().getTime() - new Date(inv.dueDate).getTime()) / (1000 * 3600 * 24))
                   return (
                     <TableRow key={inv.id}>
-                      <TableCell className="font-mono">{inv.number}</TableCell>
+                      <TableCell className="font-mono">{inv.number || '-'}</TableCell>
                       <TableCell>
-                        <div>{inv.customerName}</div>
-                        <div className="text-xs text-gray-500">{inv.customerTaxId}</div>
+                        <div>{inv.customerName || '-'}</div>
+                        <div className="text-xs text-gray-500">{inv.customerTaxId || '-'}</div>
                       </TableCell>
                       <TableCell className="text-right font-medium">
                         {formatCurrency(inv.totalGross)}
@@ -201,7 +195,7 @@ export function OverdueAlerts() {
 
       {/* MODAL ZA E-POŠTO - OPOMIN */}
       <Dialog open={emailModalOpen} onOpenChange={setEmailModalOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Mail className="w-5 h-5 text-blue-600" />
@@ -210,9 +204,9 @@ export function OverdueAlerts() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="bg-blue-50 rounded-lg p-3">
-              <p className="text-sm font-medium text-blue-800">Račun: {emailInvoice?.number}</p>
-              <p className="text-sm text-blue-600">Kupec: {emailInvoice?.customerName}</p>
-              <p className="text-sm text-red-600 mt-1">Zapadlost: {emailInvoice?.dueDate && formatDate(emailInvoice.dueDate)}</p>
+              <p className="text-sm font-medium text-blue-800">Račun: {emailInvoice?.number || '-'}</p>
+              <p className="text-sm text-blue-600">Kupec: {emailInvoice?.customerName || '-'}</p>
+              <p className="text-sm text-red-600 mt-1">Zapadlost: {emailInvoice?.dueDate ? formatDate(emailInvoice.dueDate) : '-'}</p>
             </div>
             
             <div>
@@ -253,7 +247,7 @@ export function OverdueAlerts() {
 
       {/* MODAL ZA NAVADNO POŠTO - OPOMIN */}
       <Dialog open={postModalOpen} onOpenChange={setPostModalOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Package className="w-5 h-5 text-amber-600" />
@@ -262,9 +256,9 @@ export function OverdueAlerts() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="bg-amber-50 rounded-lg p-3">
-              <p className="text-sm font-medium text-amber-800">Račun: {postInvoice?.number}</p>
-              <p className="text-sm text-amber-600">Kupec: {postInvoice?.customerName}</p>
-              <p className="text-sm text-red-600 mt-1">Zapadlost: {postInvoice?.dueDate && formatDate(postInvoice.dueDate)}</p>
+              <p className="text-sm font-medium text-amber-800">Račun: {postInvoice?.number || '-'}</p>
+              <p className="text-sm text-amber-600">Kupec: {postInvoice?.customerName || '-'}</p>
+              <p className="text-sm text-red-600 mt-1">Zapadlost: {postInvoice?.dueDate ? formatDate(postInvoice.dueDate) : '-'}</p>
             </div>
             
             <div>

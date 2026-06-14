@@ -77,8 +77,9 @@ export function Reports() {
       }
       if (priceMin !== '' && inv.totalGross < priceMin) return false
       if (priceMax !== '' && inv.totalGross > priceMax) return false
-      if (discountMin !== '' && inv.discountPercent < discountMin) return false
-      if (discountMax !== '' && inv.discountPercent > discountMax) return false
+      const discountPercent = inv.discountPercent ?? 0
+      if (discountMin !== '' && discountPercent < discountMin) return false
+      if (discountMax !== '' && discountPercent > discountMax) return false
       const dateFromStr = dateFrom ? formatDateForCompare(dateFrom) : ''
       const dateToStr = dateTo ? formatDateForCompare(dateTo) : ''
       if (dateFromStr && inv.issueDate < dateFromStr) return false
@@ -435,7 +436,7 @@ export function Reports() {
                           cx="50%"
                           cy="50%"
                           labelLine={true}
-                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                          label={({ name, percent }) => `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`}
                           outerRadius={100}
                           fill="#8884d8"
                           dataKey="value"
@@ -446,7 +447,7 @@ export function Reports() {
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                           ))}
                         </Pie>
-                        <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                        <Tooltip formatter={(value: any) => typeof value === 'number' ? formatCurrency(value) : value} />
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="flex flex-wrap justify-center gap-3 mt-4">
@@ -476,7 +477,7 @@ export function Reports() {
                           cx="50%"
                           cy="50%"
                           labelLine={true}
-                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                          label={({ name, percent }) => `${name}: ${percent != null ? (percent * 100).toFixed(0) : '0'}%`}
                           outerRadius={100}
                           fill="#8884d8"
                           dataKey="value"
@@ -487,7 +488,7 @@ export function Reports() {
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                           ))}
                         </Pie>
-                        <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                        <Tooltip formatter={(value: any) => typeof value === 'number' ? formatCurrency(value) : value} />
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="flex flex-wrap justify-center gap-3 mt-4">
@@ -516,7 +517,7 @@ export function Reports() {
                       <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                       <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                       <YAxis tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`} />
-                      <Tooltip formatter={(value: number) => formatCurrency(value)} labelFormatter={(label) => `Mesec: ${label}`} />
+                      <Tooltip formatter={(value) => typeof value === 'number' ? formatCurrency(value) : ''} labelFormatter={(label) => `Mesec: ${label}`} />
                       <Legend />
                       <Bar dataKey="total" name="Prihodki (€)" fill="#1f4e79" radius={[4, 4, 0, 0]} animationDuration={1500} animationBegin={300} />
                     </BarChart>
@@ -567,7 +568,7 @@ export function Reports() {
                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                         <XAxis dataKey="month" />
                         <YAxis tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`} />
-                        <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                      <Tooltip formatter={(value) => typeof value === 'number' ? formatCurrency(value) : ''} labelFormatter={(label) => `Mesec: ${label}`} />
                         <Legend />
                         <Line type="monotone" dataKey="total" name="Prihodki (€)" stroke="#1f4e79" strokeWidth={2} dot={{ r: 4 }} animationDuration={1500} />
                       </LineChart>

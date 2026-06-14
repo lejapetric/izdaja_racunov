@@ -496,7 +496,7 @@ const openEditModal = (invoice: Invoice) => {
       {editModalOpen && (
         <>
           <div 
-            className="fixed top-0 left-0 bottom-0 z-40 w-64 bg-black/30 backdrop-blur-sm"
+            className="fixed top-0 left-0 bottom-0 z-40 w-64 bg-black/30 backdrop-blur-sm !mt-0"
             onClick={() => {
               setEditModalOpen(false);
               setEditingInvoiceData(null);
@@ -507,7 +507,8 @@ const openEditModal = (invoice: Invoice) => {
             }}
           />
           
-          <div className="fixed inset-0 z-50 bg-white overflow-y-auto md:left-64">
+
+          <div className="fixed inset-0 z-50 bg-white overflow-y-auto md:left-64 !mt-0">
             <div className="sticky top-0 bg-white border-b z-10 px-4 md:px-6 py-4">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-bold text-gray-800">Uredi račun</h2>
@@ -515,7 +516,6 @@ const openEditModal = (invoice: Invoice) => {
                   onClick={() => {
                     setEditModalOpen(false);
                     setEditingInvoiceData(null);
-                    // Po zaprtju edit modala, odpremo nazaj InvoiceView
                     if (editingInvoiceData) {
                       setSelectedInvoiceId(editingInvoiceData.id);
                     }

@@ -556,8 +556,8 @@ export function OverdueInvoices() {
       {/* Edit Modal */}
       {editModalOpen && editingInvoiceData && (
         <>
-          <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm" onClick={handleCloseEditModal} />
-          <div className="fixed inset-0 z-50 bg-white overflow-y-auto md:left-64">
+          <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm !mt-0" onClick={handleCloseEditModal} />
+          <div className="fixed inset-0 z-50 bg-white overflow-y-auto md:left-64 !mt-0">
             <div className="sticky top-0 bg-white border-b p-4">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-bold">Uredi račun</h2>

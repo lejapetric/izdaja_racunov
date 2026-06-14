@@ -377,7 +377,7 @@ export function InvoiceView({
                   <Edit className="w-4 h-4 mr-2" /> Uredi
                 </Button>
                 <Button variant="outline" className="w-full justify-start" onClick={() => onSendEmail?.(invoice)}>
-                  <Mail className="w-4 h-4 mr-2" /> Pošlji email
+                  <Mail className="w-4 h-4 mr-2" /> Pošlji e-mail
                 </Button>
                 <Button variant="outline" className="w-full justify-start" onClick={() => onSendPost?.(invoice)}>
                   <Package className="w-4 h-4 mr-2" /> Pošlji po pošti

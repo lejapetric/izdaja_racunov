@@ -53,6 +53,7 @@ export type InvoiceStatus =
   | 'overdue'
   | 'paid'
   | 'cancelled'
+  | 'estimate'
 
 export interface Invoice {
   id: string

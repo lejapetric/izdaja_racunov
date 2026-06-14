@@ -90,6 +90,7 @@ export interface Invoice {
 export interface Estimate extends Invoice {
   isEstimate: true
   estimateNumber: string
+  status: InvoiceStatus
 }
 
 export interface User {

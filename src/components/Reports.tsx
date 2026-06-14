@@ -303,23 +303,23 @@ export function Reports() {
           {/* Kontrole za prikaz */}
           <div className="flex justify-between items-center">
             <div className="flex gap-4">
-              <Button 
-                size="lg" 
-                variant={reportType === 'list' ? 'default' : 'outline'}
-                onClick={() => setReportType('list')}
-                className="min-w-[140px]"
-              >
-                <FileText className="w-5 h-5 mr-2" /> Seznam
-              </Button>
-              <Button 
-                size="lg" 
-                variant={reportType === 'analysis' ? 'default' : 'outline'}
-                onClick={() => setReportType('analysis')}
-                className="min-w-[140px]"
-              >
-                <PieChartIcon className="w-5 h-5 mr-2" /> Analiza
-              </Button>
-            </div>
+            <Button 
+              size="lg" 
+              variant={reportType === 'analysis' ? 'default' : 'outline'}
+              onClick={() => setReportType('analysis')}
+              className="min-w-[140px]"
+            >
+              <PieChartIcon className="w-5 h-5 mr-2" /> Analiza
+            </Button>
+            <Button 
+              size="lg" 
+              variant={reportType === 'list' ? 'default' : 'outline'}
+              onClick={() => setReportType('list')}
+              className="min-w-[140px]"
+            >
+              <FileText className="w-5 h-5 mr-2" /> Seznam
+            </Button>
+          </div>
             <div className="flex gap-3">
               <Button variant="outline" onClick={exportToExcel}>
                 <Download className="w-4 h-4 mr-2" /> Excel

@@ -101,6 +101,15 @@ export function InvoiceArchive({ onEditInvoice: _onEditInvoice }: InvoiceArchive
     // Ne zapremo InvoiceView, ostane odprt
   }
   
+const openEditModal = (invoice: Invoice) => {
+  // Dovoli urejanje za vse (tako predračune kot račune)
+  console.log('Urejanje:', invoice.number, 'Tip:', invoice.number?.startsWith('PR') ? 'predračun' : 'račun')
+  setEditingInvoiceData(invoice)
+  setEditModalOpen(true)
+  setSelectedInvoiceId(null)
+}
+
+
   // Email modal functions
   const openEmailModal = (invoice: Invoice) => { 
     setEmailInvoice(invoice); 
@@ -622,11 +631,7 @@ export function InvoiceArchive({ onEditInvoice: _onEditInvoice }: InvoiceArchive
   invoiceId={selectedInvoiceId} 
   open={!!selectedInvoiceId} 
   onClose={() => setSelectedInvoiceId(null)}
-  onEdit={(invoice) => {
-    setEditingInvoiceData(invoice)
-    setEditModalOpen(true)
-    setSelectedInvoiceId(null)
-  }}
+  onEdit={openEditModal}
   onSendEmail={(invoice) => {
     openEmailModal(invoice)
   }}

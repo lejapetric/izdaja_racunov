@@ -81,40 +81,40 @@ export function NewInvoice({ editingInvoice, clearEditing }: NewInvoiceProps) {
     setDueDate(null)
   }
 
-  // Validation based on invoice type
-  const getRequiredFieldsMessage = () => {
-    if (invoiceType === 'draft') {
-      const missing = []
-      if (!selectedCustomer) missing.push('kupec')
-      if (items.length === 0) missing.push('vsaj ena postavka')
-      if (missing.length > 0) return `Manjkajo podatki: ${missing.join(', ')}`
-      return null
-    }
-    if (invoiceType === 'estimate') {
-      const missing = []
-      if (!selectedCustomer) missing.push('kupec')
-      if (items.length === 0) missing.push('vsaj ena postavka')
-      if (!issueDate) missing.push('datum izdaje')
-      if (!serviceDateFrom) missing.push('datum storitve (od)')
-      if (!serviceDateTo) missing.push('datum storitve (do)')
-      if (dateError) missing.push(dateError)
-      if (missing.length > 0) return `Manjkajo podatki: ${missing.join(', ')}`
-      return null
-    }
-    if (invoiceType === 'invoice') {
-      const missing = []
-      if (!selectedCustomer) missing.push('kupec')
-      if (items.length === 0) missing.push('vsaj ena postavka')
-      if (!issueDate) missing.push('datum izdaje')
-      if (!serviceDateFrom) missing.push('datum storitve (od)')
-      if (!serviceDateTo) missing.push('datum storitve (do)')
-      if (!dueDate) missing.push('rok plačila')
-      if (dateError) missing.push(dateError)
-      if (missing.length > 0) return `Manjkajo podatki: ${missing.join(', ')}`
-      return null
-    }
+// Validation based on invoice type
+const getRequiredFieldsMessage = () => {
+  if (invoiceType === 'draft') {
+    const missing = []
+    if (!selectedCustomer) missing.push('kupec')
+    if (items.length === 0) missing.push('vsaj ena postavka')
+    if (missing.length > 0) return `Manjkajo podatki: ${missing.join(', ')}`
     return null
   }
+  if (invoiceType === 'estimate') {
+    const missing = []
+    if (!selectedCustomer) missing.push('kupec')
+    if (items.length === 0) missing.push('vsaj ena postavka')
+    if (!issueDate) missing.push('datum izdaje')
+    if (!serviceDateFrom) missing.push('datum storitve (od)')
+    if (!serviceDateTo) missing.push('datum storitve (do)')
+    if (dateError) missing.push(dateError)
+    if (missing.length > 0) return `Manjkajo podatki: ${missing.join(', ')}`
+    return null
+  }
+  if (invoiceType === 'invoice') {
+    const missing = []
+    if (!selectedCustomer) missing.push('kupec')
+    if (items.length === 0) missing.push('vsaj ena postavka')
+    if (!issueDate) missing.push('datum izdaje')
+    if (!serviceDateFrom) missing.push('datum storitve (od)')
+    if (!serviceDateTo) missing.push('datum storitve (do)')
+    if (!dueDate) missing.push('rok plačila')
+    if (dateError) missing.push(dateError)
+    if (missing.length > 0) return `Manjkajo podatki: ${missing.join(', ')}`
+    return null
+  }
+  return null
+}
 
   // Check if form is valid for current invoice type
   const isFormValid = () => {
@@ -160,9 +160,9 @@ export function NewInvoice({ editingInvoice, clearEditing }: NewInvoiceProps) {
   }
 
   const totals = calculateTotals()
+  const validationMessage = getRequiredFieldsMessage()
 
   const saveInvoice = () => {
-    const validationMessage = getRequiredFieldsMessage()
     if (validationMessage) {
       alert(validationMessage)
       return
@@ -257,7 +257,6 @@ export function NewInvoice({ editingInvoice, clearEditing }: NewInvoiceProps) {
     }
   }
 
-  const validationMessage = getRequiredFieldsMessage()
   const isValid = isFormValid()
 
   return (
@@ -454,7 +453,7 @@ export function NewInvoice({ editingInvoice, clearEditing }: NewInvoiceProps) {
       </Card>
 
       <div className="flex justify-between items-center">
-        {validationMessage && invoiceType !== 'draft' && (
+        {validationMessage && (
           <div className="text-sm text-amber-600 flex items-center gap-2">
             <AlertCircle className="w-4 h-4" />
             {validationMessage}

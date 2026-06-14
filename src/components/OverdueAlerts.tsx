@@ -1,19 +1,32 @@
-// src/components/OverdueAlerts.tsx
+// src/components/OverdueInvoices.tsx
 import { useState } from 'react'
-import { useInvoices } from '@/hooks/useInvoices'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { Mail, CheckCircle, Eye, AlertCircle, Clock, Send, Package, Ban, FileText } from 'lucide-react'
+import { useInvoices } from '@/hooks/useInvoices'
 import { InvoiceView } from './invoice/InvoiceView'
+import { InvoiceFilters } from './invoice/InvoiceFilters'
+import { InvoiceStatus } from '@/types'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Send, Ban, History, Package, Mail, X, FileText, CheckCircle, AlertTriangle } from 'lucide-react'
+import { EditInvoice } from './invoice/EditInvoice'
+import { mockAuditLogs } from '@/data/mockData'
+import { Badge } from '@/components/ui/badge'
 
-export function OverdueAlerts() {
-  const { invoices, updateInvoice, customers } = useInvoices()
+// Status opcije za zapadle račune
+const overdueStatusOptions: { value: InvoiceStatus | 'all'; label: string }[] = [
+  { value: 'all', label: 'Vsi' },
+  { value: 'overdue', label: 'Zapadli' },
+  { value: 'paid', label: 'Plačani' },
+  { value: 'cancelled', label: 'Stornirani' },
+]
+
+export function OverdueInvoices() {
+  const { invoices, customers, updateInvoice } = useInvoices()
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null)
   
   // Email modal
@@ -28,14 +41,88 @@ export function OverdueAlerts() {
   const [postAddress, setPostAddress] = useState('')
   const [postNote, setPostNote] = useState('')
   
+  // Edit modal
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [editingInvoiceData, setEditingInvoiceData] = useState<any>(null)
+  
   // Mark as Paid modal
   const [paidModalOpen, setPaidModalOpen] = useState(false)
   const [paidInvoice, setPaidInvoice] = useState<any>(null)
   
-  const overdue = invoices.filter(inv => inv.status === 'overdue')
-  const totalOverdue = overdue.reduce((sum, inv) => sum + inv.totalGross, 0)
+  // Cancel modal
+  const [cancelModalOpen, setCancelModalOpen] = useState(false)
+  const [cancelInvoice, setCancelInvoice] = useState<any>(null)
+  const [cancelReason, setCancelReason] = useState('')
+  
+  // Audit modal
+  const [auditModalOpen, setAuditModalOpen] = useState(false)
+  const [auditInvoice, setAuditInvoice] = useState<any>(null)
+  
+  // Filtri
+  const [selectedNumber, setSelectedNumber] = useState('')
+  const [searchNumber, setSearchNumber] = useState('')
+  const [selectedCustomer, setSelectedCustomer] = useState<{ id: string; name: string; taxId: string } | null>(null)
+  const [searchCustomer, setSearchCustomer] = useState('')
+  const [selectedMunicipality, setSelectedMunicipality] = useState('')
+  const [searchMunicipality, setSearchMunicipality] = useState('')
+  const [priceMin, setPriceMin] = useState<number | ''>('')
+  const [priceMax, setPriceMax] = useState<number | ''>('')
+  const [discountMin, setDiscountMin] = useState<number | ''>('')
+  const [discountMax, setDiscountMax] = useState<number | ''>('')
+  const [dateFrom, setDateFrom] = useState<Date | null>(null)
+  const [dateTo, setDateTo] = useState<Date | null>(null)
+  const [dueDateFrom, setDueDateFrom] = useState<Date | null>(null)
+  const [dueDateTo, setDueDateTo] = useState<Date | null>(null)
+  const [selectedStatus, setSelectedStatus] = useState<InvoiceStatus | 'all'>('all')
+  const [activeTab, setActiveTab] = useState('all')
 
-  // Email modal functions
+  // Pridobi samo zapadle račune (status === 'overdue')
+  const overdueInvoices = invoices.filter(inv => inv.status === 'overdue')
+
+  // Unique podatki za filtre
+  const uniqueNumbers = Array.from(new Map(overdueInvoices.map(inv => [inv.number, inv.number])).entries()).map(([number]) => ({ number })).filter(item => item.number.toLowerCase().includes(searchNumber.toLowerCase()))
+  const uniqueCustomers = Array.from(new Map(overdueInvoices.map(inv => [inv.customerId, { id: inv.customerId, name: inv.customerName, taxId: inv.customerTaxId }])).entries()).map(([_, customer]) => customer).filter(c => c.name.toLowerCase().includes(searchCustomer.toLowerCase()) || c.taxId.toLowerCase().includes(searchCustomer.toLowerCase()))
+  const uniqueMunicipalities = Array.from(new Set(overdueInvoices.map(inv => { const customer = customers.find(c => c.id === inv.customerId); const address = customer?.address || ''; const parts = address.split(','); return parts.length > 1 ? parts[parts.length - 1].trim() : address.trim(); }))).filter(m => m.toLowerCase().includes(searchMunicipality.toLowerCase()))
+
+  const filterInvoices = (statusFilter?: string) => overdueInvoices.filter(inv => {
+    if (selectedNumber && inv.number !== selectedNumber) return false
+    if (selectedCustomer && inv.customerId !== selectedCustomer.id) return false
+    if (selectedMunicipality) { const customer = customers.find(c => c.id === inv.customerId); const address = customer?.address || ''; const parts = address.split(','); const municipality = parts.length > 1 ? parts[parts.length - 1].trim() : address.trim(); if (!municipality.toLowerCase().includes(selectedMunicipality.toLowerCase())) return false }
+    if (priceMin !== '' && inv.totalGross < priceMin) return false
+    if (priceMax !== '' && inv.totalGross > priceMax) return false
+    const invoiceDiscountPercent = inv.discountPercent ?? 0
+    if (discountMin !== '' && invoiceDiscountPercent < discountMin) return false
+    if (discountMax !== '' && invoiceDiscountPercent > discountMax) return false
+    const dateFromStr = dateFrom ? dateFrom.toISOString().split('T')[0] : ''; const dateToStr = dateTo ? dateTo.toISOString().split('T')[0] : ''
+    if (dateFromStr && inv.issueDate < dateFromStr) return false; if (dateToStr && inv.issueDate > dateToStr) return false
+    const dueFromStr = dueDateFrom ? dueDateFrom.toISOString().split('T')[0] : ''; const dueToStr = dueDateTo ? dueDateTo.toISOString().split('T')[0] : ''
+    if (dueFromStr && inv.dueDate < dueFromStr) return false; if (dueToStr && inv.dueDate > dueToStr) return false
+    if (selectedStatus !== 'all') {
+      if (inv.status !== selectedStatus) return false
+    }
+    if (statusFilter) {
+      if (inv.status !== statusFilter) return false
+    }
+    return true
+  })
+
+  const filteredAll = filterInvoices()
+  const filteredOverdue = filterInvoices('overdue')
+  const filteredPaid = filterInvoices('paid')
+  const filteredCancelled = filterInvoices('cancelled')
+
+  const clearAllFilters = () => { 
+    setSelectedNumber(''); setSearchNumber(''); setSelectedCustomer(null); setSearchCustomer('')
+    setSelectedMunicipality(''); setSearchMunicipality(''); setPriceMin(''); setPriceMax('')
+    setDiscountMin(''); setDiscountMax(''); setDateFrom(null); setDateTo(null)
+    setDueDateFrom(null); setDueDateTo(null); setSelectedStatus('all')
+  }
+
+  const handleInvoiceClick = (invoice: any) => {
+    setSelectedInvoiceId(invoice.id)
+  }
+
+  // Email modal functions (opomin)
   const openEmailModal = (invoice: any) => { 
     setEmailInvoice(invoice)
     setEmailSubject(`Opomin za plačilo - Račun ${invoice.number}`)
@@ -45,7 +132,6 @@ export function OverdueAlerts() {
   
   const handleSendEmail = () => { 
     if (!emailInvoice) return
-    console.log(`📧 Opomin poslan na naslov kupca ${emailInvoice.customerName}`)
     updateInvoice(emailInvoice.id, { 
       note: emailInvoice.note 
         ? `${emailInvoice.note}\n\n[${new Date().toLocaleDateString('sl-SI')}] Poslan opomin za plačilo po e-pošti.` 
@@ -94,128 +180,170 @@ export function OverdueAlerts() {
     setPaidModalOpen(false)
     setPaidInvoice(null)
   }
+  
+  // Cancel modal functions
+  const openCancelModal = (invoice: any) => {
+    setCancelInvoice(invoice)
+    setCancelReason('')
+    setCancelModalOpen(true)
+  }
+  
+  const handleCancelInvoice = () => {
+    if (!cancelInvoice || !cancelReason.trim()) {
+      alert('Prosimo, vnesite razlog za stornacijo!')
+      return
+    }
+    updateInvoice(cancelInvoice.id, {
+      status: 'cancelled',
+      cancelledReason: cancelReason,
+      note: cancelInvoice.note 
+        ? `${cancelInvoice.note}\n\n[${new Date().toLocaleDateString('sl-SI')}] Račun storniran. Razlog: ${cancelReason}` 
+        : `[${new Date().toLocaleDateString('sl-SI')}] Račun storniran. Razlog: ${cancelReason}`
+    })
+    setCancelModalOpen(false)
+    setCancelInvoice(null)
+    setCancelReason('')
+  }
+  
+  // Audit modal functions
+  const openAuditModal = (invoice: any) => {
+    setAuditInvoice(invoice)
+    setAuditModalOpen(true)
+  }
+  
+  const getAuditLogsForInvoice = (invoiceId: string) => {
+    return mockAuditLogs.filter(log => log.invoiceId === invoiceId).sort((a, b) => 
+      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    )
+  }
+  
+  // Edit funkcije
+  const handleEditInvoice = (invoice: any) => {
+    setEditingInvoiceData(invoice)
+    setSelectedInvoiceId(null)
+    setTimeout(() => {
+      setEditModalOpen(true)
+    }, 50)
+  }
+
+  const handleCloseEditModal = () => {
+    setEditModalOpen(false)
+    if (editingInvoiceData) {
+      setTimeout(() => {
+        setSelectedInvoiceId(editingInvoiceData.id)
+        setEditingInvoiceData(null)
+      }, 50)
+    } else {
+      setEditingInvoiceData(null)
+    }
+  }
+  
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'issued': return 'Izdan'
+      case 'sent': return 'Poslan'
+      case 'overdue': return 'Zapadel'
+      case 'paid': return 'Plačan'
+      case 'cancelled': return 'Storniran'
+      default: return status
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'issued': return 'bg-blue-100 text-blue-800'
+      case 'sent': return 'bg-green-100 text-green-800'
+      case 'overdue': return 'bg-red-100 text-red-800'
+      case 'paid': return 'bg-emerald-100 text-emerald-800'
+      case 'cancelled': return 'bg-gray-100 text-gray-800'
+      default: return 'bg-yellow-100 text-yellow-800'
+    }
+  }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Zapadli računi</h1>
-        <p className="text-sm text-gray-500 mt-1">Pregled in upravljanje zapadlih računov</p>
+      <div className="flex justify-between items-center flex-wrap gap-4">
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold">Zapadli računi</h1>
+        </div>
       </div>
 
-      {overdue.length === 0 ? (
-        <Card>
-          <CardContent className="pt-12 pb-12 text-center">
-            <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
-            <p className="text-gray-500">Ni zapadlih računov</p>
-            <p className="text-sm text-gray-400 mt-1">Vsi računi so plačani ali še niso zapadli</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          {/* Info Banner */}
-          <Card className="bg-red-50 border-red-200">
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-center gap-3">
-                <AlertCircle className="w-5 h-5 text-red-600" />
-                <div>
-                  <span className="font-medium text-red-800">
-                    {overdue.length} zapadlih računov
-                  </span>
-                  <span className="text-red-600 ml-2">
-                    Skupaj: {formatCurrency(totalOverdue)}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+      <Card>
+        <CardContent className="pt-6">
+          <InvoiceFilters 
+            searchNumber={searchNumber} setSearchNumber={setSearchNumber} selectedNumber={selectedNumber} setSelectedNumber={setSelectedNumber}
+            searchCustomer={searchCustomer} setSearchCustomer={setSearchCustomer} selectedCustomer={selectedCustomer} setSelectedCustomer={setSelectedCustomer}
+            searchMunicipality={searchMunicipality} setSearchMunicipality={setSearchMunicipality} selectedMunicipality={selectedMunicipality} setSelectedMunicipality={setSelectedMunicipality}
+            priceMin={priceMin} setPriceMin={setPriceMin} priceMax={priceMax} setPriceMax={setPriceMax}
+            discountMin={discountMin} setDiscountMin={setDiscountMin} discountMax={discountMax} setDiscountMax={setDiscountMax}
+            dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo}
+            dueDateFrom={dueDateFrom} setDueDateFrom={setDueDateFrom} dueDateTo={dueDateTo} setDueDateTo={setDueDateTo}
+            selectedStatus={selectedStatus as any} setSelectedStatus={setSelectedStatus as any}
+            uniqueNumbers={uniqueNumbers} uniqueCustomers={uniqueCustomers} uniqueMunicipalities={uniqueMunicipalities} statusOptions={overdueStatusOptions as any}
+            clearAllFilters={clearAllFilters}
+          />
+          
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="all">Vsi ({filteredAll.length})</TabsTrigger>
+              <TabsTrigger value="overdue">Zapadli ({filteredOverdue.length})</TabsTrigger>
+              <TabsTrigger value="paid">Plačani ({filteredPaid.length})</TabsTrigger>
+              <TabsTrigger value="cancelled">Stornirani ({filteredCancelled.length})</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="all">
+              <OverdueTable 
+                invoices={filteredAll}
+                customers={customers}
+                onInvoiceClick={handleInvoiceClick}
+                getStatusLabel={getStatusLabel}
+                getStatusColor={getStatusColor}
+              />
+            </TabsContent>
+            <TabsContent value="overdue">
+              <OverdueTable 
+                invoices={filteredOverdue}
+                customers={customers}
+                onInvoiceClick={handleInvoiceClick}
+                getStatusLabel={getStatusLabel}
+                getStatusColor={getStatusColor}
+              />
+            </TabsContent>
+            <TabsContent value="paid">
+              <OverdueTable 
+                invoices={filteredPaid}
+                customers={customers}
+                onInvoiceClick={handleInvoiceClick}
+                getStatusLabel={getStatusLabel}
+                getStatusColor={getStatusColor}
+              />
+            </TabsContent>
+            <TabsContent value="cancelled">
+              <OverdueTable 
+                invoices={filteredCancelled}
+                customers={customers}
+                onInvoiceClick={handleInvoiceClick}
+                getStatusLabel={getStatusLabel}
+                getStatusColor={getStatusColor}
+              />
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
 
-          {/* Overdue Invoices Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Seznam zapadlih računov</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Številka</TableHead>
-                      <TableHead>Kupec</TableHead>
-                      <TableHead className="text-right">Znesek</TableHead>
-                      <TableHead>Datum zapadlosti</TableHead>
-                      <TableHead>Dni zamude</TableHead>
-                      <TableHead className="text-center">Akcije</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {overdue.map(inv => {
-                      const daysLate = Math.floor((new Date().getTime() - new Date(inv.dueDate).getTime()) / (1000 * 3600 * 24))
-                      
-                      return (
-                        <TableRow key={inv.id} className="bg-red-50">
-                          <TableCell className="font-mono font-medium">{inv.number}</TableCell>
-                          <TableCell>
-                            <div className="font-medium">{inv.customerName}</div>
-                            <div className="text-xs text-gray-500">{inv.customerTaxId}</div>
-                          </TableCell>
-                          <TableCell className="text-right font-semibold text-red-600">
-                            {formatCurrency(inv.totalGross)}
-                          </TableCell>
-                          <TableCell>{formatDate(inv.dueDate)}</TableCell>
-                          <TableCell>
-                            <Badge variant="secondary" className="bg-red-100 text-red-800">
-                              <Clock className="w-3 h-3 mr-1" />
-                              {daysLate} dni
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-1 justify-center flex-wrap">
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
-                                title="Prikaži račun"
-                                onClick={() => setSelectedInvoiceId(inv.id)}
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="secondary" 
-                                onClick={() => openEmailModal(inv)}
-                                title="Pošlji opomin po e-pošti"
-                              >
-                                <Mail className="w-4 h-4" />
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="secondary" 
-                                onClick={() => openPostModal(inv)}
-                                title="Pošlji opomin po pošti"
-                              >
-                                <Package className="w-4 h-4" />
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                onClick={() => openPaidModal(inv)}
-                                className="bg-green-600 hover:bg-green-700"
-                                title="Označi kot plačano"
-                              >
-                                <CheckCircle className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </>
-      )}
+      <Card className="bg-red-50 border-red-200">
+        <CardContent className="pt-4 pb-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5" />
+            <div className="text-sm text-red-700">
+              <p className="font-medium">Informacije o zapadlih računih</p>
+              <p className="text-xs mt-1">Računi so označeni kot zapadli, ko mine rok plačila. Pošljete jim lahko opomine ali jih označite kot plačane. Storniran račun je trajno razveljavljen.</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Email Modal */}
+      {/* MODAL ZA E-POŠTO (opomin) */}
       <Dialog open={emailModalOpen} onOpenChange={setEmailModalOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -226,7 +354,7 @@ export function OverdueAlerts() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <label className="text-sm font-medium block mb-1 text-gray-700">📧 Prejemnik (e-pošta)</label>
+              <label className="text-sm font-medium block mb-1 text-gray-700">Prejemnik (e-pošta) *</label>
               <Input 
                 value={customers.find(c => c.id === emailInvoice?.customerId)?.email || 'E-pošta ni vpisan'} 
                 disabled 
@@ -239,21 +367,21 @@ export function OverdueAlerts() {
             </div>
             <div>
               <label className="text-sm font-medium block mb-1 text-gray-700">Sporočilo *</label>
-              <Textarea value={emailBody} onChange={(e) => setEmailBody(e.target.value)} rows={8} />
+              <Textarea value={emailBody} onChange={(e) => setEmailBody(e.target.value)} rows={10} />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEmailModalOpen(false)}>
-              <Ban className="w-4 h-4 mr-2" /> Prekliči
+              <X className="w-4 h-4 mr-2" /> Prekliči
             </Button>
-            <Button onClick={handleSendEmail} className="bg-blue-600 hover:bg-blue-700">
+            <Button onClick={handleSendEmail} className="bg-blue-600">
               <Send className="w-4 h-4 mr-2" /> Pošlji opomin
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Post Modal */}
+      {/* MODAL ZA NAVADNO POŠTO */}
       <Dialog open={postModalOpen} onOpenChange={setPostModalOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -270,7 +398,12 @@ export function OverdueAlerts() {
             </div>
             <div>
               <label className="text-sm font-medium block mb-1 text-gray-700">Naslov za pošiljanje *</label>
-              <textarea value={postAddress} onChange={(e) => setPostAddress(e.target.value)} className="w-full min-h-[100px] px-3 py-2 text-sm border rounded-md" placeholder="Ime in priimek / podjetje&#10;Ulica in hišna številka&#10;Poštna številka in kraj" />
+              <textarea 
+                value={postAddress} 
+                onChange={(e) => setPostAddress(e.target.value)} 
+                className="w-full min-h-[100px] px-3 py-2 text-sm border rounded-md"
+                placeholder="Ime in priimek / podjetje&#10;Ulica in hišna številka&#10;Poštna številka in kraj"
+              />
             </div>
             <div>
               <label className="text-sm font-medium block mb-1 text-gray-700">Opomba (neobvezno)</label>
@@ -281,14 +414,14 @@ export function OverdueAlerts() {
             <Button variant="outline" onClick={() => setPostModalOpen(false)}>
               <X className="w-4 h-4 mr-2" /> Prekliči
             </Button>
-            <Button onClick={handleSendPost} className="bg-blue-600 hover:bg-blue-700">
+            <Button onClick={handleSendPost} className="bg-blue-600">
               <Package className="w-4 h-4 mr-2" /> Potrdi pošiljanje
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Mark as Paid Modal */}
+      {/* MODAL ZA PLAČILO */}
       <Dialog open={paidModalOpen} onOpenChange={setPaidModalOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -298,47 +431,265 @@ export function OverdueAlerts() {
             </DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-yellow-800">Pozor!</p>
-                  <p className="text-sm text-yellow-700 mt-1">
-                    S tem dejanjem boste račun <span className="font-semibold">{paidInvoice?.number}</span> 
-                    za kupca <span className="font-semibold">{paidInvoice?.customerName}</span> 
-                    označili kot <span className="font-semibold text-green-600">PLAČAN</span>.
-                  </p>
-                </div>
-              </div>
+            <div className="bg-yellow-50 border border-yellow-200 rounded p-4 mb-4">
+              <p className="text-sm text-yellow-800">
+                S tem dejanjem boste račun <span className="font-semibold">{paidInvoice?.number}</span>
+                za kupca <span className="font-semibold">{paidInvoice?.customerName}</span>
+                označili kot <span className="font-semibold text-green-600">PLAČAN</span>.
+              </p>
             </div>
             <p className="text-sm text-gray-600">Ste prepričani, da želite to narediti?</p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPaidModalOpen(false)}>
-              <X className="w-4 h-4 mr-2" /> Prekliči
-            </Button>
-            <Button onClick={handleMarkAsPaid} className="bg-green-600 hover:bg-green-700">
+            <Button variant="outline" onClick={() => setPaidModalOpen(false)}>Prekliči</Button>
+            <Button onClick={handleMarkAsPaid} className="bg-green-600">
               <CheckCircle className="w-4 h-4 mr-2" /> Potrdi plačilo
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Invoice View Modal */}
+      {/* MODAL ZA STORNIRANJE */}
+      <Dialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-700">
+              <Ban className="w-5 h-5 text-red-600" />
+              Storniraj račun
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-5">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-base font-semibold text-red-800">OPOZORILO!</p>
+                  <p className="text-sm text-red-700 mt-2 leading-relaxed">
+                    Storniranje računa <span className="font-semibold">{cancelInvoice?.number}</span> 
+                    za kupca <span className="font-semibold">{cancelInvoice?.customerName}</span> 
+                    v znesku <span className="font-semibold">{formatCurrency(cancelInvoice?.totalGross)}</span> 
+                    je <span className="font-semibold underline">TRAJNO</span> in ga <span className="font-semibold underline">ni mogoče razveljaviti</span>.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-2 text-gray-700">
+                Razlog za stornacijo <span className="text-red-500">*</span>
+              </label>
+              <Textarea 
+                value={cancelReason} 
+                onChange={(e) => setCancelReason(e.target.value)} 
+                placeholder="Vpišite podroben razlog za stornacijo (obvezno)..."
+                rows={4}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelModalOpen(false)}>
+              <X className="w-4 h-4 mr-2" /> Prekliči
+            </Button>
+            <Button variant="destructive" onClick={handleCancelInvoice} disabled={!cancelReason.trim()}>
+              <Ban className="w-4 h-4 mr-2" /> Storniraj račun
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* MODAL ZA REVIZIJO */}
+      <Dialog open={auditModalOpen} onOpenChange={setAuditModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader className="sticky top-0 bg-white pb-4 border-b">
+            <DialogTitle className="flex items-center gap-2 text-gray-800">
+              <History className="w-5 h-5 text-blue-600" />
+              Dnevnik sprememb - {auditInvoice?.number}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-3">
+            {auditInvoice && getAuditLogsForInvoice(auditInvoice.id).length > 0 ? (
+              getAuditLogsForInvoice(auditInvoice.id).map((log, index) => (
+                <div key={log.id} className="relative">
+                  {index < getAuditLogsForInvoice(auditInvoice.id).length - 1 && (
+                    <div className="absolute left-[27px] top-12 bottom-0 w-0.5 bg-gray-200"></div>
+                  )}
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0 z-10">
+                      {log.action === 'created' && (
+                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                          <FileText className="w-5 h-5 text-green-600" />
+                        </div>
+                      )}
+                      {log.action === 'edited' && (
+                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                          <History className="w-5 h-5 text-blue-600" />
+                        </div>
+                      )}
+                      {log.action === 'status_changed' && (
+                        <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                          <FileText className="w-5 h-5 text-yellow-600" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 bg-gray-50 rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="text-sm font-semibold text-gray-900">{log.user}</span>
+                        <span className="text-xs text-gray-500">{formatDate(log.timestamp)}</span>
+                      </div>
+                      <p className="text-sm text-gray-700">{log.details}</p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <History className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <p>Za ta račun ni zabeleženih sprememb.</p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setAuditModalOpen(false)}>Zapri</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Modal */}
+      {editModalOpen && editingInvoiceData && (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm" onClick={handleCloseEditModal} />
+          <div className="fixed inset-0 z-50 bg-white overflow-y-auto md:left-64">
+            <div className="sticky top-0 bg-white border-b p-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold">Uredi račun</h2>
+                <button onClick={handleCloseEditModal} className="p-2 bg-gray-100 rounded-full">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            <div className="p-6">
+              <EditInvoice 
+                editingInvoice={editingInvoiceData} 
+                onClose={handleCloseEditModal}
+                onSaved={handleCloseEditModal}
+              />
+            </div>
+          </div>
+        </>
+      )}
+
       <InvoiceView 
         invoiceId={selectedInvoiceId} 
         open={!!selectedInvoiceId} 
         onClose={() => setSelectedInvoiceId(null)}
+        onEdit={handleEditInvoice}
         onSendEmail={openEmailModal}
         onSendPost={openPostModal}
         onMarkAsPaid={(invoiceId) => {
           const invoice = invoices.find(inv => inv.id === invoiceId)
           if (invoice) openPaidModal(invoice)
         }}
+        onCancel={openCancelModal}
+        onAudit={openAuditModal}
+        documentType="invoice" 
       />
     </div>
   )
 }
 
-// Potreben import za X ikono
-import { X } from 'lucide-react'
+// Tabela za zapadle račune
+interface OverdueTableProps {
+  invoices: any[]
+  customers: any[]
+  onInvoiceClick: (invoice: any) => void
+  getStatusLabel: (status: string) => string
+  getStatusColor: (status: string) => string
+}
+
+function OverdueTable({ invoices, customers, onInvoiceClick, getStatusLabel, getStatusColor }: OverdueTableProps) {
+  const getDaysLate = (dueDate: string) => {
+    const today = new Date()
+    const due = new Date(dueDate)
+    const diffTime = today.getTime() - due.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    return diffDays
+  }
+
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead className="px-1 py-3 text-left w-[110px]">Številka</TableHead>
+          <TableHead className="px-4 py-3 text-center">Datum</TableHead>
+          <TableHead className="px-4 py-3 text-left w-[240px]">Kupec</TableHead>
+          <TableHead className="px-4 py-3 text-left">Občina</TableHead>
+          <TableHead className="px-4 py-3 text-right">Neto</TableHead>
+          <TableHead className="px-4 py-3 text-right">DDV</TableHead>
+          <TableHead className="px-4 py-3 text-right">Bruto</TableHead>
+          <TableHead className="px-4 py-3 text-center w-[90px]">Popust</TableHead>
+          <TableHead className="px-4 py-3 text-center w-[120px]">Status</TableHead>
+          <TableHead className="px-4 py-3 text-center w-[140px]">Zapadlost</TableHead>
+          <TableHead className="px-4 py-3 text-center w-[150px]"></TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {invoices.map(inv => {
+          const customer = customers.find(c => c.id === inv.customerId)
+          const address = customer?.address || ''
+          const parts = address.split(',')
+          const municipality = parts.length > 1 ? parts[parts.length - 1].trim() : address.trim()
+          const daysLate = getDaysLate(inv.dueDate)
+          
+          return (
+            <TableRow 
+              key={inv.id} 
+              className={`${inv.status === 'overdue' ? 'bg-red-50' : ''} cursor-pointer hover:bg-gray-50 transition-colors`}
+              onClick={() => onInvoiceClick(inv)}
+            >
+              <TableCell className="px-2 py-2 font-left">{inv.number}</TableCell>
+              <TableCell className="px-4 py-2 text-center">{formatDate(inv.issueDate)}</TableCell>
+              <TableCell className="px-4 py-2">
+                <div className="font-medium">{inv.customerName}</div>
+                <div className="text-xs text-gray-500">{inv.customerTaxId}</div>
+              </TableCell>
+              <TableCell className="px-4 py-2">{municipality}</TableCell>
+              <TableCell className="px-4 py-2 text-right">{formatCurrency(inv.totalNet)}</TableCell>
+              <TableCell className="px-4 py-2 text-right">{formatCurrency(inv.totalVat)}</TableCell>
+              <TableCell className="px-4 py-2 text-right font-semibold">{formatCurrency(inv.totalGross)}</TableCell>
+              <TableCell className="px-4 py-2 text-center">{inv.discountPercent ?? 0}%</TableCell>
+              <TableCell className="px-4 py-2 text-center">
+                <Badge className={getStatusColor(inv.status)}>
+                  {getStatusLabel(inv.status)}
+                </Badge>
+              </TableCell>
+              <TableCell className="px-4 py-2 text-center">
+                {formatDate(inv.dueDate)}
+                {inv.status === 'overdue' && (
+                  <div className="text-xs text-red-500">{daysLate} dni zamude</div>
+                )}
+              </TableCell>
+              <TableCell className="px-4 py-2 text-center" onClick={(e) => e.stopPropagation()}>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  className="text-xs h-7 px-2"
+                  onClick={() => onInvoiceClick(inv)}
+                >
+                  Več o računu
+                </Button>
+              </TableCell>
+            </TableRow>
+          )
+        })}
+        {invoices.length === 0 && (
+          <TableRow>
+            <TableCell colSpan={11} className="text-center text-gray-400 py-8">
+              Ni zapadlih računov
+            </TableCell>
+          </TableRow>
+        )}
+      </TableBody>
+    </Table>
+  )
+}
+
+export { OverdueInvoices as OverdueAlerts }

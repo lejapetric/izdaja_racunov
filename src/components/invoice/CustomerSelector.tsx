@@ -47,7 +47,7 @@ export function CustomerSelector({
             <Search className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
             <input
               type="text"
-              placeholder="Iskanje po imenu, naslovu ali davčni številki..."
+              placeholder="Iskanje po nazivu, naslovu ali davčni številki..."
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value)

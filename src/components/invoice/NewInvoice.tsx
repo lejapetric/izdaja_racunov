@@ -27,7 +27,7 @@ export function NewInvoice({ editingInvoice, clearEditing }: NewInvoiceProps) {
   const { customers, addInvoice, updateInvoice, services } = useInvoices()
   const [modalOpen, setModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<InvoiceItem | null>(null)
-  const [invoiceType, setInvoiceType] = useState<InvoiceType>('invoice')
+  const [invoiceType, setInvoiceType] = useState<InvoiceType>('draft')
   
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -252,9 +252,7 @@ const getRequiredFieldsMessage = () => {
   }
 
   const deleteItem = (id: string) => {
-    if (confirm('Ali ste prepričani, da želite izbrisati to postavko?')) {
-      setItems(items.filter(i => i.id !== id))
-    }
+    setItems(items.filter(i => i.id !== id))
   }
 
   const isValid = isFormValid()
@@ -377,7 +375,7 @@ const getRequiredFieldsMessage = () => {
           </div>
 
           <div className="pt-4 border-t">
-            <label className="text-sm font-medium mb-2 block flex items-center gap-1"><AlertCircle className="w-4 h-4" /> Opombe</label>
+            <label className="text-sm font-medium mb-2 block flex items-center gap-1"> Opombe</label>
             <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Sklic na naročilnico, dodatna pojasnila, način plačila..." className="w-full min-h-[80px] px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-y" rows={3} />
           </div>
         </CardContent>
@@ -396,7 +394,7 @@ const getRequiredFieldsMessage = () => {
               <TableRow>
                 <TableHead>Storitev</TableHead>
                 <TableHead className="text-right">Količina</TableHead>
-                <TableHead>En.</TableHead>
+                <TableHead className="text-right">Enota</TableHead>
                 <TableHead className="text-right">Cena/enoto (€)</TableHead>
                 <TableHead className="text-right">Popust %</TableHead>
                 <TableHead className="text-right">Neto</TableHead>
@@ -425,7 +423,7 @@ const getRequiredFieldsMessage = () => {
                     )}
                   </TableCell>
                   <TableCell className="text-right">{item.quantity}</TableCell>
-                  <TableCell>{item.unit}</TableCell>
+                  <TableCell className="text-right">{item.unit}</TableCell>
                   <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
                   <TableCell className="text-right">{item.discountPercent || 0}%</TableCell>
                   <TableCell className="text-right font-medium">{formatCurrency(item.net)}</TableCell>
@@ -454,7 +452,7 @@ const getRequiredFieldsMessage = () => {
 
       <div className="flex justify-between items-center">
         {validationMessage && (
-          <div className="text-sm text-amber-600 flex items-center gap-2">
+          <div className="text-sm text-blue-600 flex items-center gap-2">
             <AlertCircle className="w-4 h-4" />
             {validationMessage}
           </div>

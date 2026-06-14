@@ -61,19 +61,41 @@ export function EditInvoice({ editingInvoice, onClose, onSaved }: EditInvoicePro
     }
   }, [serviceDateFrom, serviceDateTo])
 
-  useEffect(() => {
-    if (editingInvoice) {
-      const cust = customers.find(c => c.id === editingInvoice.customerId)
-      setSelectedCustomer(cust || null)
-      setItems(editingInvoice.items)
-      if (editingInvoice.issueDate) setIssueDate(new Date(editingInvoice.issueDate))
-      if (editingInvoice.serviceDateFrom) setServiceDateFrom(new Date(editingInvoice.serviceDateFrom))
-      if (editingInvoice.serviceDateTo) setServiceDateTo(new Date(editingInvoice.serviceDateTo))
-      if (editingInvoice.dueDate) setDueDate(new Date(editingInvoice.dueDate))
-      setNote(editingInvoice.note || '')
-      if (cust) setSearchTerm(cust.name)
+ useEffect(() => {
+  if (editingInvoice) {
+    const cust = customers.find(c => c.id === editingInvoice.customerId)
+    setSelectedCustomer(cust || null)
+    setItems(editingInvoice.items)
+    
+    // Fix: Only set dates if they are valid
+    if (editingInvoice.issueDate && editingInvoice.issueDate !== 'null') {
+      setIssueDate(new Date(editingInvoice.issueDate))
+    } else {
+      setIssueDate(null)
     }
-  }, [editingInvoice, customers])
+    
+    if (editingInvoice.serviceDateFrom && editingInvoice.serviceDateFrom !== 'null') {
+      setServiceDateFrom(new Date(editingInvoice.serviceDateFrom))
+    } else {
+      setServiceDateFrom(null)
+    }
+    
+    if (editingInvoice.serviceDateTo && editingInvoice.serviceDateTo !== 'null') {
+      setServiceDateTo(new Date(editingInvoice.serviceDateTo))
+    } else {
+      setServiceDateTo(null)
+    }
+    
+    if (editingInvoice.dueDate && editingInvoice.dueDate !== 'null') {
+      setDueDate(new Date(editingInvoice.dueDate))
+    } else {
+      setDueDate(null)
+    }
+    
+    setNote(editingInvoice.note || '')
+    if (cust) setSearchTerm(cust.name)
+  }
+}, [editingInvoice, customers])
 
   // Preveri ali je obrazec veljaven za trenutni tip
   const isFormValid = () => {

@@ -158,7 +158,7 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
 
       {/* Dodatni filtri - prikažejo se samo ko je showAdditionalFilters true */}
       {showAdditionalFilters && (
-        <div className="space-y-4 mb-4 pt-4 border-t">
+        <div className="space-y-4 mb-4 pt-4 ">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="text-sm font-medium mb-1 block flex items-center gap-1"><DollarSign className="w-4 h-4" /> Znesek (bruto) od</label>

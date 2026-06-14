@@ -124,7 +124,7 @@ export function InvoiceItemModal({ open, onOpenChange, editingItem, onSave, serv
           </div>
 
           <div><label className="text-sm font-medium mb-1 block">Količina *</label>
-            <NumberInput value={newItem.quantity || 1} onChange={(val) => setNewItem({ ...newItem, quantity: val })} min={0} step={0.5} />
+            <NumberInput value={newItem.quantity || 1} onChange={(val) => setNewItem({ ...newItem, quantity: val })} min={0} max={1000} step={0.5} />
           </div>
 
           <div><label className="text-sm font-medium mb-1 block">Merska enota *</label>
@@ -139,7 +139,7 @@ export function InvoiceItemModal({ open, onOpenChange, editingItem, onSave, serv
             <div className="text-xs text-gray-400 mt-1">Cena je določena s storitvijo</div>
           </div>
 
-          <div><label className="text-sm font-medium mb-1 block">Stopnja DDV (%) *</label>
+          <div><label className="text-sm font-medium mb-1 block">Stopnja DDV *</label>
             <Select value={String(newItem.vatRate)} onValueChange={(val) => setNewItem({ ...newItem, vatRate: parseFloat(val) as VatRate })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent><SelectItem value="22">22%</SelectItem><SelectItem value="9.5">9,5%</SelectItem><SelectItem value="5">5%</SelectItem><SelectItem value="0">0% (oprostitev DDV)</SelectItem></SelectContent>
@@ -149,7 +149,7 @@ export function InvoiceItemModal({ open, onOpenChange, editingItem, onSave, serv
           <div className="col-span-2 border-t pt-3">
             <div className="font-medium mb-2 text-sm">Popust na postavko</div>
             <div className="grid grid-cols-2 gap-4">
-              <div><label className="text-sm font-medium mb-1 block">Višina popusta (%)</label>
+              <div><label className="text-sm font-medium mb-1 block">Popusta (%)</label>
                 <NumberInput value={newItem.discountPercent || 0} onChange={(val) => setNewItem({ ...newItem, discountPercent: val })} min={0} max={100} step={1} />
               </div>
               <div><label className="text-sm font-medium mb-1 block">Znesek popusta (€)</label>
@@ -189,13 +189,13 @@ export function InvoiceItemModal({ open, onOpenChange, editingItem, onSave, serv
               </div>
               <div>
                 <label className="text-sm font-medium mb-1 block">Bruto znesek</label>
-                <div className="text-md font-bold text-green-600">{formatCurrency(gross)}</div>
+                <div className="text-md font-bold text-blue-600">{formatCurrency(gross)}</div>
               </div>
             </div>
           </div>
 
           <div className="col-span-2 border-t pt-3">
-            <div className="font-medium mb-2 text-sm">Geodetski podatki (opcijsko)</div>
+            <div className="font-medium mb-2 text-sm">Geodetski podatki</div>
             <div className="grid grid-cols-2 gap-4">
               <div><label className="text-sm font-medium mb-1 block">Številka parcele</label><Input placeholder="npr. 325/4" value={newItem.parcelNumber || ''} onChange={e => setNewItem({ ...newItem, parcelNumber: e.target.value.replace(/[^0-9/\-\s]/g, '') })} /></div>
               <div><label className="text-sm font-medium mb-1 block">Katastrska občina</label><Input placeholder="npr. 1434 Šiška" value={newItem.cadastralMunicipality || ''} onChange={e => setNewItem({ ...newItem, cadastralMunicipality: e.target.value })} /></div>

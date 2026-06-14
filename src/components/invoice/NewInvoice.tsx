@@ -23,6 +23,22 @@ interface NewInvoiceProps {
   clearEditing?: () => void
 }
 
+// Funkcija za generiranje manjkajočih geodetskih podatkov
+const enrichItemWithGeodeticData = (item: InvoiceItem): InvoiceItem => {
+  const enrichedItem = { ...item }
+  
+  if (!enrichedItem.cadastreName && enrichedItem.parcelNumber) {
+    enrichedItem.cadastreName = 'Kataster stavb'
+  }
+  
+  if (!enrichedItem.landRegisterId && enrichedItem.parcelNumber && enrichedItem.cadastralMunicipality) {
+    const koNumber = enrichedItem.cadastralMunicipality.split(' ')[0]
+    enrichedItem.landRegisterId = `${koNumber} ${enrichedItem.parcelNumber}`
+  }
+  
+  return enrichedItem
+}
+
 export function NewInvoice({ editingInvoice, clearEditing }: NewInvoiceProps) {
   const { customers, addInvoice, updateInvoice, services } = useInvoices()
   const [modalOpen, setModalOpen] = useState(false)
@@ -57,7 +73,11 @@ export function NewInvoice({ editingInvoice, clearEditing }: NewInvoiceProps) {
     if (editingInvoice) {
       const cust = customers.find(c => c.id === editingInvoice.customerId)
       setSelectedCustomer(cust || null)
-      setItems(editingInvoice.items)
+      
+      // Obogati vsak item z geodetskimi podatki
+      const enrichedItems = editingInvoice.items.map(item => enrichItemWithGeodeticData(item))
+      setItems(enrichedItems)
+      
       if (editingInvoice.issueDate) setIssueDate(new Date(editingInvoice.issueDate))
       if (editingInvoice.serviceDateFrom) setServiceDateFrom(new Date(editingInvoice.serviceDateFrom))
       if (editingInvoice.serviceDateTo) setServiceDateTo(new Date(editingInvoice.serviceDateTo))
@@ -407,21 +427,23 @@ const getRequiredFieldsMessage = () => {
             <TableBody>
               {items.map(item => (
                 <TableRow key={item.id}>
-                  <TableCell>
-                    <div className="font-medium">{item.description}</div>
-                    {(item.parcelNumber || item.cadastralMunicipality) && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        {[
-                          item.parcelNumber && `št. parcele: ${item.parcelNumber}`,
-                          item.cadastralMunicipality && `kat.občina: ${item.cadastralMunicipality}`
-                        ].filter(Boolean).join(' | ')}
-                      </div>
-                    )}
-                    {item.itemNote && <div className="text-xs text-gray-500 mt-1">{item.itemNote}</div>}
-                    {item.vatRate === 0 && item.vatExemptionReason && (
-                      <div className="text-xs text-gray-500 mt-1">{item.vatExemptionReason}</div>
-                    )}
-                  </TableCell>
+                 <TableCell>
+                  <div className="font-medium">{item.description}</div>
+                  {(item.parcelNumber || item.cadastralMunicipality || item.cadastreName || item.landRegisterId) && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      {[
+                        item.parcelNumber && `št. parcele: ${item.parcelNumber}`,
+                        item.cadastralMunicipality && `kat. občina: ${item.cadastralMunicipality}`,
+                        item.cadastreName && `ime katastra: ${item.cadastreName}`,
+                        item.landRegisterId && `ID zaznambe: ${item.landRegisterId}`
+                      ].filter(Boolean).join(' | ')}
+                    </div>
+                  )}
+                  {item.itemNote && <div className="text-xs text-gray-500 mt-1">{item.itemNote}</div>}
+                  {item.vatRate === 0 && item.vatExemptionReason && (
+                    <div className="text-xs text-gray-500 mt-1">{item.vatExemptionReason}</div>
+                  )}
+                </TableCell>
                   <TableCell className="text-right">{item.quantity}</TableCell>
                   <TableCell className="text-right">{item.unit}</TableCell>
                   <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>

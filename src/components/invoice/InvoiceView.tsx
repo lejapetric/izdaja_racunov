@@ -277,12 +277,17 @@ export function InvoiceView({
                           {item.vatRate === 0 && item.vatExemptionReason && (
                             <div className="text-xs text-gray-500 mt-1">{item.vatExemptionReason}</div>
                           )}
-                          {(item.parcelNumber || item.cadastralMunicipality) && (
-                            <div className="text-xs text-gray-500 mt-1">
-                              {[
-                                item.parcelNumber && `št. parcele: ${item.parcelNumber}`,
-                                item.cadastralMunicipality && `kat. občina: ${item.cadastralMunicipality}`
-                              ].filter(Boolean).join(' | ')}
+                          {(item.parcelNumber || item.cadastralMunicipality || item.cadastreName || item.landRegisterId) && (
+                            <div className="text-xs text-gray-500 mt-1 space-y-0.5">
+                              {item.parcelNumber && <div>št. parcele: {item.parcelNumber}</div>}
+                              {item.cadastralMunicipality && <div>kat. občina: {item.cadastralMunicipality}</div>}
+                              {(item.cadastreName || (item.parcelNumber && 'Kataster stavb')) && (
+                                <div>ime katastra: {item.cadastreName || 'Kataster stavb'}</div>
+                              )}
+                              {(item.landRegisterId || (item.parcelNumber && item.cadastralMunicipality && 
+                                `${item.cadastralMunicipality.split(' ')[0]} ${item.parcelNumber}`)) && (
+                                <div>ID zaznambe: {item.landRegisterId || `${item.cadastralMunicipality?.split(' ')[0]} ${item.parcelNumber}`}</div>
+                              )}
                             </div>
                           )}
                           {item.itemNote && <div className="text-xs text-gray-500 mt-0.5">{item.itemNote}</div>}

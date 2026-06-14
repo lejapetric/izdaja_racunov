@@ -158,19 +158,51 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
 
       {/* Dodatni filtri - prikažejo se samo ko je showAdditionalFilters true */}
       {showAdditionalFilters && (
-        <div className="space-y-4 mb-4 pt-4 ">
+        <div className="space-y-4 mb-4 pt-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <label className="text-sm font-medium mb-1 block flex items-center gap-1"><DollarSign className="w-4 h-4" /> Znesek (bruto) od</label>
-              <NumberInput placeholder="Minimalni znesek €" value={priceMin} onChange={setPriceMin} />
-              <label className="text-sm font-medium mt-2 mb-1 block flex items-center gap-1"><DollarSign className="w-4 h-4" /> Znesek (bruto) do</label>
-              <NumberInput placeholder="Maksimalni znesek €" value={priceMax} onChange={setPriceMax} />
+              <label className="text-sm font-medium mb-1 block flex items-center gap-1">
+                <DollarSign className="w-4 h-4" /> Znesek (bruto) od
+              </label>
+              <NumberInput 
+                placeholder="Minimalni znesek €" 
+                value={priceMin} 
+                onChange={setPriceMin} 
+                min={1} 
+                max={999999999}
+              />
+              <label className="text-sm font-medium mt-2 mb-1 block flex items-center gap-1">
+                <DollarSign className="w-4 h-4" /> Znesek (bruto) do
+              </label>
+              <NumberInput 
+                placeholder="Maksimalni znesek €" 
+                value={priceMax} 
+                onChange={setPriceMax} 
+                min={1} 
+                max={999999999}
+              />
             </div>
             <div>
-              <label className="text-sm font-medium mb-1 block flex items-center gap-1"><Percent className="w-4 h-4" /> Popust od</label>
-              <NumberInput placeholder="Minimalni popust %" value={discountMin} onChange={setDiscountMin} />
-              <label className="text-sm font-medium mt-2 mb-1 block flex items-center gap-1"><Percent className="w-4 h-4" /> Popust do</label>
-              <NumberInput placeholder="Maksimalni popust %" value={discountMax} onChange={setDiscountMax} />
+              <label className="text-sm font-medium mb-1 block flex items-center gap-1">
+                <Percent className="w-4 h-4" /> Popust od
+              </label>
+              <NumberInput 
+                placeholder="Minimalni popust %" 
+                value={discountMin} 
+                onChange={setDiscountMin} 
+                min={0} 
+                max={100}
+              />
+              <label className="text-sm font-medium mt-2 mb-1 block flex items-center gap-1">
+                <Percent className="w-4 h-4" /> Popust do
+              </label>
+              <NumberInput 
+                placeholder="Maksimalni popust %" 
+                value={discountMax} 
+                onChange={setDiscountMax} 
+                min={0} 
+                max={100}
+              />
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block">Status računa</label>
@@ -190,7 +222,9 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-8 gap-4">
             <div>
-              <label className="text-sm font-medium mb-1 block flex items-center gap-1"><Calendar className="w-4 h-4" /> Datum izdaje od</label>
+              <label className="text-sm font-medium mb-1 block flex items-center gap-1">
+                <Calendar className="w-4 h-4" /> Datum izdaje od
+              </label>
               <DatePicker
                 selected={dateFrom}
                 onChange={setDateFrom}
@@ -200,7 +234,9 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
                 placeholderText="Izberite datum od"
                 isClearable={false}
               />
-              <label className="text-sm font-medium mt-2 mb-1 block flex items-center gap-1"><Calendar className="w-4 h-4" /> Datum izdaje do</label>
+              <label className="text-sm font-medium mt-2 mb-1 block flex items-center gap-1">
+                <Calendar className="w-4 h-4" /> Datum izdaje do
+              </label>
               <DatePicker
                 selected={dateTo}
                 onChange={setDateTo}
@@ -212,7 +248,9 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
               />
             </div>
             <div>
-              <label className="text-sm font-medium mb-1 block flex items-center gap-1"><Clock className="w-4 h-4" /> Datum zapadlosti od</label>
+              <label className="text-sm font-medium mb-1 block flex items-center gap-1">
+                <Clock className="w-4 h-4" /> Datum zapadlosti od
+              </label>
               <DatePicker
                 selected={dueDateFrom}
                 onChange={setDueDateFrom}
@@ -222,7 +260,9 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
                 placeholderText="Izberite datum od"
                 isClearable={false}
               />
-              <label className="text-sm font-medium mt-2 mb-1 block flex items-center gap-1"><Clock className="w-4 h-4" /> Datum zapadlosti do</label>
+              <label className="text-sm font-medium mt-2 mb-1 block flex items-center gap-1">
+                <Clock className="w-4 h-4" /> Datum zapadlosti do
+              </label>
               <DatePicker
                 selected={dueDateTo}
                 onChange={setDueDateTo}

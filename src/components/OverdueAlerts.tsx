@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Send, Ban, History, Package, Mail, X, FileText, CheckCircle, AlertTriangle } from 'lucide-react'
+import { Send, Ban, History, Package, Mail, X, FileText, CheckCircle } from 'lucide-react'
 import { EditInvoice } from './invoice/EditInvoice'
 import { mockAuditLogs } from '@/data/mockData'
 import { Badge } from '@/components/ui/badge'
@@ -331,18 +331,6 @@ export function OverdueInvoices() {
         </CardContent>
       </Card>
 
-      <Card className="bg-red-50 border-red-200">
-        <CardContent className="pt-4 pb-4">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5" />
-            <div className="text-sm text-red-700">
-              <p className="font-medium">Informacije o zapadlih računih</p>
-              <p className="text-xs mt-1">Računi so označeni kot zapadli, ko mine rok plačila. Pošljete jim lahko opomine ali jih označite kot plačane. Storniran račun je trajno razveljavljen.</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* MODAL ZA E-POŠTO (opomin) */}
       <Dialog open={emailModalOpen} onOpenChange={setEmailModalOpen}>
         <DialogContent className="max-w-2xl">
@@ -461,7 +449,7 @@ export function OverdueInvoices() {
           <div className="space-y-6 py-4">
             <div className="bg-red-50 border border-red-200 rounded-lg p-5">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+                <Ban className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
                   <p className="text-base font-semibold text-red-800">OPOZORILO!</p>
                   <p className="text-sm text-red-700 mt-2 leading-relaxed">
@@ -642,7 +630,7 @@ function OverdueTable({ invoices, customers, onInvoiceClick, getStatusLabel, get
           return (
             <TableRow 
               key={inv.id} 
-              className={`${inv.status === 'overdue' ? 'bg-red-50' : ''} cursor-pointer hover:bg-gray-50 transition-colors`}
+              className="cursor-pointer hover:bg-gray-50 transition-colors"
               onClick={() => onInvoiceClick(inv)}
             >
               <TableCell className="px-2 py-2 font-left">{inv.number}</TableCell>

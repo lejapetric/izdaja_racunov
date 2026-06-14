@@ -165,7 +165,6 @@ export function EditInvoice({ editingInvoice, onClose, onSaved }: EditInvoicePro
 // Shrani spremembe
 const handleSave = () => {
   if (!isFormValid()) {
-    alert(getValidationMessage())
     return
   }
 
@@ -201,7 +200,6 @@ const handleSave = () => {
 // Pretvori predračun v račun
 const handleConvertToInvoice = () => {
   if (!isFormValid()) {
-    alert(getValidationMessage())
     return
   }
 

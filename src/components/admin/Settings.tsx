@@ -40,7 +40,6 @@ export function Settings() {
         third: thirdReminderDays
       }
     })
-    alert('Nastavitve so bile shranjene!')
   }
 
   return (

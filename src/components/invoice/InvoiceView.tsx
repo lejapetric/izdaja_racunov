@@ -82,95 +82,207 @@ export function InvoiceView({
     }
   }
 
-  const handlePrint = () => {
-    if (!printRef.current) return
-    
-    const iframe = document.createElement('iframe')
-    iframe.style.position = 'absolute'
-    iframe.style.width = '0'
-    iframe.style.height = '0'
-    iframe.style.border = 'none'
-    document.body.appendChild(iframe)
-    
-    const iframeDoc = iframe.contentWindow?.document
-    if (!iframeDoc) {
-      document.body.removeChild(iframe)
-      return
-    }
-    
-    const printContent = printRef.current.cloneNode(true) as HTMLElement
-    
-    const watermark = printContent.querySelector('.watermark')
-    if (watermark) watermark.remove()
-    
-    const statusBadge = printContent.querySelector('.status-badge-print-hide')
-    if (statusBadge) statusBadge.remove()
-    
-    const styles = document.querySelectorAll('link[rel="stylesheet"], style')
-    let stylesHtml = ''
-    styles.forEach(style => {
-      if (style.tagName === 'LINK') {
-        const link = style as HTMLLinkElement
-        stylesHtml += `<link rel="stylesheet" href="${link.href}">`
-      } else if (style.tagName === 'STYLE') {
-        stylesHtml += style.outerHTML
-      }
-    })
-    
-    iframeDoc.open()
-    iframeDoc.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>${getDocumentTitle()} ${invoice.number}</title>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          ${stylesHtml}
-          <style>
-            @media print {
-              body { margin: 0; padding: 20px; background: white; height: auto; min-height: 100vh; }
-              .print-invoice-container { padding: 0; margin: 0; min-height: 100vh; display: flex; flex-direction: column; }
-              button, .no-print { display: none !important; }
-            }
-            .print-invoice-container { max-width: 1200px; margin: 0 auto; background: white; display: flex; flex-direction: column; min-height: 100vh; }
-            .print-content { flex: 1; }
-            .print-footer { margin-top: auto; }
-            * { font-size: 8pt !important; line-height: 1.3 !important; }
-            h1 { font-size: 12pt !important; font-weight: bold !important; }
-            .text-2xl { font-size: 14pt !important; }
-            .text-lg { font-size: 11pt !important; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { padding: 4px 6px !important; }
-            th { font-weight: bold; background-color: #f3f4f6; }
-            td:first-child { word-break: break-word; white-space: normal; max-width: 200px; }
-            td:not(:first-child) { white-space: nowrap; }
-            img { max-width: 80px !important; height: auto !important; }
-            .grid { display: flex; flex-wrap: wrap; }
-            .border-t, .border-b { border-top-width: 1px !important; border-bottom-width: 1px !important; }
-            .mt-auto { margin-top: auto; }
-          </style>
-        </head>
-        <body style="padding: 20px; background: white; margin: 0;">
-          <div class="print-invoice-container">
-            <div class="print-content">
-              ${printContent.innerHTML}
-            </div>
-          </div>
-        </body>
-      </html>
-    `)
-    iframeDoc.close()
-    
-    setTimeout(() => {
-      iframe.contentWindow?.focus()
-      iframe.contentWindow?.print()
-      setTimeout(() => {
-        if (iframe && iframe.parentNode) {
-          document.body.removeChild(iframe)
-        }
-      }, 500)
-    }, 500)
+ const handlePrint = () => {
+  if (!printRef.current) return
+  
+  const iframe = document.createElement('iframe')
+  iframe.style.position = 'absolute'
+  iframe.style.width = '0'
+  iframe.style.height = '0'
+  iframe.style.border = 'none'
+  document.body.appendChild(iframe)
+  
+  const iframeDoc = iframe.contentWindow?.document
+  if (!iframeDoc) {
+    document.body.removeChild(iframe)
+    return
   }
+  
+  const printContent = printRef.current.cloneNode(true) as HTMLElement
+  
+  const watermark = printContent.querySelector('.watermark')
+  if (watermark) watermark.remove()
+  
+  const statusBadge = printContent.querySelector('.status-badge-print-hide')
+  if (statusBadge) statusBadge.remove()
+  
+  const styles = document.querySelectorAll('link[rel="stylesheet"], style')
+  let stylesHtml = ''
+  styles.forEach(style => {
+    if (style.tagName === 'LINK') {
+      const link = style as HTMLLinkElement
+      stylesHtml += `<link rel="stylesheet" href="${link.href}">`
+    } else if (style.tagName === 'STYLE') {
+      stylesHtml += style.outerHTML
+    }
+  })
+  
+  iframeDoc.open()
+  iframeDoc.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>${getDocumentTitle()} ${invoice.number}</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        ${stylesHtml}
+        <style>
+          /* Popravljeni print stili - vse na eni strani */
+          @media print {
+            body { 
+              margin: 0; 
+              padding: 0; 
+              background: white; 
+              height: auto;
+            }
+            .print-invoice-container { 
+              padding: 10px; 
+              margin: 0 auto; 
+              width: 100%;
+              max-width: 1200px;
+              box-sizing: border-box;
+            }
+            button, .no-print, .status-badge-print-hide { 
+              display: none !important; 
+            }
+            /* Prepreči flex/skrčenje vsebine */
+            .print-invoice-container {
+              display: block !important;
+              position: static !important;
+              top: 0 !important;
+              left: 0 !important;
+              transform: none !important;
+            }
+            /* Prepreči prelom strani znotraj računa */
+            .print-invoice-container, .print-content, .flex-1, .relative {
+              page-break-inside: avoid;
+              break-inside: avoid;
+            }
+            /* QR koda naj ostane spodaj desno */
+            .grid-cols-3 {
+              display: flex !important;
+              flex-direction: row !important;
+              justify-content: space-between !important;
+              align-items: flex-start !important;
+              width: 100% !important;
+            }
+            .grid-cols-3 > div:last-child {
+              text-align: right !important;
+            }
+            /* Tabela naj se ne skrči */
+            table {
+              width: 100% !important;
+              border-collapse: collapse !important;
+            }
+            td, th {
+              padding: 3px 4px !important;
+              font-size: 9pt !important;
+            }
+            /* Zagotovi, da je vsebina na vrhu strani */
+            body, html {
+              height: auto !important;
+              min-height: auto !important;
+            }
+            /* Prepreči dodatne margine */
+            .flex-1, .overflow-y-auto {
+              overflow: visible !important;
+            }
+            /* Footer naj ostane na isti strani */
+            .border-t:last-child {
+              page-break-before: avoid;
+              page-break-after: avoid;
+              margin-top: 10px !important;
+              padding-top: 5px !important;
+            }
+            /* Zmanjšaj margine in paddinge za tisk */
+            .mb-4, .mb-6 {
+              margin-bottom: 5px !important;
+            }
+            .mt-4 {
+              margin-top: 5px !important;
+            }
+            .pt-3, .pt-4 {
+              padding-top: 3px !important;
+            }
+            .pb-3 {
+              padding-bottom: 3px !important;
+            }
+            .gap-6 {
+              gap: 10px !important;
+            }
+          }
+          /* Normalni stili za tisk */
+          .print-invoice-container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            background: white; 
+            font-family: Arial, Helvetica, sans-serif;
+          }
+          table { 
+            width: 100%; 
+            border-collapse: collapse; 
+          }
+          th, td { 
+            border-bottom: 1px solid #ddd; 
+            padding: 6px; 
+            text-align: left;
+          }
+          th { 
+            background-color: #f3f4f6; 
+          }
+          .text-right { 
+            text-align: right; 
+          }
+          .text-center { 
+            text-align: center; 
+          }
+          .font-bold { 
+            font-weight: bold; 
+          }
+          .border-t { 
+            border-top: 1px solid #ddd; 
+          }
+          .border-t-2 { 
+            border-top: 2px solid #333; 
+          }
+          img { 
+            max-width: 80px; 
+            height: auto; 
+          }
+          /* Zmanjšaj velikosti za tisk */
+          .text-lg {
+            font-size: 11pt !important;
+          }
+          .text-sm {
+            font-size: 8pt !important;
+          }
+          .text-xs {
+            font-size: 7pt !important;
+          }
+          .text-2xl {
+            font-size: 14pt !important;
+          }
+        </style>
+      </head>
+      <body style="margin: 0; padding: 0; background: white;">
+        <div class="print-invoice-container">
+          ${printContent.innerHTML}
+        </div>
+      </body>
+    </html>
+  `)
+  iframeDoc.close()
+  
+  setTimeout(() => {
+    iframe.contentWindow?.focus()
+    iframe.contentWindow?.print()
+    setTimeout(() => {
+      if (iframe && iframe.parentNode) {
+        document.body.removeChild(iframe)
+      }
+    }, 500)
+  }, 500)
+}
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>

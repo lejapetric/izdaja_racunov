@@ -18,7 +18,7 @@ interface InvoiceItemModalProps {
 }
 
 const calculateItemTotals = (item: Partial<InvoiceItem>) => {
-  const qty = item.quantity || 0
+  const qty = item.quantity && item.quantity > 0 ? item.quantity : 0
   const price = item.price || 0
   const discountPercent = item.discountPercent || 0
   const netBeforeDiscount = qty * price
@@ -66,12 +66,14 @@ export function InvoiceItemModal({ open, onOpenChange, editingItem, onSave, serv
         price: service.price,
         unit: service.unit,
         vatRate: service.vatRate,
+        quantity: 1,
       })
     }
   }
 
   const handleSave = () => {
-    if (!newItem.description || !newItem.quantity || !newItem.price) return
+    const quantity = newItem.quantity || 0
+    if (!newItem.description || quantity <= 0 || !newItem.price) return
     if (newItem.vatRate === 0 && !newItem.vatExemptionReason) return
 
     const { netBeforeDiscount, discountAmount, net, vatAmount, gross } = calculateItemTotals(newItem)
@@ -79,7 +81,7 @@ export function InvoiceItemModal({ open, onOpenChange, editingItem, onSave, serv
     const fullItem: InvoiceItem = {
       id: editingItem?.id || crypto.randomUUID(),
       description: newItem.description,
-      quantity: newItem.quantity,
+      quantity: quantity,
       unit: newItem.unit || 'ura',
       price: newItem.price,
       discountPercent: newItem.discountPercent || 0,
@@ -102,6 +104,7 @@ export function InvoiceItemModal({ open, onOpenChange, editingItem, onSave, serv
   }
 
   const { netBeforeDiscount, discountAmount, net, vatAmount, gross } = calculateItemTotals(newItem)
+  const isQuantityValid = newItem.quantity !== undefined && newItem.quantity !== null && newItem.quantity > 0
 
   return (
     <Dialog open={open} onOpenChange={(val) => { if (!val) onOpenChange(val); resetForm() }}>
@@ -123,8 +126,18 @@ export function InvoiceItemModal({ open, onOpenChange, editingItem, onSave, serv
             </Select>
           </div>
 
-          <div><label className="text-sm font-medium mb-1 block">Količina *</label>
-            <NumberInput value={newItem.quantity || 1} onChange={(val) => setNewItem({ ...newItem, quantity: val })} min={0} max={1000} step={0.5} />
+          <div>
+            <label className="text-sm font-medium mb-1 block">Količina *</label>
+            <NumberInput 
+              value={newItem.quantity !== undefined && newItem.quantity !== null ? newItem.quantity : 0} 
+              onChange={(val) => setNewItem({ ...newItem, quantity: val === null ? 0 : val })} 
+              min={0} 
+              max={1000} 
+              step={0.5} 
+            />
+            {!isQuantityValid && (
+              <div className="text-xs text-red-500 mt-1">Količina mora biti večja od 0</div>
+            )}
           </div>
 
           <div><label className="text-sm font-medium mb-1 block">Merska enota *</label>
@@ -149,7 +162,7 @@ export function InvoiceItemModal({ open, onOpenChange, editingItem, onSave, serv
           <div className="col-span-2 border-t pt-3">
             <div className="font-medium mb-2 text-sm">Popust na postavko</div>
             <div className="grid grid-cols-2 gap-4">
-              <div><label className="text-sm font-medium mb-1 block">Popusta (%)</label>
+              <div><label className="text-sm font-medium mb-1 block">Popust (%)</label>
                 <NumberInput value={newItem.discountPercent || 0} onChange={(val) => setNewItem({ ...newItem, discountPercent: val })} min={0} max={100} step={1} />
               </div>
               <div><label className="text-sm font-medium mb-1 block">Znesek popusta (€)</label>
@@ -212,7 +225,15 @@ export function InvoiceItemModal({ open, onOpenChange, editingItem, onSave, serv
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => { onOpenChange(false); resetForm() }}>Prekliči</Button>
-          <Button onClick={handleSave} disabled={!newItem.description || !newItem.quantity || !newItem.price || (newItem.vatRate === 0 && !newItem.vatExemptionReason)}>
+          <Button 
+            onClick={handleSave} 
+            disabled={
+              !newItem.description || 
+              !isQuantityValid || 
+              !newItem.price || 
+              (newItem.vatRate === 0 && !newItem.vatExemptionReason)
+            }
+          >
             {editingItem ? 'Posodobi' : 'Dodaj'}
           </Button>
         </DialogFooter>

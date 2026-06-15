@@ -121,7 +121,7 @@ const openEditModal = (invoice: Invoice) => {
   const handleSendEmail = () => { 
     if (!emailInvoice) return; 
     
-    console.log(`📧 E-pošta poslana na naslov kupca ${emailInvoice.customerName}\nZadeva: ${emailSubject}\nPriloga: Racun_${emailInvoice.number}.pdf`);
+    console.log(`E-pošta poslana na naslov kupca ${emailInvoice.customerName}\nZadeva: ${emailSubject}\nPriloga: Racun_${emailInvoice.number}.pdf`);
     
     updateInvoice(emailInvoice.id, { 
       status: 'sent', 
@@ -401,7 +401,7 @@ const openEditModal = (invoice: Invoice) => {
                 value={emailBody} 
                 onChange={(e) => setEmailBody(e.target.value)} 
                 rows={8} 
-                className="font-normal text-sm border-gray-200 focus:border-blue-400 focus:ring-blue-400"
+                className="font-normal text-sm border-gray-200 focus:border-blue-400 focus:ring-blue-400 min-h-[300px]"
               />
             </div>
             

@@ -19,6 +19,6 @@ BAZA
 odstrani povezavo pri racunu samega nase
 dodaj povezanRacuId (ideja ko si v racunu napises predracunId, ko si v predracunu napises racunId)
 dodaj placanoPredracun (koliko je stranka placala v predracunu)
-
+ RACUN: pri opominih lahko das samo st opominov
 
 

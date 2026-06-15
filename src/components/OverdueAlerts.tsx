@@ -1,5 +1,5 @@
 // src/components/OverdueInvoices.tsx
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { formatCurrency, formatDate } from '@/lib/utils'
@@ -12,10 +12,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Send, Ban, History, Package, Mail, X, FileText, CheckCircle } from 'lucide-react'
+import { Send, Ban, History, Package, Mail, X, FileText, CheckCircle, Bell, BellRing, BellOff } from 'lucide-react'
 import { EditInvoice } from './invoice/EditInvoice'
 import { mockAuditLogs } from '@/data/mockData'
 import { Badge } from '@/components/ui/badge'
+
+// Tip za opomine
+interface Reminder {
+  sentAt: string
+  reminderNumber: number
+  method: 'email' | 'post'
+}
 
 // Status opcije za zapadle račune
 const overdueStatusOptions: { value: InvoiceStatus | 'all'; label: string }[] = [
@@ -25,21 +32,72 @@ const overdueStatusOptions: { value: InvoiceStatus | 'all'; label: string }[] = 
   { value: 'cancelled', label: 'Stornirani' },
 ]
 
+// Pomožna funkcija za izračun dni zamude
+const getDaysLate = (dueDate: string) => {
+  const today = new Date()
+  const due = new Date(dueDate)
+  const diffTime = today.getTime() - due.getTime()
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  return diffDays
+}
+
+// Pomožna funkcija za določitev naslednjega opomina
+const getNextReminderNumber = (reminders: Reminder[]): number => {
+  const sentReminders = reminders.map(r => r.reminderNumber)
+  if (!sentReminders.includes(1)) return 1
+  if (!sentReminders.includes(2)) return 2
+  return 3
+}
+
+// Pomožna funkcija za preverjanje ali je opomin potreben
+const isReminderNeeded = (invoice: any, reminders: Reminder[]): boolean => {
+  if (invoice.status !== 'overdue') return false
+  
+  const daysLate = getDaysLate(invoice.dueDate)
+  const sentReminders = reminders.map(r => r.reminderNumber)
+  
+  // 1. opomin po 7 dneh
+  if (daysLate >= 7 && !sentReminders.includes(1)) return true
+  // 2. opomin po 14 dneh
+  if (daysLate >= 14 && !sentReminders.includes(2)) return true
+  // 3. opomin po 21 dneh
+  if (daysLate >= 21 && !sentReminders.includes(3)) return true
+  
+  return false
+}
+
 export function OverdueInvoices() {
   const { invoices, customers, updateInvoice } = useInvoices()
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null)
+  const [reminders, setReminders] = useState<Record<string, Reminder[]>>({})
+  
+  // Naloži opomine iz localStorage
+  useEffect(() => {
+    const savedReminders = localStorage.getItem('invoiceReminders')
+    if (savedReminders) {
+      setReminders(JSON.parse(savedReminders))
+    }
+  }, [])
+  
+  // Shrani opomine v localStorage
+  const saveReminders = (newReminders: Record<string, Reminder[]>) => {
+    setReminders(newReminders)
+    localStorage.setItem('invoiceReminders', JSON.stringify(newReminders))
+  }
   
   // Email modal
   const [emailModalOpen, setEmailModalOpen] = useState(false)
   const [emailInvoice, setEmailInvoice] = useState<any>(null)
   const [emailSubject, setEmailSubject] = useState('')
   const [emailBody, setEmailBody] = useState('')
+  const [currentReminderNumber, setCurrentReminderNumber] = useState<number>(1)
   
   // Post modal
   const [postModalOpen, setPostModalOpen] = useState(false)
   const [postInvoice, setPostInvoice] = useState<any>(null)
   const [postAddress, setPostAddress] = useState('')
   const [postNote, setPostNote] = useState('')
+  const [postReminderNumber, setPostReminderNumber] = useState<number>(1)
   
   // Edit modal
   const [editModalOpen, setEditModalOpen] = useState(false)
@@ -123,29 +181,46 @@ export function OverdueInvoices() {
   }
 
   // Email modal functions (opomin)
-  const openEmailModal = (invoice: any) => { 
+  const openEmailModal = (invoice: any, reminderNumber: number) => { 
     setEmailInvoice(invoice)
-    setEmailSubject(`Opomin za plačilo - Račun ${invoice.number}`)
-    setEmailBody(`Spoštovani,\n\nOpominjamo vas, da je račun št. ${invoice.number} z dne ${formatDate(invoice.issueDate)} v znesku ${formatCurrency(invoice.totalGross)} zapadel ${formatDate(invoice.dueDate)}.\n\nProsimo, da račun poravnate čim prej.\n\nLep pozdrav,\nGeoFaktura`)
+    setCurrentReminderNumber(reminderNumber)
+    setEmailSubject(`${reminderNumber}. opomin za plačilo - Račun ${invoice.number}`)
+    setEmailBody(`Spoštovani,\n\nTo je ${reminderNumber}. opomin za plačilo računa št. ${invoice.number} z dne ${formatDate(invoice.issueDate)} v znesku ${formatCurrency(invoice.totalGross)}.\n\nRačun je zapadel ${formatDate(invoice.dueDate)}.\n\nProsimo, da račun poravnate čim prej.\n\nLep pozdrav,\nGeoFaktura`)
     setEmailModalOpen(true)
   }
   
   const handleSendEmail = () => { 
     if (!emailInvoice) return
+    
+    const newReminder: Reminder = {
+      sentAt: new Date().toISOString(),
+      reminderNumber: currentReminderNumber,
+      method: 'email'
+    }
+    
+    const currentReminders = reminders[emailInvoice.id] || []
+    const updatedReminders = [...currentReminders, newReminder]
+    
+    saveReminders({
+      ...reminders,
+      [emailInvoice.id]: updatedReminders
+    })
+    
     updateInvoice(emailInvoice.id, { 
       note: emailInvoice.note 
-        ? `${emailInvoice.note}\n\n[${new Date().toLocaleDateString('sl-SI')}] Poslan opomin za plačilo po e-pošti.` 
-        : `[${new Date().toLocaleDateString('sl-SI')}] Poslan opomin za plačilo po e-pošti.`
+        ? `${emailInvoice.note}\n\n[${new Date().toLocaleDateString('sl-SI')}] Poslan ${currentReminderNumber}. opomin za plačilo po e-pošti.` 
+        : `[${new Date().toLocaleDateString('sl-SI')}] Poslan ${currentReminderNumber}. opomin za plačilo po e-pošti.`
     })
     setEmailModalOpen(false)
     setEmailInvoice(null)
   }
   
   // Post modal functions
-  const openPostModal = (invoice: any) => {
+  const openPostModal = (invoice: any, reminderNumber: number) => {
     const customer = customers.find(c => c.id === invoice.customerId)
     const defaultAddress = customer?.address || 'Naslov ni vpisan'
     setPostInvoice(invoice)
+    setPostReminderNumber(reminderNumber)
     setPostAddress(defaultAddress)
     setPostNote('')
     setPostModalOpen(true)
@@ -153,8 +228,23 @@ export function OverdueInvoices() {
   
   const handleSendPost = () => {
     if (!postInvoice) return
+    
+    const newReminder: Reminder = {
+      sentAt: new Date().toISOString(),
+      reminderNumber: postReminderNumber,
+      method: 'post'
+    }
+    
+    const currentReminders = reminders[postInvoice.id] || []
+    const updatedReminders = [...currentReminders, newReminder]
+    
+    saveReminders({
+      ...reminders,
+      [postInvoice.id]: updatedReminders
+    })
+    
     updateInvoice(postInvoice.id, { 
-      note: postInvoice.note ? `${postInvoice.note}\n\n[${new Date().toLocaleDateString('sl-SI')}] Poslan opomin za plačilo po navadni pošti na naslov: ${postAddress}` : `[${new Date().toLocaleDateString('sl-SI')}] Poslan opomin za plačilo po navadni pošti na naslov: ${postAddress}`
+      note: postInvoice.note ? `${postInvoice.note}\n\n[${new Date().toLocaleDateString('sl-SI')}] Poslan ${postReminderNumber}. opomin za plačilo po navadni pošti na naslov: ${postAddress}` : `[${new Date().toLocaleDateString('sl-SI')}] Poslan ${postReminderNumber}. opomin za plačilo po navadni pošti na naslov: ${postAddress}`
     })
     setPostModalOpen(false)
     setPostInvoice(null)
@@ -295,7 +385,10 @@ export function OverdueInvoices() {
               <OverdueTable 
                 invoices={filteredAll}
                 customers={customers}
+                reminders={reminders}
                 onInvoiceClick={handleInvoiceClick}
+                onSendEmail={openEmailModal}
+                onSendPost={openPostModal}
                 getStatusLabel={getStatusLabel}
                 getStatusColor={getStatusColor}
               />
@@ -304,7 +397,10 @@ export function OverdueInvoices() {
               <OverdueTable 
                 invoices={filteredOverdue}
                 customers={customers}
+                reminders={reminders}
                 onInvoiceClick={handleInvoiceClick}
+                onSendEmail={openEmailModal}
+                onSendPost={openPostModal}
                 getStatusLabel={getStatusLabel}
                 getStatusColor={getStatusColor}
               />
@@ -313,7 +409,10 @@ export function OverdueInvoices() {
               <OverdueTable 
                 invoices={filteredPaid}
                 customers={customers}
+                reminders={reminders}
                 onInvoiceClick={handleInvoiceClick}
+                onSendEmail={openEmailModal}
+                onSendPost={openPostModal}
                 getStatusLabel={getStatusLabel}
                 getStatusColor={getStatusColor}
               />
@@ -322,7 +421,10 @@ export function OverdueInvoices() {
               <OverdueTable 
                 invoices={filteredCancelled}
                 customers={customers}
+                reminders={reminders}
                 onInvoiceClick={handleInvoiceClick}
+                onSendEmail={openEmailModal}
+                onSendPost={openPostModal}
                 getStatusLabel={getStatusLabel}
                 getStatusColor={getStatusColor}
               />
@@ -337,7 +439,7 @@ export function OverdueInvoices() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-blue-700">
               <Mail className="w-5 h-5 text-blue-600" />
-              Pošlji opomin za plačilo
+              Pošlji {currentReminderNumber}. opomin za plačilo
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -375,7 +477,7 @@ export function OverdueInvoices() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-blue-700">
               <Package className="w-5 h-5 text-blue-600" />
-              Pošlji opomin po pošti
+              Pošlji {postReminderNumber}. opomin po pošti
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -570,8 +672,14 @@ export function OverdueInvoices() {
         open={!!selectedInvoiceId} 
         onClose={() => setSelectedInvoiceId(null)}
         onEdit={handleEditInvoice}
-        onSendEmail={openEmailModal}
-        onSendPost={openPostModal}
+        onSendEmail={(invoice) => {
+          const nextReminder = getNextReminderNumber(reminders[invoice.id] || [])
+          openEmailModal(invoice, nextReminder)
+        }}
+        onSendPost={(invoice) => {
+          const nextReminder = getNextReminderNumber(reminders[invoice.id] || [])
+          openPostModal(invoice, nextReminder)
+        }}
         onMarkAsPaid={(invoiceId) => {
           const invoice = invoices.find(inv => inv.id === invoiceId)
           if (invoice) openPaidModal(invoice)
@@ -588,18 +696,30 @@ export function OverdueInvoices() {
 interface OverdueTableProps {
   invoices: any[]
   customers: any[]
+  reminders: Record<string, Reminder[]>
   onInvoiceClick: (invoice: any) => void
+  onSendEmail: (invoice: any, reminderNumber: number) => void
+  onSendPost: (invoice: any, reminderNumber: number) => void
   getStatusLabel: (status: string) => string
   getStatusColor: (status: string) => string
 }
 
-function OverdueTable({ invoices, customers, onInvoiceClick, getStatusLabel, getStatusColor }: OverdueTableProps) {
-  const getDaysLate = (dueDate: string) => {
-    const today = new Date()
-    const due = new Date(dueDate)
-    const diffTime = today.getTime() - due.getTime()
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return diffDays
+function OverdueTable({ invoices, customers, reminders, onInvoiceClick, onSendEmail, onSendPost, getStatusLabel, getStatusColor }: OverdueTableProps) {
+  const getReminderStatus = (invoice: any, reminders: Reminder[]) => {
+    const sentReminders = reminders.map(r => r.reminderNumber)
+    const daysLate = getDaysLate(invoice.dueDate)
+    
+    // Določi naslednji opomin, ki ga je treba poslati
+    if (daysLate >= 21 && !sentReminders.includes(3)) return { number: 3, needed: true, text: 'Potreben 3. opomin!' }
+    if (daysLate >= 14 && !sentReminders.includes(2)) return { number: 2, needed: true, text: 'Potreben 2. opomin!' }
+    if (daysLate >= 7 && !sentReminders.includes(1)) return { number: 1, needed: true, text: 'Potreben 1. opomin!' }
+    
+    // Če so vsi opomini poslani
+    if (sentReminders.includes(3)) return { number: 3, needed: false, text: '3/3 poslani' }
+    if (sentReminders.includes(2)) return { number: 2, needed: false, text: '2/3 poslani' }
+    if (sentReminders.includes(1)) return { number: 1, needed: false, text: '1/3 poslani' }
+    
+    return { number: 0, needed: false, text: '0/3' }
   }
 
   return (
@@ -607,13 +727,14 @@ function OverdueTable({ invoices, customers, onInvoiceClick, getStatusLabel, get
       <TableHeader>
         <TableRow>
           <TableHead className="px-1 py-3 text-left w-[110px]">Številka</TableHead>
-          <TableHead className="px-4 py-3 text-center">Datum</TableHead>
+          <TableHead className="px-4 py-3 text-center">Datum izdaje</TableHead>
           <TableHead className="px-4 py-3 text-left w-[240px]">Kupec</TableHead>
           <TableHead className="px-4 py-3 text-right">Neto</TableHead>
           <TableHead className="px-4 py-3 text-right">DDV</TableHead>
           <TableHead className="px-4 py-3 text-right">Bruto</TableHead>
           <TableHead className="px-4 py-3 text-center w-[150px]">Status</TableHead>
           <TableHead className="px-4 py-3 text-center w-[140px]">Zapadlost</TableHead>
+          <TableHead className="px-4 py-3 text-center w-[100px]">Opomini</TableHead>
           <TableHead className="px-4 py-3 text-center w-[150px]"></TableHead>
         </TableRow>
       </TableHeader>
@@ -624,6 +745,9 @@ function OverdueTable({ invoices, customers, onInvoiceClick, getStatusLabel, get
           const parts = address.split(',')
           const municipality = parts.length > 1 ? parts[parts.length - 1].trim() : address.trim()
           const daysLate = getDaysLate(inv.dueDate)
+          const invoiceReminders = reminders[inv.id] || []
+          const reminderStatus = getReminderStatus(inv, invoiceReminders)
+          const needsReminder = reminderStatus.needed && inv.status === 'overdue'
           
           return (
             <TableRow 
@@ -631,7 +755,11 @@ function OverdueTable({ invoices, customers, onInvoiceClick, getStatusLabel, get
               className="cursor-pointer hover:bg-gray-50 transition-colors"
               onClick={() => onInvoiceClick(inv)}
             >
-              <TableCell className="px-2 py-2 font-left">{inv.number}</TableCell>
+              <TableCell className="px-2 py-2 font-left">
+                <div className="flex items-center gap-2">
+                  <span>{inv.number}</span>
+                </div>
+              </TableCell>
               <TableCell className="px-4 py-2 text-center">{formatDate(inv.issueDate)}</TableCell>
               <TableCell className="px-4 py-2">
                 <div className="font-medium">{inv.customerName}</div>
@@ -647,10 +775,33 @@ function OverdueTable({ invoices, customers, onInvoiceClick, getStatusLabel, get
               </TableCell>
               <TableCell className="px-4 py-2 text-center">
                 {formatDate(inv.dueDate)}
-                {inv.status === 'overdue' && (
+                {inv.status === 'overdue' && daysLate > 0 && (
                   <div className="text-xs text-red-500">{daysLate} dni zamude</div>
                 )}
               </TableCell>
+
+
+                <TableCell className="px-4 py-2 text-center">
+                  <div className="flex items-center justify-center">
+                    {inv.status === 'overdue' ? (
+
+                      
+                      <div className="relative">
+                        <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                          <span className="text-sm font-bold text-red-600">
+                            {reminderStatus.number > 0 ? reminderStatus.number : '!'}
+                          </span>
+                        </div>
+
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-400">—</span>
+                    )}
+                  </div>
+                </TableCell>
+
+
+
               <TableCell className="px-4 py-2 text-center" onClick={(e) => e.stopPropagation()}>
                 <Button 
                   size="sm" 
@@ -666,7 +817,7 @@ function OverdueTable({ invoices, customers, onInvoiceClick, getStatusLabel, get
         })}
         {invoices.length === 0 && (
           <TableRow>
-            <TableCell colSpan={11} className="text-center text-gray-400 py-8">
+            <TableCell colSpan={10} className="text-center text-gray-400 py-8">
               Ni zapadlih računov
             </TableCell>
           </TableRow>

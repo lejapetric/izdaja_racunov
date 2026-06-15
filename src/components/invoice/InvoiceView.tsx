@@ -360,7 +360,7 @@ export function InvoiceView({
                 <table className="w-full text-sm border-collapse mb-4 relative z-10">
                   <thead>
                     <tr className="bg-gray-100">
-                      <th className="text-left p-2">Opis</th>
+                      <th className="text-left p-2">Storitev</th>
                       <th className="text-right p-2">Količina</th>
                       <th className="text-right p-2">Enota</th>
                       <th className="text-right p-2">Cena/Enoto</th>
@@ -489,7 +489,7 @@ export function InvoiceView({
       <Button variant="outline" className="w-full justify-start" onClick={() => onSendPost?.(invoice)}>
         <Package className="w-4 h-4 mr-2" /> Pošlji po pošti
       </Button>
-      {documentType === 'estimate' && invoice.status !== 'paid' && invoice.status !== 'cancelled' && (
+      {documentType === 'estimate' && invoice.status === 'issued' && (
         <Button variant="outline" className="w-full justify-start" onClick={() => onMarkAsPaid?.(invoice.id)}>
           <ArrowRight className="w-4 h-4 mr-2" /> Ustvari račun
         </Button>

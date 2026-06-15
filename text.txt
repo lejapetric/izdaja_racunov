@@ -1,0 +1,29 @@
+
+dodajna racun ID za DDV ce je davcni zacezanec oz. samo davcna stevilka ce ni
+
+poslji po posti/mail avtomatko potrjenao
+
+ali lahko plačaš že predračun, če ja kako potem urejas ce se je spremenil skupnu znesek
+
+
+
+
+
+
+
+
+
+
+
+
+
+BAZA
+v bazi dodaj za izdajatelja in prevernika polje jeDavcniZavzanec : boolean
+
+dodaj v bazo se vec statusov
+dodaj delno plačilo, kako naj se shrani in updejta vsakic ko placa delno
+    resitev: placal-kolicina, timestamp
+             placalDoSedaj
+             poravnalRacun boolean
+    ce placa vse naenkrat je to kul in gre na true
+    ce placa delno potem se shrani v dnevnik kdaj in kolliko, poveca placaDoSedaj

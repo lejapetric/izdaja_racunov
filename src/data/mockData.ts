@@ -64,7 +64,7 @@ export const statusColors: Record<string, string> = {
   paid: 'bg-green-300 text-emerald-800',
   partially_paid: 'bg-orange-100 text-orange-800',
   cancelled: 'bg-red-400 text-red-800',
-  converted: 'bg-purple-400 text-purple-800',
+  converted: 'bg-purple-100 text-purple-800',
 }
 
 export const actionIcons: Record<string, { icon: any; color: string; bgColor: string }> = {

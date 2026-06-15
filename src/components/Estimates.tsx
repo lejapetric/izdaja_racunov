@@ -14,15 +14,15 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Send, Ban, History, Package, Mail, X, FileText, AlertTriangle } from 'lucide-react'
 import { EditInvoice } from './invoice/EditInvoice'
-import { mockAuditLogs } from '@/data/mockData'
-import {Badge} from '@/components/ui/badge'
+import { mockAuditLogs, statusLabels, statusColors } from '@/data/mockData'
+import { Badge } from '@/components/ui/badge'
 
-
-// Status opcije samo za predračune - brez osnutek in storniran
-const estimateStatusOptions: { value: InvoiceStatus | 'all' | 'converted'; label: string }[] = [
+// Status opcije samo za predračune
+const estimateStatusOptions: { value: string; label: string }[] = [
   { value: 'all', label: 'Vsi' },
   { value: 'issued', label: 'Izdani' },
   { value: 'sent', label: 'Poslani' },
+  { value: 'paied', label: 'Plačan' },
   { value: 'overdue', label: 'Potečeni' },
   { value: 'converted', label: 'Spremenjeni v račun' },
 ]
@@ -54,7 +54,7 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [editingInvoiceData, setEditingInvoiceData] = useState<any>(null)
   
-  // Convert to invoice modal (za združljivost)
+  // Convert to invoice modal
   const [convertModalOpen, setConvertModalOpen] = useState(false)
   const [convertInvoice, setConvertInvoice] = useState<any>(null)
   
@@ -82,7 +82,7 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
   const [dateTo, setDateTo] = useState<Date | null>(null)
   const [dueDateFrom, setDueDateFrom] = useState<Date | null>(null)
   const [dueDateTo, setDueDateTo] = useState<Date | null>(null)
-  const [selectedStatus, setSelectedStatus] = useState<InvoiceStatus | 'all' | 'converted'>('all')
+  const [selectedStatus, setSelectedStatus] = useState<string>('all')
   const [activeTab, setActiveTab] = useState('all')
 
   // Pridobi samo predračune (tiste s številko, ki se začne s PR)
@@ -107,11 +107,10 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
     if (dateFromStr && inv.issueDate < dateFromStr) return false; if (dateToStr && inv.issueDate > dateToStr) return false
     const dueFromStr = dueDateFrom ? dueDateFrom.toISOString().split('T')[0] : ''; const dueToStr = dueDateTo ? dueDateTo.toISOString().split('T')[0] : ''
     if (dueFromStr && inv.dueDate < dueFromStr) return false; if (dueToStr && inv.dueDate > dueToStr) return false
-    if (selectedStatus !== 'all' && selectedStatus !== 'converted') {
-      if (inv.status !== selectedStatus) return false
-    }
-    if (selectedStatus === 'converted') {
-      if (inv.status !== 'paid') return false
+    if (selectedStatus !== 'all') {
+      if (selectedStatus === 'converted') {
+        if (inv.status !== 'paid') return false
+      } else if (inv.status !== selectedStatus) return false
     }
     if (statusFilter) {
       if (statusFilter === 'converted') {
@@ -264,26 +263,15 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
     }
   }
   
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'issued': return 'Izdan'
-      case 'sent': return 'Poslan'
-      case 'overdue': return 'Zapadel'
-      case 'paid': return 'Spremenjen v račun'
-      case 'cancelled': return 'Storniran'
-      default: return status
-    }
+  // Uporabi statusLabels in statusColors iz mockData
+  const getStatusLabelForEstimate = (status: string) => {
+    if (status === 'paid') return statusLabels.converted || 'Spremenjen v račun'
+    return statusLabels[status] || status
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'issued': return 'bg-blue-100 text-blue-800'
-      case 'sent': return 'bg-green-100 text-green-800'
-      case 'overdue': return 'bg-red-100 text-red-800'
-      case 'paid': return 'bg-purple-100 text-purple-800'
-      case 'cancelled': return 'bg-gray-100 text-gray-800'
-      default: return 'bg-yellow-100 text-yellow-800'
-    }
+  const getStatusColorForEstimate = (status: string) => {
+    if (status === 'paid') return statusColors.converted || 'bg-purple-100 text-purple-800'
+    return statusColors[status] || 'bg-gray-100 text-gray-800'
   }
 
   return (
@@ -321,46 +309,41 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
             <TabsContent value="all">
               <EstimatesTable 
                 estimates={filteredAll}
-                customers={customers}
                 onEstimateClick={handleInvoiceClick}
-                getStatusLabel={getStatusLabel}
-                getStatusColor={getStatusColor}
+                getStatusLabel={getStatusLabelForEstimate}
+                getStatusColor={getStatusColorForEstimate}
               />
             </TabsContent>
             <TabsContent value="issued">
               <EstimatesTable 
                 estimates={filteredIssued}
-                customers={customers}
                 onEstimateClick={handleInvoiceClick}
-                getStatusLabel={getStatusLabel}
-                getStatusColor={getStatusColor}
+                getStatusLabel={getStatusLabelForEstimate}
+                getStatusColor={getStatusColorForEstimate}
               />
             </TabsContent>
             <TabsContent value="sent">
               <EstimatesTable 
                 estimates={filteredSent}
-                customers={customers}
                 onEstimateClick={handleInvoiceClick}
-                getStatusLabel={getStatusLabel}
-                getStatusColor={getStatusColor}
+                getStatusLabel={getStatusLabelForEstimate}
+                getStatusColor={getStatusColorForEstimate}
               />
             </TabsContent>
             <TabsContent value="converted">
               <EstimatesTable 
                 estimates={filteredConverted}
-                customers={customers}
                 onEstimateClick={handleInvoiceClick}
-                getStatusLabel={getStatusLabel}
-                getStatusColor={getStatusColor}
+                getStatusLabel={getStatusLabelForEstimate}
+                getStatusColor={getStatusColorForEstimate}
               />
             </TabsContent>
             <TabsContent value="expired">
               <EstimatesTable 
                 estimates={filteredExpired}
-                customers={customers}
                 onEstimateClick={handleInvoiceClick}
-                getStatusLabel={getStatusLabel}
-                getStatusColor={getStatusColor}
+                getStatusLabel={getStatusLabelForEstimate}
+                getStatusColor={getStatusColorForEstimate}
               />
             </TabsContent>
           </Tabs>
@@ -744,14 +727,14 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
 // Tabela za predračune
 interface EstimatesTableProps {
   estimates: any[]
-  customers: any[]
   onEstimateClick: (estimate: any) => void
   getStatusLabel: (status: string) => string
   getStatusColor: (status: string) => string
 }
 
-function EstimatesTable({ estimates, customers, onEstimateClick, getStatusLabel, getStatusColor }: EstimatesTableProps) {
+function EstimatesTable({ estimates, onEstimateClick, getStatusLabel, getStatusColor }: EstimatesTableProps) {
   const getDaysUntilExpiry = (dueDate: string) => {
+    if (!dueDate || dueDate === 'null') return null
     const today = new Date()
     const expiry = new Date(dueDate)
     const diffTime = expiry.getTime() - today.getTime()
@@ -777,12 +760,8 @@ function EstimatesTable({ estimates, customers, onEstimateClick, getStatusLabel,
       </TableHeader>
       <TableBody>
         {estimates.map(est => {
-          const customer = customers.find(c => c.id === est.customerId)
-          const address = customer?.address || ''
-          const parts = address.split(',')
-          const municipality = parts.length > 1 ? parts[parts.length - 1].trim() : address.trim()
           const daysUntilExpiry = getDaysUntilExpiry(est.dueDate)
-          const isExpired = daysUntilExpiry < 0
+          const isExpired = daysUntilExpiry !== null && daysUntilExpiry < 0
           
           return (
             <TableRow 
@@ -800,23 +779,17 @@ function EstimatesTable({ estimates, customers, onEstimateClick, getStatusLabel,
               <TableCell className="px-4 py-2 text-right">{formatCurrency(est.totalVat)}</TableCell>
               <TableCell className="px-4 py-2 text-right font-semibold">{formatCurrency(est.totalGross)}</TableCell>
               <TableCell className="px-4 py-2 text-center">{(est.discountPercent ?? 0)}%</TableCell>
-             <TableCell className="px-4 py-2 text-center">
-  {est.status ? (
-    <Badge className={getStatusColor(est.status)}>
-      {getStatusLabel(est.status)}
-    </Badge>
-  ) : (
-    <Badge className="bg-gray-100 text-gray-800">
-      Izdan
-    </Badge>
-  )}
-</TableCell>
               <TableCell className="px-4 py-2 text-center">
-                {est.dueDate ? formatDate(est.dueDate) : '-'}
-                {!isExpired && daysUntilExpiry <= 7 && daysUntilExpiry > 0 && est.dueDate && (
+                <Badge className={getStatusColor(est.status)}>
+                  {getStatusLabel(est.status)}
+                </Badge>
+              </TableCell>
+              <TableCell className="px-4 py-2 text-center">
+                {est.dueDate && est.dueDate !== 'null' ? formatDate(est.dueDate) : '-'}
+                {!isExpired && daysUntilExpiry !== null && daysUntilExpiry <= 7 && daysUntilExpiry > 0 && (
                   <div className="text-xs text-orange-500">Poteče čez {daysUntilExpiry} dni</div>
                 )}
-                {isExpired && est.dueDate && <div className="text-xs text-red-500">POTEČEN</div>}
+                {isExpired && <div className="text-xs text-red-500">POTEČEN</div>}
               </TableCell>
               <TableCell className="px-4 py-2 text-center" onClick={(e) => e.stopPropagation()}>
                 <Button 
@@ -825,7 +798,7 @@ function EstimatesTable({ estimates, customers, onEstimateClick, getStatusLabel,
                   className="text-xs h-7 px-2"
                   onClick={() => onEstimateClick(est)}
                 >
-                   Več o računu
+                  Več o računu
                 </Button>
               </TableCell>
             </TableRow>
@@ -833,7 +806,7 @@ function EstimatesTable({ estimates, customers, onEstimateClick, getStatusLabel,
         })}
         {estimates.length === 0 && (
           <TableRow>
-            <TableCell colSpan={11} className="text-center text-gray-400 py-8">
+            <TableCell colSpan={10} className="text-center text-gray-400 py-8">
               Ni predračunov
             </TableCell>
           </TableRow>

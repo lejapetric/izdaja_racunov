@@ -261,77 +261,77 @@ const openEditModal = (invoice: Invoice) => {
 
      
       
-      {/* MODAL ZA STORNIRANJE */}
-      <Dialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
-        <DialogContent className="max-w-2xl aria-describedby={undefined}">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-red-700">
-              <Ban className="w-5 h-5 text-red-600" />
-              Storniraj račun
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-6 py-4">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-5">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-base font-semibold text-red-800">OPOZORILO!</p>
-                  <p className="text-sm text-red-700 mt-2 leading-relaxed">
-                    Storniranje računa <span className="font-semibold">{cancelInvoice?.number} </span> 
-                    za kupca <span className="font-semibold">{cancelInvoice?.customerName}</span> 
-                    v znesku <span className="font-semibold">{cancelInvoice?.totalGross}€ </span> 
-                    je <span className="font-semibold underline">TRAJNO</span> in ga <span className="font-semibold underline">ni mogoče razveljaviti</span>.
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="grid gap-4">
-              <div>
-                <label className="text-sm font-medium block mb-2 text-gray-700">Številka računa</label>
-                <Input 
-                  value={cancelInvoice?.number || ''} 
-                  disabled 
-                  className="bg-gray-50 border-gray-200 text-base"
-                />
-              </div>
-              
-              <div>
-                <label className="text-sm font-medium block mb-2 text-gray-700">
-                  Razlog za stornacijo <span className="text-red-500">*</span>
-                </label>
-                <Textarea 
-                  value={cancelReason} 
-                  onChange={(e) => setCancelReason(e.target.value)} 
-                  placeholder="Vpišite podroben razlog za stornacijo (obvezno)..."
-                  rows={4}
-                  className="border-red-200 focus:border-red-400 focus:ring-red-400 resize-none"
-                />
-                <p className="text-xs text-gray-500 mt-2">
-                  Razlog bo zabeležen v dnevniku sprememb računa in viden v zgodovini.
-                </p>
-              </div>
-            </div>
+{/* MODAL ZA STORNIRANJE */}
+<Dialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
+  <DialogContent className="max-w-2xl">
+    <DialogHeader>
+      <DialogTitle className="flex items-center gap-2 text-red-700">
+        <Ban className="w-5 h-5 text-red-600" />
+        Storniraj račun
+      </DialogTitle>
+    </DialogHeader>
+    <div className="space-y-6 py-4">
+      <div className="bg-red-50 border border-red-200 rounded-lg p-5">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-base font-semibold text-red-800">OPOZORILO!</p>
+            <p className="text-sm text-red-700 mt-2 leading-relaxed">
+              Storniranje računa <span className="font-semibold">{cancelInvoice?.number} </span> 
+              za kupca <span className="font-semibold">{cancelInvoice?.customerName}</span> 
+              v znesku <span className="font-semibold">{formatCurrency(cancelInvoice?.totalGross || 0)} </span> 
+              je <span className="font-semibold underline">TRAJNO</span> in ga <span className="font-semibold underline">ni mogoče razveljaviti</span>.
+            </p>
           </div>
-          <DialogFooter className="gap-3 pt-4">
-            <Button 
-              variant="outline" 
-              onClick={() => setCancelModalOpen(false)}
-              className="px-6"
-            >
-              <X className="w-4 h-4 mr-2" /> Prekliči
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleCancelInvoice} 
-              disabled={!cancelReason.trim()}
-              className="px-6"
-            >
-              <Ban className="w-4 h-4 mr-2" /> Storniraj račun
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>
+      
+      <div className="grid gap-4">
+        <div>
+          <label className="text-sm font-medium block mb-2 text-gray-700">Številka računa</label>
+          <Input 
+            value={cancelInvoice?.number || ''} 
+            disabled 
+            className="bg-gray-50 border-gray-200 text-base"
+          />
+        </div>
+        
+        <div>
+          <label className="text-sm font-medium block mb-2 text-gray-700">
+            Razlog za stornacijo <span className="text-red-500">*</span>
+          </label>
+          <Textarea 
+            value={cancelReason} 
+            onChange={(e) => setCancelReason(e.target.value)} 
+            placeholder="Vpišite podroben razlog za stornacijo (obvezno)..."
+            rows={4}
+            className="border-red-200 focus:border-red-400 focus:ring-red-400 resize-none"
+          />
+          <p className="text-xs text-gray-500 mt-2">
+            Razlog bo zabeležen v dnevniku sprememb računa in viden v zgodovini.
+          </p>
+        </div>
+      </div>
+    </div>
+    <DialogFooter className="gap-3 pt-4">
+      <Button 
+        variant="outline" 
+        onClick={() => setCancelModalOpen(false)}
+        className="px-6"
+      >
+        <X className="w-4 h-4 mr-2" /> Prekliči
+      </Button>
+      <Button 
+        variant="destructive" 
+        onClick={handleCancelInvoice} 
+        disabled={!cancelReason.trim()}
+        className="px-6"
+      >
+        <Ban className="w-4 h-4 mr-2" /> Storniraj račun
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
 
       {/* MODAL ZA E-POŠTO */}
       <Dialog open={emailModalOpen} onOpenChange={setEmailModalOpen}>

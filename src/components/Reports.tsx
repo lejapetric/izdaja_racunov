@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { formatCurrency, formatDateForCompare } from '@/lib/utils'
-import { Download, FileText, PieChart as PieChartIcon, Printer, Filter, ChevronDown, ChevronUp, TrendingUp, TrendingDown, DollarSign, Calendar, Percent } from 'lucide-react'
+import { Download, FileText, PieChart as PieChartIcon, Printer, Filter, ChevronDown, ChevronUp, TrendingUp, TrendingDown, DollarSign, Calendar, Percent, Clock } from 'lucide-react'
 import DatePicker from 'react-datepicker'
 import { sl } from 'date-fns/locale'
 import { CustomDateInput } from '@/components/ui/CustomDateInput'
@@ -271,42 +271,120 @@ export function Reports() {
             <div className="space-y-4 pt-4 border-t">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Znesek (bruto) od</label>
-                  <NumberInput placeholder="Minimalni znesek €" value={priceMin} onChange={setPriceMin} min={1} max={999999999} />
-                  <label className="text-sm font-medium mt-2 mb-1 block">Znesek (bruto) do</label>
-                  <NumberInput placeholder="Maksimalni znesek €" value={priceMax} onChange={setPriceMax} min={1} max={999999999} />
+                  <label className="text-sm font-medium mb-1 block flex items-center gap-1">
+                    <DollarSign className="w-4 h-4" /> Znesek (bruto) od
+                  </label>
+                  <NumberInput 
+                    placeholder="Minimalni znesek €" 
+                    value={priceMin} 
+                    onChange={setPriceMin} 
+                    min={1} 
+                    max={999999999}
+                  />
+                  <label className="text-sm font-medium mt-2 mb-1 block flex items-center gap-1">
+                    <DollarSign className="w-4 h-4" /> Znesek (bruto) do
+                  </label>
+                  <NumberInput 
+                    placeholder="Maksimalni znesek €" 
+                    value={priceMax} 
+                    onChange={setPriceMax} 
+                    min={1} 
+                    max={999999999}
+                  />
                 </div>
+
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Popust % od</label>
-                  <NumberInput placeholder="Minimalni popust %" value={discountMin} onChange={setDiscountMin} min={0} max={100} />
-                  <label className="text-sm font-medium mt-2 mb-1 block">Popust % do</label>
-                  <NumberInput placeholder="Maksimalni popust %" value={discountMax} onChange={setDiscountMax} min={0} max={100} />
+                  <label className="text-sm font-medium mb-1 block flex items-center gap-1">
+                    <Percent className="w-4 h-4" /> Popust % od
+                  </label>
+                  <NumberInput 
+                    placeholder="Minimalni popust %" 
+                    value={discountMin} 
+                    onChange={setDiscountMin} 
+                    min={0} 
+                    max={100}
+                  />
+                  <label className="text-sm font-medium mt-2 mb-1 block flex items-center gap-1">
+                    <Percent className="w-4 h-4" /> Popust % do
+                  </label>
+                  <NumberInput 
+                    placeholder="Maksimalni popust %" 
+                    value={discountMax} 
+                    onChange={setDiscountMax} 
+                    min={0} 
+                    max={100}
+                  />
                 </div>
+
                 <div>
                   <label className="text-sm font-medium mb-1 block">Status računa</label>
-                  <select 
-                    className="w-full border rounded-md px-3 py-2"
-                    value={selectedStatus}
-                    onChange={(e) => setSelectedStatus(e.target.value as InvoiceStatus | 'all')}
-                  >
-                    {statusOptions.map(option => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select 
+                      className="w-full border rounded-md px-3 py-2 bg-white"
+                      value={selectedStatus}
+                      onChange={(e) => setSelectedStatus(e.target.value as InvoiceStatus | 'all')}
+                    >
+                      {statusOptions.map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              
+              {/* DATUMSKI FILTRI - enaka postavitev kot InvoiceFilters */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-8 gap-4">
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Datum izdaje od</label>
-                  <DatePicker selected={dateFrom} onChange={setDateFrom} dateFormat="dd. MM. yyyy" locale={sl} customInput={<CustomDateInput onClear={() => setDateFrom(null)} />} />
-                  <label className="text-sm font-medium mt-2 mb-1 block">Datum izdaje do</label>
-                  <DatePicker selected={dateTo} onChange={setDateTo} dateFormat="dd. MM. yyyy" locale={sl} customInput={<CustomDateInput onClear={() => setDateTo(null)} />} />
+                  <label className="text-sm font-medium mb-1 block flex items-center gap-1">
+                    <Calendar className="w-4 h-4" /> Datum izdaje od
+                  </label>
+                  <DatePicker
+                    selected={dateFrom}
+                    onChange={setDateFrom}
+                    dateFormat="dd. MM. yyyy"
+                    locale={sl}
+                    customInput={<CustomDateInput onClear={() => setDateFrom(null)} />}
+                    placeholderText="Izberite datum od"
+                    isClearable={false}
+                  />
+                  <label className="text-sm font-medium mt-2 mb-1 block flex items-center gap-1">
+                    <Calendar className="w-4 h-4" /> Datum izdaje do
+                  </label>
+                  <DatePicker
+                    selected={dateTo}
+                    onChange={setDateTo}
+                    dateFormat="dd. MM. yyyy"
+                    locale={sl}
+                    customInput={<CustomDateInput onClear={() => setDateTo(null)} />}
+                    placeholderText="Izberite datum do"
+                    isClearable={false}
+                  />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Datum zapadlosti od</label>
-                  <DatePicker selected={dueDateFrom} onChange={setDueDateFrom} dateFormat="dd. MM. yyyy" locale={sl} customInput={<CustomDateInput onClear={() => setDueDateFrom(null)} />} />
-                  <label className="text-sm font-medium mt-2 mb-1 block">Datum zapadlosti do</label>
-                  <DatePicker selected={dueDateTo} onChange={setDueDateTo} dateFormat="dd. MM. yyyy" locale={sl} customInput={<CustomDateInput onClear={() => setDueDateTo(null)} />} />
+                  <label className="text-sm font-medium mb-1 block flex items-center gap-1">
+                    <Clock className="w-4 h-4" /> Datum zapadlosti od
+                  </label>
+                  <DatePicker
+                    selected={dueDateFrom}
+                    onChange={setDueDateFrom}
+                    dateFormat="dd. MM. yyyy"
+                    locale={sl}
+                    customInput={<CustomDateInput onClear={() => setDueDateFrom(null)} />}
+                    placeholderText="Izberite datum od"
+                    isClearable={false}
+                  />
+                  <label className="text-sm font-medium mt-2 mb-1 block flex items-center gap-1">
+                    <Clock className="w-4 h-4" /> Datum zapadlosti do
+                  </label>
+                  <DatePicker
+                    selected={dueDateTo}
+                    onChange={setDueDateTo}
+                    dateFormat="dd. MM. yyyy"
+                    locale={sl}
+                    customInput={<CustomDateInput onClear={() => setDueDateTo(null)} />}
+                    placeholderText="Izberite datum do"
+                    isClearable={false}
+                  />
                 </div>
               </div>
             </div>

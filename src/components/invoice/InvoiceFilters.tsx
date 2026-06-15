@@ -182,28 +182,9 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
                 max={999999999}
               />
             </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block flex items-center gap-1">
-                <Percent className="w-4 h-4" /> Popust od
-              </label>
-              <NumberInput 
-                placeholder="Minimalni popust %" 
-                value={discountMin} 
-                onChange={setDiscountMin} 
-                min={0} 
-                max={100}
-              />
-              <label className="text-sm font-medium mt-2 mb-1 block flex items-center gap-1">
-                <Percent className="w-4 h-4" /> Popust do
-              </label>
-              <NumberInput 
-                placeholder="Maksimalni popust %" 
-                value={discountMax} 
-                onChange={setDiscountMax} 
-                min={0} 
-                max={100}
-              />
-            </div>
+
+
+
             <div>
               <label className="text-sm font-medium mb-1 block">Status računa</label>
               <div className="relative" ref={statusDropdownRef}>

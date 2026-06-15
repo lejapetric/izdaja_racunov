@@ -79,9 +79,7 @@ const handleSave = () => {
   }
   
   // Validacija količine - prazno ali 0 ni dovoljeno
-  const quantity = newItem.quantity === '' || newItem.quantity === null || newItem.quantity === undefined 
-    ? 0 
-    : Number(newItem.quantity)
+  const quantity = typeof newItem.quantity === 'number' ? newItem.quantity : 0
   
   if (quantity <= 0) {
     // Opomba: lahko dodate state za napako
@@ -131,7 +129,7 @@ const handleSave = () => {
 }
 
   const { netBeforeDiscount, discountAmount, net, vatAmount, gross } = calculateItemTotals(newItem)
-  const isQuantityValid = newItem.quantity !== undefined && newItem.quantity !== null && newItem.quantity > 0
+  const isQuantityValid = typeof newItem.quantity === 'number' && newItem.quantity > 0
 
   return (
     <Dialog open={open} onOpenChange={(val) => { if (!val) onOpenChange(val); resetForm() }}>
@@ -157,7 +155,7 @@ const handleSave = () => {
             <label className="text-sm font-medium mb-1 block">Količina *</label>
             <NumberInput 
               value={newItem.quantity !== undefined && newItem.quantity !== null && newItem.quantity !== 0 ? newItem.quantity : ''} 
-              onChange={(val) => setNewItem({ ...newItem, quantity: val === null || val === 0 ? '' : val })} 
+              onChange={(val) => setNewItem({ ...newItem, quantity: val === 0 ? '' : val })} 
               min={0} 
               max={1000} 
               step={0.5} 
@@ -197,7 +195,7 @@ const handleSave = () => {
                   onChange={(val) => {
                     setNewItem({ 
                       ...newItem, 
-                      discountPercent: val === null || val === 0 ? '' : val 
+                      discountPercent: val === 0 ? '' : val 
                     })
                   }} 
                   min={0} 

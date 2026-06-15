@@ -234,15 +234,6 @@ const getRequiredFieldsMessage = () => {
       updatedAt: new Date().toISOString(),
     }
 
-    if (editingInvoice) {
-      updateInvoice(editingInvoice.id, invoiceData)
-      alert(`Osnutek ${editingInvoice.number} posodobljen.`)
-    } else {
-      addInvoice(invoiceData as any)
-      if (invoiceType === 'draft') alert('Osnutek shranjen.')
-      else if (invoiceType === 'estimate') alert(`Predračun ${invoiceNumber} uspešno ustvarjen!`)
-      else alert(`Račun ${invoiceNumber} uspešno izdan!`)
-    }
 
     if (!editingInvoice) resetForm()
     if (clearEditing) clearEditing()

@@ -380,73 +380,88 @@ return (
       </Card>
 
       <Card>
-        <CardHeader className="flex-row justify-between items-center">
-          <CardTitle>Postavke računa</CardTitle>
-          <Button size="sm" onClick={() => { setEditingItem(null); setModalOpen(true); }}>
-            <Plus className="w-4 h-4 mr-1" /> Dodaj postavko
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Storitev</TableHead>
-                <TableHead className="text-right">Količina</TableHead>
-                <TableHead>En.</TableHead>
-                <TableHead className="text-right">Cena/enoto (€)</TableHead>
-                <TableHead className="text-right">Popust %</TableHead>
-                <TableHead className="text-right">Neto</TableHead>
-                <TableHead className="text-right">DDV %</TableHead>
-                <TableHead className="text-right">Znesek DDV</TableHead>
-                <TableHead className="text-right">Bruto</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.map(item => (
-                <TableRow key={item.id}>
-                  <TableCell>
-                    <div className="font-medium">{item.description}</div>
-                    {(item.parcelNumber || item.cadastralMunicipality) && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        {[
-                          item.parcelNumber && `št. parcele: ${item.parcelNumber}`,
-                          item.cadastralMunicipality && `kat.občina: ${item.cadastralMunicipality}`
-                        ].filter(Boolean).join(' | ')}
-                      </div>
-                    )}
-                    {item.itemNote && <div className="text-xs text-gray-500 mt-1">{item.itemNote}</div>}
-                    {item.vatRate === 0 && item.vatExemptionReason && (
-                      <div className="text-xs text-gray-600 mt-1">{item.vatExemptionReason}</div>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">{item.quantity}</TableCell>
-                  <TableCell>{item.unit}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
-                  <TableCell className="text-right">{item.discountPercent || 0}%</TableCell>
-                  <TableCell className="text-right font-medium">{formatCurrency(item.net)}</TableCell>
-                  <TableCell className="text-right">{item.vatRate}%</TableCell>
-                  <TableCell className="text-right">{formatCurrency(item.vatAmount)}</TableCell>
-                  <TableCell className="text-right font-bold">{formatCurrency(item.gross)}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button size="sm" variant="ghost" onClick={() => editItem(item)}><Edit className="w-4 h-4" /></Button>
-                      <Button size="sm" variant="ghost" onClick={() => deleteItem(item.id)}><Trash2 className="w-4 h-4" /></Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {items.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={10} className="text-center text-gray-400">Ni postavk. Kliknite "Dodaj postavko".</TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+  <CardHeader className="flex-row justify-between items-center flex-wrap gap-2">
+    <CardTitle className="text-sm sm:text-base md:text-lg">Postavke računa</CardTitle>
+    <Button size="sm" onClick={() => { setEditingItem(null); setModalOpen(true); }}>
+      <Plus className="w-4 h-4 mr-1" /> Dodaj postavko
+    </Button>
+  </CardHeader>
+  <CardContent className="overflow-x-auto">
+    <div className="min-w-[800px] md:min-w-0">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="text-xs sm:text-sm">Storitev</TableHead>
+            <TableHead className="text-right text-xs sm:text-sm">Količina</TableHead>
+            <TableHead className="text-xs sm:text-sm">Enota</TableHead>
+            <TableHead className="text-right text-xs sm:text-sm">Cena/enoto</TableHead>
+            <TableHead className="text-right text-xs sm:text-sm">Popust %</TableHead>
+            <TableHead className="text-right text-xs sm:text-sm">Neto</TableHead>
+            <TableHead className="text-right text-xs sm:text-sm">DDV %</TableHead>
+            <TableHead className="text-right text-xs sm:text-sm">Znesek DDV</TableHead>
+            <TableHead className="text-right text-xs sm:text-sm">Bruto</TableHead>
+            <TableHead className="w-16"></TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {items.map(item => (
+            <TableRow key={item.id}>
+              <TableCell className="max-w-[200px] sm:max-w-[300px] md:max-w-none">
+                <div className="text-xs sm:text-sm font-medium break-words">{item.description}</div>
+                {(item.parcelNumber || item.cadastralMunicipality || item.cadastreName || item.landRegisterId) && (
+                  <div className="text-[10px] sm:text-xs text-gray-500 mt-1">
+                    {[
+                      item.parcelNumber && `št. parcele: ${item.parcelNumber}`,
+                      item.cadastralMunicipality && `kat. občina: ${item.cadastralMunicipality}`,
+                      (item.cadastreName || (item.parcelNumber && 'Kataster stavb')) && 
+                        `ime katastra: ${item.cadastreName || 'Kataster stavb'}`,
+                      (item.landRegisterId || (item.parcelNumber && item.cadastralMunicipality && 
+                        `${item.cadastralMunicipality.split(' ')[0]} ${item.parcelNumber}`)) && 
+                        `ID zaznambe: ${item.landRegisterId || `${item.cadastralMunicipality?.split(' ')[0]} ${item.parcelNumber}`}`
+                    ].filter(Boolean).join(' | ')}
+                  </div>
+                )}
+                {item.itemNote && (
+                  <div className="text-[10px] sm:text-xs text-gray-500 mt-1 break-words">{item.itemNote}</div>
+                )}
+                {item.vatRate === 0 && item.vatExemptionReason && (
+                  <div className="text-[10px] sm:text-xs text-gray-600 mt-1 break-words">{item.vatExemptionReason}</div>
+                )}
+              </TableCell>
+              <TableCell className="text-right text-xs sm:text-sm whitespace-nowrap">{item.quantity}</TableCell>
+              <TableCell className="text-xs sm:text-sm whitespace-nowrap">{item.unit}</TableCell>
+              <TableCell className="text-right text-xs sm:text-sm whitespace-nowrap">{formatCurrency(item.price)}</TableCell>
+              <TableCell className="text-right text-xs sm:text-sm whitespace-nowrap">{item.discountPercent || 0}%</TableCell>
+              <TableCell className="text-right text-xs sm:text-sm whitespace-nowrap">{formatCurrency(item.net)}</TableCell>
+              <TableCell className="text-right text-xs sm:text-sm whitespace-nowrap">{item.vatRate}%</TableCell>
+              <TableCell className="text-right text-xs sm:text-sm whitespace-nowrap">{formatCurrency(item.vatAmount)}</TableCell>
+              <TableCell className="text-right text-xs sm:text-sm whitespace-nowrap font-bold">{formatCurrency(item.gross)}</TableCell>
+              <TableCell>
+                <div className="flex gap-1">
+                  <Button size="sm" variant="ghost" onClick={() => editItem(item)} className="h-7 w-7 p-0">
+                    <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => deleteItem(item.id)} className="h-7 w-7 p-0">
+                    <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+          {items.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={10} className="text-center text-gray-400 text-xs sm:text-sm">
+                Ni postavk. Kliknite "Dodaj postavko".
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
 
-          <InvoiceTotals totals={totals} />
-        </CardContent>
-      </Card>
+    <InvoiceTotals totals={totals} />
+  </CardContent>
+</Card>
 
 {/* Footer z gumbi */}
 <div className="flex justify-between items-center">

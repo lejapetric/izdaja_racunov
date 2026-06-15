@@ -71,37 +71,64 @@ export function InvoiceItemModal({ open, onOpenChange, editingItem, onSave, serv
     }
   }
 
-  const handleSave = () => {
-    const quantity = newItem.quantity || 0
-    if (!newItem.description || quantity <= 0 || !newItem.price) return
-    if (newItem.vatRate === 0 && !newItem.vatExemptionReason) return
-
-    const { netBeforeDiscount, discountAmount, net, vatAmount, gross } = calculateItemTotals(newItem)
-
-    const fullItem: InvoiceItem = {
-      id: editingItem?.id || crypto.randomUUID(),
-      description: newItem.description,
-      quantity: quantity,
-      unit: newItem.unit || 'ura',
-      price: newItem.price,
-      discountPercent: newItem.discountPercent || 0,
-      discountAmount,
-      netBeforeDiscount,
-      net,
-      vatRate: newItem.vatRate as VatRate,
-      vatAmount,
-      gross,
-      parcelNumber: newItem.parcelNumber,
-      cadastralMunicipality: newItem.cadastralMunicipality,
-      cadastreName: newItem.cadastreName,
-      landRegisterId: newItem.landRegisterId,
-      reverseCharge: newItem.reverseCharge || false,
-      vatExemptionReason: newItem.vatExemptionReason,
-      itemNote: newItem.itemNote,
-    }
-    onSave(fullItem)
-    resetForm()
+const handleSave = () => {
+  // Validacija opisa
+  if (!newItem.description || newItem.description.trim() === '') {
+    // Opomba: lahko dodate state za napako
+    return
   }
+  
+  // Validacija količine - prazno ali 0 ni dovoljeno
+  const quantity = newItem.quantity === '' || newItem.quantity === null || newItem.quantity === undefined 
+    ? 0 
+    : Number(newItem.quantity)
+  
+  if (quantity <= 0) {
+    // Opomba: lahko dodate state za napako
+    return
+  }
+  
+  // Validacija cene
+  if (!newItem.price || newItem.price <= 0) {
+    return
+  }
+  
+  // Validacija razloga za oprostitev DDV
+  if (newItem.vatRate === 0 && !newItem.vatExemptionReason) {
+    return
+  }
+
+  // Izračun vseh vrednosti
+  const { netBeforeDiscount, discountAmount, net, vatAmount, gross } = calculateItemTotals({
+    ...newItem,
+    quantity: quantity
+  })
+
+  const fullItem: InvoiceItem = {
+    id: editingItem?.id || crypto.randomUUID(),
+    description: newItem.description.trim(),
+    quantity: quantity,
+    unit: newItem.unit || 'ura',
+    price: newItem.price,
+    discountPercent: newItem.discountPercent || 0,
+    discountAmount,
+    netBeforeDiscount,
+    net,
+    vatRate: newItem.vatRate as VatRate,
+    vatAmount,
+    gross,
+    parcelNumber: newItem.parcelNumber,
+    cadastralMunicipality: newItem.cadastralMunicipality,
+    cadastreName: newItem.cadastreName,
+    landRegisterId: newItem.landRegisterId,
+    reverseCharge: newItem.reverseCharge || false,
+    vatExemptionReason: newItem.vatExemptionReason,
+    itemNote: newItem.itemNote,
+  }
+  
+  onSave(fullItem)
+  resetForm()
+}
 
   const { netBeforeDiscount, discountAmount, net, vatAmount, gross } = calculateItemTotals(newItem)
   const isQuantityValid = newItem.quantity !== undefined && newItem.quantity !== null && newItem.quantity > 0
@@ -129,11 +156,12 @@ export function InvoiceItemModal({ open, onOpenChange, editingItem, onSave, serv
           <div>
             <label className="text-sm font-medium mb-1 block">Količina *</label>
             <NumberInput 
-              value={newItem.quantity !== undefined && newItem.quantity !== null ? newItem.quantity : 0} 
-              onChange={(val) => setNewItem({ ...newItem, quantity: val === null ? 0 : val })} 
+              value={newItem.quantity !== undefined && newItem.quantity !== null && newItem.quantity !== 0 ? newItem.quantity : ''} 
+              onChange={(val) => setNewItem({ ...newItem, quantity: val === null || val === 0 ? '' : val })} 
               min={0} 
               max={1000} 
               step={0.5} 
+              placeholder="Vnesite količino"
             />
             {!isQuantityValid && (
               <div className="text-xs text-red-500 mt-1">Količina mora biti večja od 0</div>
@@ -162,8 +190,21 @@ export function InvoiceItemModal({ open, onOpenChange, editingItem, onSave, serv
           <div className="col-span-2 border-t pt-3">
             <div className="font-medium mb-2 text-sm">Popust na postavko</div>
             <div className="grid grid-cols-2 gap-4">
-              <div><label className="text-sm font-medium mb-1 block">Popust (%)</label>
-                <NumberInput value={newItem.discountPercent || 0} onChange={(val) => setNewItem({ ...newItem, discountPercent: val })} min={0} max={100} step={1} />
+              <div>
+                <label className="text-sm font-medium mb-1 block">Popust (%)</label>
+                <NumberInput 
+                  value={newItem.discountPercent !== undefined && newItem.discountPercent !== null && newItem.discountPercent !== 0 ? newItem.discountPercent : ''} 
+                  onChange={(val) => {
+                    setNewItem({ 
+                      ...newItem, 
+                      discountPercent: val === null || val === 0 ? '' : val 
+                    })
+                  }} 
+                  min={0} 
+                  max={100} 
+                  step={1}
+                  placeholder="0"
+                />
               </div>
               <div><label className="text-sm font-medium mb-1 block">Znesek popusta (€)</label>
                 <Input type="text" disabled value={formatCurrency(discountAmount)} className="bg-gray-100" />

@@ -6,3 +6,4 @@ poslji po posti/mail avtomatko potrjenao
 
 v bazi dodaj za izdajatelja in prevernika polje jeDavcniZavzanec : boolean
 dodajna racun ID za DDV ce je davcni zacezanec oz. samo davcna stevilka ce ni
+

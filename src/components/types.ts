@@ -52,7 +52,9 @@ export type InvoiceStatus =
   | 'sent'
   | 'overdue'
   | 'paid'
+  | 'partially_paid'
   | 'cancelled'
+  | 'converted'
   | 'estimate'
 
 export interface Invoice {
@@ -106,11 +108,13 @@ export interface AuditLogEntry {
   id: string
   invoiceId: string
   invoiceNumber: string
-  action: 'created' | 'edited' | 'sent' | 'paid' | 'cancelled' | 'status_changed' | 'printed'
+  action: 'created' | 'edited' | 'sent' | 'paid' | 'cancelled' | 'status_changed' | 'printed' | 'converted' | 'emailed' | 'posted' | 'viewed' | 'overdue_set' | 'alert_sent' | 'item_added' | 'item_removed' | 'saved' | 'drafted' | 'partially_paid'
   user: string
   userRole: string
   timestamp: string
   oldValue?: string
   newValue?: string
+  oldStatus?: string
+  newStatus?: string
   details?: string
 }

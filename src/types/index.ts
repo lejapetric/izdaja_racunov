@@ -1,4 +1,5 @@
-// src/types/index.ts
+// src/types.ts
+
 export type VatRate = 22 | 9.5 | 5 | 0
 
 export interface Customer {
@@ -51,7 +52,10 @@ export type InvoiceStatus =
   | 'sent'
   | 'overdue'
   | 'paid'
+  | 'partially_paid'
   | 'cancelled'
+  | 'converted'
+  | 'estimate'
 
 export interface Invoice {
   id: string
@@ -60,13 +64,14 @@ export interface Invoice {
   customerName: string
   customerTaxId: string
   customerAddress?: string
+  customerRegistrationNumber?: string
   issueDate: string
   serviceDateFrom: string
   serviceDateTo: string
   dueDate: string
   paymentTermDays: number
   items: InvoiceItem[]
-  discountPercent?: number
+  discountPercent: number
   totalNet: number
   totalVat: number
   totalGross: number
@@ -84,13 +89,11 @@ export interface Invoice {
   cancelledReason?: string
   createdAt: string
   updatedAt: string
-  customerRegistrationNumber?: string
 }
 
 export interface Estimate extends Invoice {
   isEstimate: true
   estimateNumber: string
-  status: InvoiceStatus
 }
 
 export interface User {
@@ -105,11 +108,13 @@ export interface AuditLogEntry {
   id: string
   invoiceId: string
   invoiceNumber: string
-  action: 'created' | 'edited' | 'sent' | 'paid' | 'cancelled' | 'status_changed' | 'printed' | 'converted'
+  action: 'created' | 'overdue' | 'issued' | 'edited' | 'sent' | 'paid' | 'cancelled' | 'status_changed' | 'printed' | 'converted' | 'emailed' | 'posted' | 'viewed' | 'overdue_set' | 'alert_sent' | 'item_added' | 'item_removed' | 'saved' | 'drafted' | 'partially_paid'
   user: string
   userRole: string
   timestamp: string
   oldValue?: string
   newValue?: string
+  oldStatus?: string
+  newStatus?: string
   details?: string
 }

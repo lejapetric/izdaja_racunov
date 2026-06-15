@@ -1,5 +1,6 @@
 // src/data/mockData.ts
 import { Customer, ServiceItem, Invoice, AuditLogEntry, InvoiceItem, VatRate } from '@/types'
+import { FileText, Edit, Mail, CheckCircle, Ban, RefreshCw, Printer, Send, Package, Eye, Clock, AlertCircle, Plus, Trash2, Save, XCircle, ArrowRight } from 'lucide-react'
 
 export const mockCustomers: Customer[] = [
   { id: 'c1', name: 'Občina Kranj', taxId: '12345678', address: 'Slovenski trg 1, 4000 Kranj', email: 'info@kranj.si', phone: '04 123 4567', isCompany: true, registrationNumber: '1234567' },
@@ -50,6 +51,7 @@ export const statusLabels: Record<string, string> = {
   sent: 'Poslan',
   overdue: 'Zapadel',
   paid: 'Plačan',
+  partially_paid: 'Delno plačan',
   cancelled: 'Storniran',
   converted: 'Spremenjen v račun'
 }
@@ -60,8 +62,28 @@ export const statusColors: Record<string, string> = {
   sent: 'bg-green-100 text-green-800',
   overdue: 'bg-red-100 text-red-800',
   paid: 'bg-green-300 text-emerald-800',
-  cancelled: 'bg-red-400 text-green-800',
+  partially_paid: 'bg-orange-100 text-orange-800',
+  cancelled: 'bg-red-400 text-red-800',
   converted: 'bg-purple-400 text-purple-800',
+}
+
+export const actionIcons: Record<string, { icon: any; color: string; bgColor: string }> = {
+  drafted: { icon: FileText, color: 'text-gray-800', bgColor: 'bg-gray-300' },
+  issued: { icon: FileText, color: 'text-blue-800', bgColor: 'bg-blue-100' },
+  converted: { icon: ArrowRight, color: 'text-purple-800', bgColor: 'bg-purple-400' },
+  edited: { icon: Edit, color: 'text-yellow-800', bgColor: 'bg-yellow-400' },
+  sent: { icon: Send, color: 'text-green-800', bgColor: 'bg-green-100' },
+  emailed: { icon: Mail, color: 'text-purple-800', bgColor: 'bg-purple-100' },
+  paid: { icon: CheckCircle, color: 'text-emerald-800', bgColor: 'bg-green-300' },
+  partially_paid: { icon: Clock, color: 'text-orange-800', bgColor: 'bg-orange-100' },
+  cancelled: { icon: XCircle, color: 'text-red-800', bgColor: 'bg-red-400' },
+  printed: { icon: Printer, color: 'text-gray-600', bgColor: 'bg-gray-100' },
+  viewed: { icon: Eye, color: 'text-gray-600', bgColor: 'bg-gray-100' },
+  overdue: { icon: Clock, color: 'text-red-800', bgColor: 'bg-red-100' },
+  alert_sent: { icon: AlertCircle, color: 'text-orange-600', bgColor: 'bg-orange-100' },
+  item_added: { icon: Plus, color: 'text-green-800', bgColor: 'bg-green-100' },
+  item_removed: { icon: Trash2, color: 'text-red-800', bgColor: 'bg-red-100' },
+  saved: { icon: Save, color: 'text-indigo-800', bgColor: 'bg-indigo-100' },
 }
 
 // Helper function to create invoice items
@@ -349,6 +371,83 @@ export const initialEstimates: Invoice[] = [
     createdAt: '2026-06-05T09:00:00Z',
     updatedAt: '2026-06-10T14:00:00Z',
   } as Invoice,
+  {
+  id: 'est8',
+  number: 'PR-2026-0008',
+  customerId: 'c3',
+  customerName: 'Stanislav Horvat',
+  customerTaxId: 'SI11223344',
+  customerRegistrationNumber: '',
+  customerAddress: 'Cesta v Mestni log 8, 1000 Ljubljana',
+  issueDate: '2026-06-01',
+  serviceDateFrom: '2026-06-15',
+  serviceDateTo: '2026-06-20',
+  dueDate: '2026-07-01',
+  paymentTermDays: 30,
+  items: createEstimateItems([{ serviceId: 's1', quantity: 2, parcelNumber: '555/1', cadastralMunicipality: '1434 Šiška', itemNote: 'Geodetsko snemanje za gradbeno dovoljenje' }]),
+  discountPercent: 0,
+  ...(() => {
+    const items = createEstimateItems([{ serviceId: 's1', quantity: 2, parcelNumber: '555/1', cadastralMunicipality: '1434 Šiška', itemNote: 'Geodetsko snemanje za gradbeno dovoljenje' }])
+    const totals = calculateTotalsForInvoice(items, 0)
+    return { totalNet: totals.totalNetAfterItemDiscounts, totalVat: totals.totalVat, totalGross: totals.totalGross, vatBreakdown: totals.vatBreakdown }
+  })(),
+  status: 'converted',
+  note: 'Predračun spremenjen v račun R-2026-0045.',
+  createdAt: '2026-06-01T10:00:00Z',
+  updatedAt: '2026-06-15T12:00:00Z',
+} as Invoice,
+
+{
+  id: 'est9',
+  number: 'PR-2026-0009',
+  customerId: 'c8',
+  customerName: 'Občina Škofja Loka',
+  customerTaxId: '12345678',
+  customerRegistrationNumber: '87654321',
+  customerAddress: 'Stari trg 1, 4220 Škofja Loka',
+  issueDate: '2026-06-10',
+  serviceDateFrom: '2026-06-25',
+  serviceDateTo: '2026-06-30',
+  dueDate: '2026-07-10',
+  paymentTermDays: 30,
+  items: createEstimateItems([{ serviceId: 's2', quantity: 1, parcelNumber: '777/3', cadastralMunicipality: '2000 Škofja Loka', itemNote: 'Izdelava elaborata' }]),
+  discountPercent: 0,
+  ...(() => {
+    const items = createEstimateItems([{ serviceId: 's2', quantity: 1, parcelNumber: '777/3', cadastralMunicipality: '2000 Škofja Loka', itemNote: 'Izdelava elaborata' }])
+    const totals = calculateTotalsForInvoice(items, 0)
+    return { totalNet: totals.totalNetAfterItemDiscounts, totalVat: totals.totalVat, totalGross: totals.totalGross, vatBreakdown: totals.vatBreakdown }
+  })(),
+  status: 'converted',
+  note: 'Predračun spremenjen v račun R-2026-0050.',
+  createdAt: '2026-06-10T09:00:00Z',
+  updatedAt: '2026-07-01T10:00:00Z',
+} as Invoice,
+
+{
+  id: 'est10',
+  number: 'PR-2026-0010',
+  customerId: 'c1',
+  customerName: 'Občina Kranj',
+  customerTaxId: '12345678',
+  customerRegistrationNumber: '99887123',
+  customerAddress: 'Slovenski trg 1, 4000 Kranj',
+  issueDate: '2026-06-15',
+  serviceDateFrom: '2026-07-01',
+  serviceDateTo: '2026-07-10',
+  dueDate: '2026-07-15',
+  paymentTermDays: 30,
+  items: createEstimateItems([{ serviceId: 's4', quantity: 3, parcelNumber: '325/4', cadastralMunicipality: '1434 Šiška', itemNote: 'Katastrska izmera' }]),
+  discountPercent: 10,
+  ...(() => {
+    const items = createEstimateItems([{ serviceId: 's4', quantity: 3, parcelNumber: '325/4', cadastralMunicipality: '1434 Šiška', itemNote: 'Katastrska izmera' }])
+    const totals = calculateTotalsForInvoice(items, 10)
+    return { totalNet: totals.totalNetAfterItemDiscounts, totalVat: totals.totalVat, totalGross: totals.totalGross, vatBreakdown: totals.vatBreakdown }
+  })(),
+  status: 'converted',
+  note: 'Predračun spremenjen v račun R-2026-0055.',
+  createdAt: '2026-06-15T13:00:00Z',
+  updatedAt: '2026-07-05T11:00:00Z',
+} as Invoice,
 ]
 
 // ZAPADLI RAČUNI (status 'overdue')
@@ -812,6 +911,87 @@ export const initialInvoices: Invoice[] = [
     createdAt: '2025-06-30T10:00:00Z',
     updatedAt: '2025-06-30T10:00:00Z',
   } as Invoice,
+  {
+    id: 'inv8',
+    number: 'R-2025-0057',
+    customerId: 'c4',
+    customerName: 'Občina Ljubljana',
+    customerTaxId: '56789012',
+    customerRegistrationNumber: '3456789',
+    customerAddress: 'Mestni trg 1, 1000 Ljubljana',
+    issueDate: '2025-07-01',
+    serviceDateFrom: '2025-06-25',
+    serviceDateTo: '2025-06-30',
+    dueDate: '2025-08-01',
+    paymentTermDays: 30,
+    items: createItems([{ serviceId: 's1', quantity: 10, parcelNumber: '1000/1', cadastralMunicipality: '1000 Ljubljana', itemNote: 'Obsežno geodetsko snemanje' }]),
+    discountPercent: 0,
+    ...(() => {
+      const items = createItems([{ serviceId: 's1', quantity: 10, parcelNumber: '1000/1', cadastralMunicipality: '1000 Ljubljana', itemNote: 'Obsežno geodetsko snemanje' }])
+      const totals = calculateTotalsForInvoice(items, 0)
+      return { totalNet: totals.totalNetAfterItemDiscounts, totalVat: totals.totalVat, totalGross: totals.totalGross, vatBreakdown: totals.vatBreakdown }
+    })(),
+    status: 'partially_paid',
+    note: 'Kupec je plačal 50% vrednosti računa.',
+    createdAt: '2025-07-01T08:00:00Z',
+    updatedAt: '2025-08-15T10:00:00Z',
+    paidAt: '2025-08-15T10:00:00Z',
+  } as Invoice,
+
+{
+  id: 'inv9',
+  number: 'R-2025-0058',
+  customerId: 'c5',
+  customerName: 'Gradnja Marles d.o.o.',
+  customerTaxId: 'SI44332211',
+  customerRegistrationNumber: '8765432',
+  customerAddress: 'Poslovna cona A 12, 2000 Maribor',
+  issueDate: '2025-07-10',
+  serviceDateFrom: '2025-07-01',
+  serviceDateTo: '2025-07-09',
+  dueDate: '2025-08-10',
+  paymentTermDays: 30,
+  items: createItems([{ serviceId: 's3', quantity: 5, parcelNumber: '333/7', cadastralMunicipality: '2000 Maribor', itemNote: 'Kompleksna parcelacija' }]),
+  discountPercent: 10,
+  ...(() => {
+    const items = createItems([{ serviceId: 's3', quantity: 5, parcelNumber: '333/7', cadastralMunicipality: '2000 Maribor', itemNote: 'Kompleksna parcelacija' }])
+    const totals = calculateTotalsForInvoice(items, 10)
+    return { totalNet: totals.totalNetAfterItemDiscounts, totalVat: totals.totalVat, totalGross: totals.totalGross, vatBreakdown: totals.vatBreakdown }
+  })(),
+  status: 'partially_paid',
+  note: 'Plačano 30% - dogovorjeno obročno plačilo.',
+  createdAt: '2025-07-10T09:00:00Z',
+  updatedAt: '2025-09-01T14:00:00Z',
+  paidAt: '2025-09-01T14:00:00Z',
+} as Invoice,
+
+{
+  id: 'inv10',
+  number: 'R-2025-0059',
+  customerId: 'c6',
+  customerName: 'Geodetski zavod Slovenije',
+  customerTaxId: 'SI99887766',
+  customerRegistrationNumber: '12345678',
+  customerAddress: 'Dimičeva ulica 12, 1000 Ljubljana',
+  issueDate: '2025-07-15',
+  serviceDateFrom: '2025-07-10',
+  serviceDateTo: '2025-07-14',
+  dueDate: '2025-08-15',
+  paymentTermDays: 30,
+  items: createItems([{ serviceId: 's4', quantity: 8, parcelNumber: '888/2', cadastralMunicipality: '1000 Ljubljana', itemNote: 'Katastrska izmera za več parcel' }]),
+  discountPercent: 5,
+  ...(() => {
+    const items = createItems([{ serviceId: 's4', quantity: 8, parcelNumber: '888/2', cadastralMunicipality: '1000 Ljubljana', itemNote: 'Katastrska izmera za več parcel' }])
+    const totals = calculateTotalsForInvoice(items, 5)
+    return { totalNet: totals.totalNetAfterItemDiscounts, totalVat: totals.totalVat, totalGross: totals.totalGross, vatBreakdown: totals.vatBreakdown }
+  })(),
+  status: 'partially_paid',
+  note: 'Plačano 60% - preostanek v 30 dneh.',
+  createdAt: '2025-07-15T11:00:00Z',
+  updatedAt: '2025-09-10T09:00:00Z',
+  paidAt: '2025-09-10T09:00:00Z',
+} as Invoice,
+
   
   // Dodani zapadli računi
   ...initialOverdueInvoices,
@@ -824,28 +1004,64 @@ export const mockAuditLogs: AuditLogEntry[] = []
 
 export const initializeAuditLogs = () => {
   mockAuditLogs.push(
-    { id: 'a1', invoiceId: 'inv1', invoiceNumber: 'R-2025-0047', action: 'created', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2025-06-09T10:00:00Z', details: 'Račun ustvarjen iz predračuna P-2405-12' },
+    { id: 'a1', invoiceId: 'inv1', invoiceNumber: 'R-2025-0047', action: 'issued', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2025-06-09T10:00:00Z', details: 'Račun ustvarjen iz predračuna P-2405-12' },
     { id: 'a2', invoiceId: 'inv1', invoiceNumber: 'R-2025-0047', action: 'sent', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2025-06-09T10:30:00Z', details: 'Račun poslan po e-pošti na naslov info@kranj.si' },
     { id: 'a3', invoiceId: 'inv1', invoiceNumber: 'R-2025-0047', action: 'paid', user: 'Igor Žagar', userRole: 'direktor', timestamp: '2025-07-10T14:00:00Z', details: 'Račun označen kot plačan - plačilo prispelo na TRR' },
-    { id: 'a4', invoiceId: 'inv2', invoiceNumber: 'R-2025-0048', action: 'created', user: 'Ana Kuhar', userRole: 'projektant', timestamp: '2025-06-15T09:00:00Z', details: 'Račun ustvarjen na podlagi terenskega dela' },
+    { id: 'a4', invoiceId: 'inv2', invoiceNumber: 'R-2025-0048', action: 'issued', user: 'Ana Kuhar', userRole: 'projektant', timestamp: '2025-06-15T09:00:00Z', details: 'Račun ustvarjen na podlagi terenskega dela' },
     { id: 'a5', invoiceId: 'inv2', invoiceNumber: 'R-2025-0048', action: 'status_changed', user: 'Sistem', userRole: 'auto', timestamp: '2025-07-16T00:00:00Z', details: 'Račun samodejno označen kot zapadel - rok plačila potekel', oldValue: 'izdan', newValue: 'zapadel' },
-    { id: 'a6', invoiceId: 'inv3', invoiceNumber: 'R-2025-0049', action: 'created', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2025-06-20T08:00:00Z', details: 'Račun ustvarjen' },
+    { id: 'a6', invoiceId: 'inv3', invoiceNumber: 'R-2025-0049', action: 'issued', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2025-06-20T08:00:00Z', details: 'Račun ustvarjen' },
     { id: 'a7', invoiceId: 'inv3', invoiceNumber: 'R-2025-0049', action: 'edited', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2025-06-20T08:30:00Z', details: 'Popravljena cena pri postavki Geodetsko snemanje', oldValue: '140,00 €', newValue: '150,00 €' },
     { id: 'a8', invoiceId: 'inv3', invoiceNumber: 'R-2025-0049', action: 'sent', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2025-06-21T11:00:00Z', details: 'Račun poslan po e-pošti na naslov stanislav.horvat@gmail.com' },
-    { id: 'a9', invoiceId: 'inv4', invoiceNumber: 'R-2025-0050', action: 'created', user: 'Igor Žagar', userRole: 'direktor', timestamp: '2025-06-25T13:00:00Z', details: 'Račun ustvarjen - čaka na pošiljanje' },
-    { id: 'a10', invoiceId: 'inv5', invoiceNumber: 'OSNUTEK', action: 'created', user: 'Ana Kuhar', userRole: 'projektant', timestamp: '2025-06-28T09:30:00Z', details: 'Osnutek računa ustvarjen' },
+    { id: 'a9', invoiceId: 'inv4', invoiceNumber: 'R-2025-0050', action: 'issued', user: 'Igor Žagar', userRole: 'direktor', timestamp: '2025-06-25T13:00:00Z', details: 'Račun ustvarjen - čaka na pošiljanje' },
+    { id: 'a10', invoiceId: 'inv5', invoiceNumber: 'OSNUTEK', action: 'issued', user: 'Ana Kuhar', userRole: 'projektant', timestamp: '2025-06-28T09:30:00Z', details: 'Osnutek računa ustvarjen' },
     { id: 'a11', invoiceId: 'inv5', invoiceNumber: 'OSNUTEK', action: 'edited', user: 'Ana Kuhar', userRole: 'projektant', timestamp: '2025-06-28T10:00:00Z', details: 'Dodana parcela 333/7, k.o. Maribor' },
-    { id: 'a12', invoiceId: 'inv6', invoiceNumber: 'R-2025-0046', action: 'created', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2025-05-20T10:00:00Z', details: 'Račun ustvarjen' },
+    { id: 'a12', invoiceId: 'inv6', invoiceNumber: 'R-2025-0046', action: 'issued', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2025-05-20T10:00:00Z', details: 'Račun ustvarjen' },
     { id: 'a13', invoiceId: 'inv6', invoiceNumber: 'R-2025-0046', action: 'sent', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2025-05-20T10:30:00Z', details: 'Račun poslan po e-pošti' },
     { id: 'a14', invoiceId: 'inv6', invoiceNumber: 'R-2025-0046', action: 'cancelled', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2025-05-25T09:00:00Z', details: 'Račun storniran - Razlog: Kupec je podvojil naročilo' },
     
     // Audit logi za predračune
-    { id: 'a15', invoiceId: 'est1', invoiceNumber: 'PR-2026-0001', action: 'created', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2026-05-01T09:00:00Z', details: 'Predračun ustvarjen' },
+    { id: 'a15', invoiceId: 'est1', invoiceNumber: 'PR-2026-0001', action: 'issued', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2026-05-01T09:00:00Z', details: 'Predračun ustvarjen' },
     { id: 'a16', invoiceId: 'est1', invoiceNumber: 'PR-2026-0001', action: 'sent', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2026-05-02T10:00:00Z', details: 'Predračun poslan po e-pošti' },
-    { id: 'a17', invoiceId: 'est2', invoiceNumber: 'PR-2026-0002', action: 'created', user: 'Igor Žagar', userRole: 'direktor', timestamp: '2026-05-10T11:00:00Z', details: 'Predračun ustvarjen' },
-    { id: 'a18', invoiceId: 'est3', invoiceNumber: 'PR-2026-0003', action: 'created', user: 'Ana Kuhar', userRole: 'projektant', timestamp: '2026-05-15T14:00:00Z', details: 'Predračun ustvarjen' },
+    { id: 'a17', invoiceId: 'est2', invoiceNumber: 'PR-2026-0002', action: 'issued', user: 'Igor Žagar', userRole: 'direktor', timestamp: '2026-05-10T11:00:00Z', details: 'Predračun ustvarjen' },
+    { id: 'a18', invoiceId: 'est3', invoiceNumber: 'PR-2026-0003', action: 'issued', user: 'Ana Kuhar', userRole: 'projektant', timestamp: '2026-05-15T14:00:00Z', details: 'Predračun ustvarjen' },
     { id: 'a19', invoiceId: 'est3', invoiceNumber: 'PR-2026-0003', action: 'sent', user: 'Ana Kuhar', userRole: 'projektant', timestamp: '2026-05-16T09:00:00Z', details: 'Predračun poslan po e-pošti' },
     { id: 'a20', invoiceId: 'est7', invoiceNumber: 'PR-2026-0007', action: 'status_changed', user: 'Sistem', userRole: 'tajnistvo', timestamp: '2026-06-10T14:00:00Z', details: 'Predračun spremenjen v račun', oldValue: 'izdan', newValue: 'spremenjen v račun' },
+    
+    //kasneje dodana
+    { id: 'a21', invoiceId: 'inv8', invoiceNumber: 'R-2025-0057', action: 'issued', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2025-07-01T08:00:00Z', details: 'Račun ustvarjen na podlagi naročila Občine Ljubljana' },
+    { id: 'a22', invoiceId: 'inv8', invoiceNumber: 'R-2025-0057', action: 'sent', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2025-07-01T09:30:00Z', details: 'Račun poslan po e-pošti na naslov info@ljubljana.si' },
+    { id: 'a23', invoiceId: 'inv8', invoiceNumber: 'R-2025-0057', action: 'viewed', user: 'Ana Kovač', userRole: 'tajnistvo', timestamp: '2025-07-02T10:00:00Z', details: 'Račun pregledan s strani tajništva Občine Ljubljana' },
+    { id: 'a24', invoiceId: 'inv8', invoiceNumber: 'R-2025-0057', action: 'partially_paid', user: 'Igor Žagar', userRole: 'direktor', timestamp: '2025-07-15T12:00:00Z', details: 'Prejeto delno plačilo v višini 750€ (50% zneska). Stanje: delno plačano', oldValue: 'issued', newValue: 'partially_paid' },
+    { id: 'a25', invoiceId: 'inv8', invoiceNumber: 'R-2025-0057', action: 'alert_sent', user: 'Sistem', userRole: 'auto', timestamp: '2025-08-01T08:00:00Z', details: 'Samodejno opozorilo za neplačani del računa poslano tajništvu' },
+    { id: 'a26', invoiceId: 'inv8', invoiceNumber: 'R-2025-0057', action: 'paid', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2025-08-15T10:00:00Z', details: 'Prejeto preostalo plačilo 750€. Račun v celoti poravnan.', oldValue: 'partially_paid', newValue: 'paid' },
+    { id: 'a27', invoiceId: 'inv9', invoiceNumber: 'R-2025-0058', action: 'issued', user: 'Ana Kuhar', userRole: 'projektant', timestamp: '2025-07-10T09:00:00Z', details: 'Račun ustvarjen po opravljeni parcelaciji' },
+    { id: 'a28', invoiceId: 'inv9', invoiceNumber: 'R-2025-0058', action: 'edited', user: 'Ana Kuhar', userRole: 'projektant', timestamp: '2025-07-10T09:30:00Z', details: 'Popravljena količina postavk', oldValue: '3 ure', newValue: '5 ur' },
+    { id: 'a29', invoiceId: 'inv9', invoiceNumber: 'R-2025-0058', action: 'sent', user: 'Ana Kuhar', userRole: 'projektant', timestamp: '2025-07-11T08:00:00Z', details: 'Račun poslan direktorju v pregled' },
+    { id: 'a30', invoiceId: 'inv9', invoiceNumber: 'R-2025-0058', action: 'viewed', user: 'Igor Žagar', userRole: 'direktor', timestamp: '2025-07-11T10:00:00Z', details: 'Direktor pregledal račun - odobril' },
+    { id: 'a31', invoiceId: 'inv9', invoiceNumber: 'R-2025-0058', action: 'sent', user: 'Igor Žagar', userRole: 'direktor', timestamp: '2025-07-12T09:00:00Z', details: 'Račun poslan kupcu Gradnja Marles d.o.o.' },
+    { id: 'a32', invoiceId: 'inv9', invoiceNumber: 'R-2025-0058', action: 'partially_paid', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2025-08-01T13:00:00Z', details: 'Plačano 30% zneska. Dogovorjeno obročno plačilo.', oldValue: 'sent', newValue: 'partially_paid' },
+    { id: 'a33', invoiceId: 'inv9', invoiceNumber: 'R-2025-0058', action: 'paid', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2025-09-01T14:00:00Z', details: 'Prejeto preostalih 70% - račun v celoti poravnan.', oldValue: 'partially_paid', newValue: 'paid' },
+
+    // Bogata zgodovina za est8 (converted)
+    { id: 'a34', invoiceId: 'est8', invoiceNumber: 'PR-2026-0008', action: 'issued', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2026-06-01T10:00:00Z', details: 'Predračun ustvarjen na podlagi telefonskega naročila' },
+    { id: 'a35', invoiceId: 'est8', invoiceNumber: 'PR-2026-0008', action: 'edited', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2026-06-02T09:00:00Z', details: 'Dodana parcela 555/1, k.o. Šiška', oldValue: 'brez podatkov', newValue: 'št. parcele: 555/1' },
+    { id: 'a36', invoiceId: 'est8', invoiceNumber: 'PR-2026-0008', action: 'sent', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2026-06-03T11:00:00Z', details: 'Predračun poslan kupcu po e-pošti' },
+    { id: 'a37', invoiceId: 'est8', invoiceNumber: 'PR-2026-0008', action: 'viewed', user: 'Stanislav Horvat', userRole: 'zunanji', timestamp: '2026-06-05T14:00:00Z', details: 'Kupec pregledal predračun - potrdil' },
+    { id: 'a38', invoiceId: 'est8', invoiceNumber: 'PR-2026-0008', action: 'converted', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2026-06-15T12:00:00Z', details: 'Predračun spremenjen v račun R-2026-0045', oldValue: 'predračun', newValue: 'račun' },
+
+    // Bogata zgodovina za est9 (converted)
+    { id: 'a39', invoiceId: 'est9', invoiceNumber: 'PR-2026-0009', action: 'issued', user: 'Ana Kuhar', userRole: 'projektant', timestamp: '2026-06-10T09:00:00Z', details: 'Predračun ustvarjen na podlagi ponudbe' },
+    { id: 'a40', invoiceId: 'est9', invoiceNumber: 'PR-2026-0009', action: 'sent', user: 'Ana Kuhar', userRole: 'projektant', timestamp: '2026-06-11T10:00:00Z', details: 'Predračun poslan po e-pošti' },
+    { id: 'a41', invoiceId: 'est9', invoiceNumber: 'PR-2026-0009', action: 'overdue', user: 'Sistem', userRole: 'auto', timestamp: '2026-07-11T00:00:00Z', details: 'Predračun zapadel - ni bil potrjen v roku', oldValue: 'sent', newValue: 'overdue' },
+    { id: 'a42', invoiceId: 'est9', invoiceNumber: 'PR-2026-0009', action: 'converted', user: 'Igor Žagar', userRole: 'direktor', timestamp: '2026-07-15T10:00:00Z', details: 'Kljub zamudi odobreno - predračun spremenjen v račun R-2026-0050', oldValue: 'overdue', newValue: 'converted' },
+
+    // Bogata zgodovina za inv7 (izvoz)
+    { id: 'a43', invoiceId: 'inv7', invoiceNumber: 'R-2025-0051', action: 'issued', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2025-06-30T10:00:00Z', details: 'Račun ustvarjen za izvozne storitve' },
+    { id: 'a44', invoiceId: 'inv7', invoiceNumber: 'R-2025-0051', action: 'edited', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2025-06-30T10:30:00Z', details: 'Dodana opomba o oprostitvi DDV po 91. členu' },
+    { id: 'a45', invoiceId: 'inv7', invoiceNumber: 'R-2025-0051', action: 'sent', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2025-07-01T09:00:00Z', details: 'Račun poslan kupcu v Sloveniji' },
+    { id: 'a46', invoiceId: 'inv7', invoiceNumber: 'R-2025-0051', action: 'viewed', user: 'Stanislav Horvat', userRole: 'zunanji', timestamp: '2025-07-02T11:00:00Z', details: 'Kupec pregledal račun' },
+    { id: 'a47', invoiceId: 'inv7', invoiceNumber: 'R-2025-0051', action: 'paid', user: 'Maja Novak', userRole: 'tajnistvo', timestamp: '2025-07-20T13:00:00Z', details: 'Plačilo prispelo na TRR - račun poravnan', oldValue: 'issued', newValue: 'paid' },
+      
   )
 }
 

@@ -3,9 +3,9 @@ import { useInvoices } from '@/hooks/useInvoices'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { Printer, Edit, Mail, CheckCircle, Ban, FileText, Package } from 'lucide-react'
 import { useRef } from 'react'
 import { companyData, statusColors, statusLabels } from '@/data/mockData'
+import { Printer, Edit, Mail, Ban, FileText, Package, ArrowRight, Euro, Calendar, Clock } from 'lucide-react'
 
 interface InvoiceViewProps {
   invoiceId: string | null
@@ -474,42 +474,87 @@ export function InvoiceView({
           </div>
           
           <div className="w-72 shrink-0 border-l pl-6">
-            <div className="sticky top-0">
-              <h3 className="font-semibold text-lg mb-4">Akcije</h3>
-              <div className="space-y-2">
-                <Button variant="outline" className="w-full justify-start" onClick={handlePrint}>
-                  <Printer className="w-4 h-4 mr-2" /> Natisni
-                </Button>
-                <Button variant="outline" className="w-full justify-start" onClick={() => onEdit?.(invoice)}>
-                  <Edit className="w-4 h-4 mr-2" /> Uredi
-                </Button>
-                <Button variant="outline" className="w-full justify-start" onClick={() => onSendEmail?.(invoice)}>
-                  <Mail className="w-4 h-4 mr-2" /> Pošlji e-mail
-                </Button>
-                <Button variant="outline" className="w-full justify-start" onClick={() => onSendPost?.(invoice)}>
-                  <Package className="w-4 h-4 mr-2" /> Pošlji po pošti
-                </Button>
-                {documentType === 'invoice' && invoice.status !== 'paid' && invoice.status !== 'draft' && (
-                  <Button variant="outline" className="w-full justify-start" onClick={() => onMarkAsPaid?.(invoice.id)}>
-                    <CheckCircle className="w-4 h-4 mr-2" /> Označi kot plačano
-                  </Button>
-                )}
-                {documentType === 'estimate' && invoice.status !== 'paid' && invoice.status !== 'cancelled' && (
-                  <Button variant="outline" className="w-full justify-start" onClick={() => onMarkAsPaid?.(invoice.id)}>
-                    <CheckCircle className="w-4 h-4 mr-2" /> Ustvari račun
-                  </Button>
-                )}
-                {invoice.status !== 'cancelled' &&  invoice.status !== 'draft' && (
-                  <Button variant="outline" className="w-full justify-start" onClick={() => onCancel?.(invoice)}>
-                    <Ban className="w-4 h-4 mr-2" /> Storniraj
-                  </Button>
-                )}
-                <Button variant="outline" className="w-full justify-start" onClick={() => onAudit?.(invoice)}>
-                  <FileText className="w-4 h-4 mr-2" /> Dnevnik sprememb
-                </Button>
-              </div>
+  <div className="sticky top-0">
+    <h3 className="font-semibold text-lg mb-4">Akcije</h3>
+    <div className="space-y-2">
+      <Button variant="outline" className="w-full justify-start" onClick={handlePrint}>
+        <Printer className="w-4 h-4 mr-2" /> Natisni
+      </Button>
+      <Button variant="outline" className="w-full justify-start" onClick={() => onEdit?.(invoice)}>
+        <Edit className="w-4 h-4 mr-2" /> Uredi
+      </Button>
+      <Button variant="outline" className="w-full justify-start" onClick={() => onSendEmail?.(invoice)}>
+        <Mail className="w-4 h-4 mr-2" /> Pošlji e-mail
+      </Button>
+      <Button variant="outline" className="w-full justify-start" onClick={() => onSendPost?.(invoice)}>
+        <Package className="w-4 h-4 mr-2" /> Pošlji po pošti
+      </Button>
+      {documentType === 'estimate' && invoice.status !== 'paid' && invoice.status !== 'cancelled' && (
+        <Button variant="outline" className="w-full justify-start" onClick={() => onMarkAsPaid?.(invoice.id)}>
+          <ArrowRight className="w-4 h-4 mr-2" /> Ustvari račun
+        </Button>
+      )}
+      {invoice.status !== 'cancelled' && invoice.status !== 'draft' && (
+        <Button variant="outline" className="w-full justify-start" onClick={() => onCancel?.(invoice)}>
+          <Ban className="w-4 h-4 mr-2" /> Storniraj
+        </Button>
+      )}
+      <Button variant="outline" className="w-full justify-start" onClick={() => onAudit?.(invoice)}>
+        <FileText className="w-4 h-4 mr-2" /> Dnevnik sprememb
+      </Button>
+    </div>
+
+    {/* OKNO ZA DELNO PLAČANE RAČUNE - pod akcijami */}
+    {documentType === 'invoice' && invoice.status === 'partially_paid' && (
+      <div className="mt-8 p-4 bg-orange-50 rounded-lg border border-orange-200">
+        <div className="flex items-center gap-2 mb-3">
+          <h4 className="font-bold text-orange-800 text-md">PREGLED PLAČILA</h4>
+        </div>
+        
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-black-600">Skupni znesek:</span>
+            <span className="text-sm font-bold text-black-800">{formatCurrency(invoice.totalGross)}</span>
+          </div>
+          
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-black-600">Plačano do sedaj:</span>
+            <span className="text-sm font-bold text-black-600">{formatCurrency(invoice.totalGross * 0.5)}</span>
+          </div>
+          
+          <div className="flex justify-between items-center pt-1 border-t border-orange-200">
+            <span className="text-xs font-medium text-black-700">Preostanek:</span>
+            <span className="text-base font-bold text-red-600">{formatCurrency(invoice.totalGross * 0.5)}</span>
+          </div>
+          
+          <div className="pt-2">
+            <div className="flex justify-between text-xs text-black-600 mb-1">
+              <span>Plačano: 50%</span>
+              <span>Ostalo: 50%</span>
+            </div>
+            <div className="w-full bg-gray-300 rounded-full h-2">
+              <div className="bg-orange-500 h-2 rounded-full" style={{ width: '50%' }}></div>
             </div>
           </div>
+          
+          <div className="flex items-center gap-2 text-xs text-gray-500 pt-2 border-t border-orange-200">
+            <Calendar className="w-3 h-3" />
+            <span>Zadnje plačilo: 15.08.2025</span>
+          </div>
+          
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <Clock className="w-3 h-3" />
+            <span>Rok plačila: {formatDate(invoice.dueDate)}</span>
+          </div>
+          
+        </div>
+      </div>
+    )}
+  </div>
+</div>
+
+
+
         </div>
       </DialogContent>
     </Dialog>

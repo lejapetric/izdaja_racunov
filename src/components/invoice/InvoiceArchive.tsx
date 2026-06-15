@@ -8,13 +8,15 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { Send, Ban, History, Package, Mail, X, FileText, Badge, CheckCircle, AlertTriangle } from 'lucide-react'
-import { Invoice, InvoiceStatus } from '@/types'
+import { Send, Ban, History, Package, Mail, X, FileText, Badge, CheckCircle, AlertTriangle, ArrowUp } from 'lucide-react'
+import { Invoice, InvoiceStatus, AuditLogEntry} from '@/types'
 import { InvoiceView } from './InvoiceView'
 import { InvoiceFilters } from './InvoiceFilters'
 import { mockAuditLogs } from '@/data/mockData'
 import { InvoiceArchiveTable } from './InvoiceArchiveTable'
 import { EditInvoice } from './EditInvoice'
+import { Edit, RefreshCw, ArrowRight } from 'lucide-react'
+import { statusColors, statusLabels } from '@/data/mockData'
 
 const statusOptions: { value: InvoiceStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'Vsi' }, { value: 'draft', label: 'Osnutki' }, { value: 'issued', label: 'Izdani' },
@@ -257,43 +259,7 @@ const openEditModal = (invoice: Invoice) => {
         </CardContent>
       </Card>
 
-      {/* MODAL ZA POTRDITEV PLAČILA */}
-      <Dialog open={paidModalOpen} onOpenChange={setPaidModalOpen}>
-        <DialogContent className="max-w-2xl aria-describedby={undefined}">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-blue-700">
-              <CheckCircle className="w-5 h-5 text-blue-600" />
-              Označi račun kot plačan
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-gray-800">Pozor!</p>
-                  <p className="text-sm text-gray-700 mt-1">
-                    S tem dejanjem boste račun <span className="font-semibold">{paidInvoice?.number} </span> 
-                    za kupca <span className="font-semibold">{paidInvoice?.customerName} </span> 
-                    v znesku <span className="font-semibold">{paidInvoice?.totalGross}€ </span> 
-                    označili kot <span className="font-semibold text-blue-600">PLAČAN</span>.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <p className="text-sm text-gray-600 mb-2">Ste prepričani, da želite to narediti?</p>
-            <p className="text-xs text-gray-500">To dejanje bo zabeleženo v dnevniku sprememb računa in ga ni mogoče razveljaviti brez administracijskega posega.</p>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setPaidModalOpen(false)}>
-              <X className="w-4 h-4 mr-2" /> Prekliči
-            </Button>
-            <Button onClick={handleMarkAsPaid} className="bg-blue-600 hover:bg-blue-700">
-              <CheckCircle className="w-4 h-4 mr-2" /> Potrdi plačilo
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+     
       
       {/* MODAL ZA STORNIRANJE */}
       <Dialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
@@ -547,85 +513,176 @@ const openEditModal = (invoice: Invoice) => {
         </>
       )}
 
-      {/* MODAL ZA REVIZIJO/SPREMEMBE */}
-      <Dialog open={auditModalOpen} onOpenChange={setAuditModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader className="sticky top-0 bg-white pb-4 border-b">
-            <DialogTitle className="flex items-center gap-2 text-gray-800">
-              <History className="w-5 h-5 text-blue-600" />
-              Dnevnik sprememb - {auditInvoice?.number}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="py-4 space-y-3">
-            {auditInvoice && getAuditLogsForInvoice(auditInvoice.id).length > 0 ? (
-              getAuditLogsForInvoice(auditInvoice.id).map((log, index) => (
+    {/* MODAL ZA REVIZIJO/SPREMEMBE */}
+<Dialog open={auditModalOpen} onOpenChange={setAuditModalOpen}>
+  <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col p-0">
+    {/* Fiksni header - ne scrolla */}
+    <div className="sticky top-0 bg-white border-b z-20 px-6 pt-6 pb-4">
+      <div className="flex justify-between items-center gap-4">
+        <DialogTitle className="flex items-center gap-2 text-gray-800">
+          <History className="w-5 h-5 text-blue-600 flex-shrink-0" />
+          <span>Dnevnik sprememb - {auditInvoice?.number || 'Osnutek'}</span>
+        </DialogTitle>
+      </div>
+      
+      {/* Trenutni status */}
+      <div className="flex items-center gap-2 mt-3">
+        <span className="text-sm font-medium text-gray-500">Trenutni status:</span>
+        <span className={`inline-block px-3 py-1 rounded-lg font-medium text-sm uppercase ${statusColors[auditInvoice?.status || 'draft']}`}>
+          {statusLabels[auditInvoice?.status || 'draft']}
+        </span>
+      </div>
+    </div>
+    
+    {/* Scrollajoča vsebina */}
+    <div className="overflow-y-auto px-6 py-4 flex-1">
+      <div className="space-y-4">
+        {auditInvoice && getAuditLogsForInvoice(auditInvoice.id).length > 0 ? (
+          getAuditLogsForInvoice(auditInvoice.id)
+            .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+            .map((log, index, array) => {
+              const prevLog = array[index + 1];
+              const oldStatus = prevLog?.newValue || prevLog?.oldValue;
+              const newStatus = log.newValue || log.oldValue;
+              
+              return (
                 <div key={log.id} className="relative">
-                  {/* Timeline connector line */}
-                  {index < getAuditLogsForInvoice(auditInvoice.id).length - 1 && (
-                    <div className="absolute left-[27px] top-12 bottom-0 w-0.5 bg-gray-200"></div>
+                  {/* Puščica med spremembama */}
+                  {index < array.length - 1 && (
+                    <div className="absolute left-[15px] top-14">
+                      <ArrowUp className="w-5 h-5 text-gray-400" />
+                    </div>
                   )}
                   
                   <div className="flex gap-4">
-                    {/* Timeline icon */}
+                    {/* Timeline ikona */}
                     <div className="flex-shrink-0 z-10">
-                      {log.action === 'created' && (
-                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                          <FileText className="w-5 h-5 text-green-600" />
-                        </div>
-                      )}
-                      {log.action === 'edited' && (
-                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                          <History className="w-5 h-5 text-blue-600" />
-                        </div>
-                      )}
-                      {log.action === 'status_changed' && (
-                        <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
-                          <Badge className="w-5 h-5 text-yellow-600" />
-                        </div>
-                      )}
-                      {!['created', 'edited', 'status_changed'].includes(log.action) && (
-                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                        log.action === 'created' ? 'bg-green-100' :
+                        log.action === 'edited' ? 'bg-blue-100' :
+                        log.action === 'sent' ? 'bg-purple-100' :
+                        log.action === 'paid' ? 'bg-emerald-100' :
+                        log.action === 'cancelled' ? 'bg-red-100' :
+                        log.action === 'converted' ? 'bg-indigo-100' :
+                        'bg-gray-100'
+                      }`}>
+                        {log.action === 'created' && <FileText className="w-5 h-5 text-green-600" />}
+                        {log.action === 'edited' && <Edit className="w-5 h-5 text-blue-600" />}
+                        {log.action === 'sent' && <Mail className="w-5 h-5 text-purple-600" />}
+                        {log.action === 'paid' && <CheckCircle className="w-5 h-5 text-emerald-600" />}
+                        {log.action === 'cancelled' && <Ban className="w-5 h-5 text-red-600" />}
+                        {log.action === 'converted' && <FileText className="w-5 h-5 text-indigo-600" />}
+                        {log.action === 'status_changed' && <RefreshCw className="w-5 h-5 text-yellow-600" />}
+                        {!['created', 'edited', 'sent', 'paid', 'cancelled', 'converted', 'status_changed'].includes(log.action) && 
                           <History className="w-5 h-5 text-gray-600" />
+                        }
+                      </div>
+                    </div>
+                    
+                    {/* Vsebina */}
+                    <div className="flex-1 bg-gray-50 rounded-lg p-3">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-semibold text-gray-900">{log.user}</span>
+                          <span className="text-xs text-gray-500">{formatDate(log.timestamp)}</span>
+                          
+                          {/* Puščica za prikaz smeri spremembe */}
+                          {oldStatus && newStatus && oldStatus !== newStatus && (
+                            <div className="flex items-center gap-1 ml-2">
+                              <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                                statusColors[oldStatus] || 'bg-gray-100 text-gray-800'
+                              }`}>
+                                {statusLabels[oldStatus] || oldStatus}
+                              </span>
+                              <ArrowRight className="w-3 h-3 text-gray-400" />
+                              <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                                statusColors[newStatus] || 'bg-gray-100 text-gray-800'
+                              }`}>
+                                {statusLabels[newStatus] || newStatus}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className={`px-2 py-0.5 rounded-md text-xs font-medium uppercase ${
+                              log.action === 'drafted' ? 'bg-gray-300 text-gray-800' :
+                              log.action === 'issued' ? 'bg-blue-100 text-blue-800' :
+                              log.action === 'converted' ? 'bg-purple-400 text-purple-800' :
+                              log.action === 'edited' ? 'bg-yellow-400 text-yellow-800' :
+                              log.action === 'sent' ? 'bg-green-100 text-green-800' :
+                              log.action === 'emailed' ? 'bg-purple-100 text-purple-800' :
+                              log.action === 'paid' ? 'bg-green-300 text-emerald-800' :
+                              log.action === 'partially_paid' ? 'bg-orange-100 text-orange-800' :
+                              log.action === 'cancelled' ? 'bg-red-400 text-red-800' :
+                              log.action === 'printed' ? 'bg-gray-100 text-gray-600' :
+                              log.action === 'viewed' ? 'bg-gray-100 text-gray-600' :
+                              log.action === 'overdue' ? 'bg-red-100 text-red-800' :
+                              log.action === 'alert_sent' ? 'bg-orange-100 text-orange-600' :
+                              log.action === 'item_added' ? 'bg-green-100 text-green-800' :
+                              log.action === 'item_removed' ? 'bg-red-100 text-red-800' :
+                              log.action === 'saved' ? 'bg-indigo-100 text-indigo-800' :
+                              log.action === 'status_changed' ? 'bg-yellow-100 text-yellow-700' :
+                                              'bg-gray-200 text-gray-700'
+                            }`}>
+                              {log.action === 'drafted' && 'OSNUTEK'}
+                              {log.action === 'issued' && 'IZDAN'}
+                              {log.action === 'converted' && 'SPREMENJEN V RAČUN'}
+                              {log.action === 'edited' && 'POSODOBLJEN'}
+                              {log.action === 'sent' && 'POSLAN'}
+                              {log.action === 'emailed' && 'POSLAN PO E-POŠTI'}
+                              {log.action === 'paid' && 'PLAČAN'}
+                              {log.action === 'partially_paid' && 'DELNO PLAČAN'}
+                              {log.action === 'cancelled' && 'STORNIRAN'}
+                              {log.action === 'printed' && 'NATISNJEN'}
+                              {log.action === 'viewed' && 'POGLEDAN'}
+                              {log.action === 'overdue' && 'ZAPADEL'}
+                              {log.action === 'alert_sent' && 'OPOZORILO POSLANO'}
+                              {log.action === 'item_added' && 'POSTAVKA DODANA'}
+                              {log.action === 'item_removed' && 'POSTAVKA ODSTRANJENA'}
+                              {log.action === 'saved' && 'SHRANJEN'}
+                              {log.action === 'status_changed' && 'STATUS SPREMENJEN'}
+                              {!['drafted', 'issued', 'converted', 'edited', 'sent', 'emailed', 'paid', 'partially_paid', 'cancelled', 'printed', 'viewed', 'overdue', 'alert_sent', 'item_added', 'item_removed', 'saved', 'status_changed'].includes(log.action) && log.action.toUpperCase()}
+                            </div>
+
+
+                      </div>
+                      
+                      <p className="text-sm text-gray-700 leading-relaxed">{log.details}</p>
+                      
+                      {/* Prikaz stare in nove vrednosti, če obstajata */}
+                      {log.oldValue && log.newValue && log.oldValue !== log.newValue && (
+                        <div className="mt-2 pt-2 border-t border-gray-200 text-xs">
+                          <span className="text-gray-500">Sprememba: </span>
+                          <span className="line-through text-red-500 mr-2">{log.oldValue}</span>
+                          <ArrowRight className="inline w-3 h-3 text-gray-400 mx-1" />
+                          <span className="text-green-600">{log.newValue}</span>
                         </div>
                       )}
                     </div>
                     
-                    {/* Content */}
-                    <div className="flex-1 bg-gray-50 rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-gray-900">{log.user}</span>
-                          <span className="text-xs text-gray-500">{formatDate(log.timestamp)}</span>
-                        </div>
-                        <div className="px-2 py-1 rounded-md text-xs font-medium uppercase bg-gray-200 text-gray-700">
-                          {log.action === 'created' && 'Ustvarjeno'}
-                          {log.action === 'edited' && 'Posodobljeno'}
-                          {log.action === 'status_changed' && 'Status spremenjen'}
-                          {!['created', 'edited', 'status_changed'].includes(log.action) && log.action}
-                        </div>
-                      </div>
-                      
-                      <p className="text-sm text-gray-700 leading-relaxed">{log.details}</p>
-                    </div>
+                    
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <History className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p>Za ta račun ni zabeleženih sprememb.</p>
-              </div>
-            )}
+              );
+            })
+        ) : (
+          <div className="text-center py-12 text-gray-500">
+            <History className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+            <p className="text-sm">Za ta račun ni zabeleženih sprememb.</p>
+            <p className="text-xs text-gray-400 mt-1">Spremembe se bodo prikazale, ko bodo izvedene akcije nad računom.</p>
           </div>
-          
-          <DialogFooter className="sticky bottom-0 bg-white pt-4 border-t">
-            <Button onClick={() => setAuditModalOpen(false)} className="bg-blue-600 hover:bg-blue-700">
-              Zapri
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        )}
+      </div>
+    </div>
+    
+    {/* Footer z gumbom Zapri */}
+<div className="bg-white border-t px-6 py-3 flex justify-end mt-auto">
+  <Button onClick={() => setAuditModalOpen(false)} variant="outline" size="sm">
+    Zapri
+  </Button>
+</div>
+  </DialogContent>
+</Dialog>
 
 <InvoiceView 
   invoiceId={selectedInvoiceId} 

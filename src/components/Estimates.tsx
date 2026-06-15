@@ -766,7 +766,6 @@ function EstimatesTable({ estimates, customers, onEstimateClick, getStatusLabel,
           <TableHead className="px-1 py-3 text-left w-[110px]">Številka</TableHead>
           <TableHead className="px-4 py-3 text-center">Datum</TableHead>
           <TableHead className="px-4 py-3 text-left w-[240px]">Kupec</TableHead>
-          <TableHead className="px-4 py-3 text-left">Občina</TableHead>
           <TableHead className="px-4 py-3 text-right">Neto</TableHead>
           <TableHead className="px-4 py-3 text-right">DDV</TableHead>
           <TableHead className="px-4 py-3 text-right">Bruto</TableHead>
@@ -797,7 +796,6 @@ function EstimatesTable({ estimates, customers, onEstimateClick, getStatusLabel,
                 <div className="font-medium">{est.customerName}</div>
                 <div className="text-xs text-gray-500">{est.customerTaxId}</div>
               </TableCell>
-              <TableCell className="px-4 py-2">{municipality}</TableCell>
               <TableCell className="px-4 py-2 text-right">{formatCurrency(est.totalNet)}</TableCell>
               <TableCell className="px-4 py-2 text-right">{formatCurrency(est.totalVat)}</TableCell>
               <TableCell className="px-4 py-2 text-right font-semibold">{formatCurrency(est.totalGross)}</TableCell>

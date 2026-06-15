@@ -45,7 +45,7 @@ export function InvoiceItemModal({ open, onOpenChange, editingItem, onSave, serv
     } else {
       resetForm()
     }
-  }, [editingItem, open])
+  }, [editingItem, open, services])
 
   const resetForm = () => {
     setNewItem({
@@ -71,65 +71,68 @@ export function InvoiceItemModal({ open, onOpenChange, editingItem, onSave, serv
     }
   }
 
-const handleSave = () => {
-  // Validacija opisa
-  if (!newItem.description || newItem.description.trim() === '') {
-    // Opomba: lahko dodate state za napako
-    return
-  }
-  
-  // Validacija količine - prazno ali 0 ni dovoljeno
-  const quantity = typeof newItem.quantity === 'number' ? newItem.quantity : 0
-  
-  if (quantity <= 0) {
-    // Opomba: lahko dodate state za napako
-    return
-  }
-  
-  // Validacija cene
-  if (!newItem.price || newItem.price <= 0) {
-    return
-  }
-  
-  // Validacija razloga za oprostitev DDV
-  if (newItem.vatRate === 0 && !newItem.vatExemptionReason) {
-    return
-  }
+  const handleSave = () => {
+    // Validacija opisa
+    if (!newItem.description || newItem.description.trim() === '') {
+      return
+    }
+    
+    // Validacija količine - prazno ali 0 ni dovoljeno
+    const quantity = typeof newItem.quantity === 'number' && newItem.quantity > 0 
+      ? newItem.quantity 
+      : 0
+    
+    if (quantity <= 0) {
+      return
+    }
+    
+    // Validacija cene
+    if (!newItem.price || newItem.price <= 0) {
+      return
+    }
+    
+    // Validacija razloga za oprostitev DDV
+    if (newItem.vatRate === 0 && !newItem.vatExemptionReason) {
+      return
+    }
 
-  // Izračun vseh vrednosti
-  const { netBeforeDiscount, discountAmount, net, vatAmount, gross } = calculateItemTotals({
-    ...newItem,
-    quantity: quantity
-  })
+    // Izračun vseh vrednosti
+    const { netBeforeDiscount, discountAmount, net, vatAmount, gross } = calculateItemTotals({
+      ...newItem,
+      quantity: quantity
+    })
 
-  const fullItem: InvoiceItem = {
-    id: editingItem?.id || crypto.randomUUID(),
-    description: newItem.description.trim(),
-    quantity: quantity,
-    unit: newItem.unit || 'ura',
-    price: newItem.price,
-    discountPercent: newItem.discountPercent || 0,
-    discountAmount,
-    netBeforeDiscount,
-    net,
-    vatRate: newItem.vatRate as VatRate,
-    vatAmount,
-    gross,
-    parcelNumber: newItem.parcelNumber,
-    cadastralMunicipality: newItem.cadastralMunicipality,
-    cadastreName: newItem.cadastreName,
-    landRegisterId: newItem.landRegisterId,
-    reverseCharge: newItem.reverseCharge || false,
-    vatExemptionReason: newItem.vatExemptionReason,
-    itemNote: newItem.itemNote,
+    const fullItem: InvoiceItem = {
+      id: editingItem?.id || crypto.randomUUID(),
+      description: newItem.description.trim(),
+      quantity: quantity,
+      unit: newItem.unit || 'ura',
+      price: newItem.price,
+      discountPercent: newItem.discountPercent || 0,
+      discountAmount,
+      netBeforeDiscount,
+      net,
+      vatRate: newItem.vatRate as VatRate,
+      vatAmount,
+      gross,
+      parcelNumber: newItem.parcelNumber,
+      cadastralMunicipality: newItem.cadastralMunicipality,
+      cadastreName: newItem.cadastreName,
+      landRegisterId: newItem.landRegisterId,
+      reverseCharge: newItem.reverseCharge || false,
+      vatExemptionReason: newItem.vatExemptionReason,
+      itemNote: newItem.itemNote,
+    }
+    
+    onSave(fullItem)
+    resetForm()
+    onOpenChange(false)
   }
-  
-  onSave(fullItem)
-  resetForm()
-}
 
   const { netBeforeDiscount, discountAmount, net, vatAmount, gross } = calculateItemTotals(newItem)
   const isQuantityValid = typeof newItem.quantity === 'number' && newItem.quantity > 0
+  const quantityValue = typeof newItem.quantity === 'number' && newItem.quantity !== 0 ? newItem.quantity : ''
+  const discountValue = typeof newItem.discountPercent === 'number' && newItem.discountPercent !== 0 ? newItem.discountPercent : ''
 
   return (
     <Dialog open={open} onOpenChange={(val) => { if (!val) onOpenChange(val); resetForm() }}>
@@ -154,8 +157,10 @@ const handleSave = () => {
           <div>
             <label className="text-sm font-medium mb-1 block">Količina *</label>
             <NumberInput 
-              value={newItem.quantity !== undefined && newItem.quantity !== null && newItem.quantity !== 0 ? newItem.quantity : ''} 
-              onChange={(val) => setNewItem({ ...newItem, quantity: val === 0 ? '' : val })} 
+              value={quantityValue}
+              onChange={(val: number | null) => {
+                setNewItem({ ...newItem, quantity: val === null ? 0 : val })
+              }} 
               min={0} 
               max={1000} 
               step={0.5} 
@@ -191,11 +196,11 @@ const handleSave = () => {
               <div>
                 <label className="text-sm font-medium mb-1 block">Popust (%)</label>
                 <NumberInput 
-                  value={newItem.discountPercent !== undefined && newItem.discountPercent !== null && newItem.discountPercent !== 0 ? newItem.discountPercent : ''} 
-                  onChange={(val) => {
+                  value={discountValue}
+                  onChange={(val: number | null) => {
                     setNewItem({ 
                       ...newItem, 
-                      discountPercent: val === 0 ? '' : val 
+                      discountPercent: val === null ? 0 : val 
                     })
                   }} 
                   min={0} 

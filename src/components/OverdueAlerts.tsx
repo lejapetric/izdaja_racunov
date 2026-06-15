@@ -609,7 +609,6 @@ function OverdueTable({ invoices, customers, onInvoiceClick, getStatusLabel, get
           <TableHead className="px-1 py-3 text-left w-[110px]">Številka</TableHead>
           <TableHead className="px-4 py-3 text-center">Datum</TableHead>
           <TableHead className="px-4 py-3 text-left w-[240px]">Kupec</TableHead>
-          <TableHead className="px-4 py-3 text-left">Občina</TableHead>
           <TableHead className="px-4 py-3 text-right">Neto</TableHead>
           <TableHead className="px-4 py-3 text-right">DDV</TableHead>
           <TableHead className="px-4 py-3 text-right">Bruto</TableHead>
@@ -639,7 +638,6 @@ function OverdueTable({ invoices, customers, onInvoiceClick, getStatusLabel, get
                 <div className="font-medium">{inv.customerName}</div>
                 <div className="text-xs text-gray-500">{inv.customerTaxId}</div>
               </TableCell>
-              <TableCell className="px-4 py-2">{municipality}</TableCell>
               <TableCell className="px-4 py-2 text-right">{formatCurrency(inv.totalNet)}</TableCell>
               <TableCell className="px-4 py-2 text-right">{formatCurrency(inv.totalVat)}</TableCell>
               <TableCell className="px-4 py-2 text-right font-semibold">{formatCurrency(inv.totalGross)}</TableCell>

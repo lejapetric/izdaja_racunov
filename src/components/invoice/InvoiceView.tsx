@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { Printer, Edit, Mail, CheckCircle, Ban, FileText, Package } from 'lucide-react'
 import { useRef } from 'react'
-import { companyData, statusLabels } from '@/data/mockData'
+import { companyData, statusColors, statusLabels } from '@/data/mockData'
 
 interface InvoiceViewProps {
   invoiceId: string | null
@@ -71,16 +71,6 @@ export function InvoiceView({
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(qrData)}`
   const customerAddress = customer?.address || ''
   const customerTaxId = invoice.customerTaxId || (customer?.taxId || '')
-
-  const getStatusColor = () => {
-    switch (invoice.status) {
-      case 'paid': return 'bg-green-100 text-green-800'
-      case 'overdue': return 'bg-red-100 text-red-800'
-      case 'cancelled': return 'bg-gray-100 text-gray-800'
-      case 'sent': return 'bg-blue-100 text-blue-800'
-      default: return 'bg-yellow-100 text-yellow-800'
-    }
-  }
 
  const handlePrint = () => {
   if (!printRef.current) return
@@ -360,13 +350,13 @@ export function InvoiceView({
 
                   <div className="text-right">
                     <div className="status-badge-print-hide">
-                      <span className={`inline-block px-8 py-2 rounded-full text-lg font-bold ${getStatusColor()}`}>
+                      <span className={`inline-block px-8 py-2 rounded-full text-lg font-bold ${statusColors[invoice.status]}`}>
                         {statusLabels[invoice.status]}
                       </span>
                     </div>
                   </div>
                 </div>
-                
+
                 <table className="w-full text-sm border-collapse mb-4 relative z-10">
                   <thead>
                     <tr className="bg-gray-100">
@@ -447,7 +437,6 @@ export function InvoiceView({
                     </div>
                   </div>
                 </div>
-              </div>
               
               {/* Podatki za plačilo - samo za račune */}
               {documentType === 'invoice' && (
@@ -481,6 +470,7 @@ export function InvoiceView({
                 <p className="text-xs text-gray-400">{companyData.name} • {companyData.address} • Matična št.: {companyData.registrationNumber} • ID za DDV: {companyData.taxId} • TRR: {companyData.trr}</p>
               </div>
             </div>
+          </div>
           </div>
           
           <div className="w-72 shrink-0 border-l pl-6">

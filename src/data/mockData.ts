@@ -49,8 +49,8 @@ export const statusLabels: Record<string, string> = {
   issued: 'Izdan',
   sent: 'Poslan',
   overdue: 'Zapadel',
-  paid: 'Plačano',
-  cancelled: 'Stornirano',
+  paid: 'Plačan',
+  cancelled: 'Storniran',
   converted: 'Spremenjen v račun'
 }
 

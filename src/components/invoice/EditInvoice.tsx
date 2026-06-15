@@ -15,6 +15,7 @@ import { CustomerSelector } from './CustomerSelector'
 import { InvoiceItemModal } from './InvoiceItemModal'
 import { InvoiceTotals } from './InvoiceTotals'
 import { formatDateForStorage } from '@/lib/utils'
+import { statusColors, statusLabels } from '@/data/mockData'
 
 interface EditInvoiceProps {
   editingInvoice: Invoice | null
@@ -260,37 +261,35 @@ const handleConvertToInvoice = () => {
   }
 
 return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-4 border border-primary/20">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-primary/20 rounded-lg p-2">
-              <ReceiptText className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <div className={`text-md font-bold ${getTitleColor()}`}>
-                {getTitle()}
-              </div>
-              <div className="text-sm text-gray-500">
-                {currentType === 'draft' && 'Osnutek - podatki še niso dokončni'}
-                {currentType === 'estimate' && 'Predračun - nima pravne veljave'}
-                {currentType === 'invoice' && editingInvoice?.status === 'sent' && 'Poslan račun'}
-                {currentType === 'invoice' && editingInvoice?.status === 'paid' && 'Plačan račun'}
-                {currentType === 'invoice' && editingInvoice?.status === 'overdue' && 'Zapadel račun'}
-                {currentType === 'invoice' && editingInvoice?.status === 'cancelled' && 'Storniran račun'}
-                {currentType === 'invoice' && editingInvoice?.status === 'issued' && 'Izdan račun - pravno veljaven dokument'}
-              </div>
-            </div>
+<div className="space-y-6">
+  {/* Header */}
+  <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-4 border border-primary/20">
+    <div className="flex items-center justify-between flex-wrap gap-4">
+      {/* Left side - Invoice info */}
+      <div className="flex items-center gap-3">
+        <div className="bg-primary/20 rounded-lg p-2">
+          <ReceiptText className="w-6 h-6 text-primary" />
+        </div>
+        <div>
+          <div className="text-lg font-bold text-gray-900">
+            Urejanje: {editingInvoice?.number || (currentType === 'draft' ? 'Nov osnutek' : currentType === 'estimate' ? 'Nov predračun' : 'Nov račun')}
           </div>
-          {/* Okvir na desni strani s tipom računa */}
-          <div className="px-6 py-2 rounded-lg border-2 border-gray-500 bg-gray-300 font-semibold text-sm text-black">
-            {currentType === 'draft' && 'OSNUTEK'}
-            {currentType === 'estimate' && 'PREDRAČUN'}
-            {currentType === 'invoice' && 'RAČUN'}
+          <div className="text-sm text-gray-500">
+            {editingInvoice?.customerName || 'Izberite kupca'}
           </div>
         </div>
       </div>
+      
+      {/* Right side - Status badge */}
+      <div>
+<span className={`px-4 py-2 rounded-lg font-medium text-base uppercase inline-block ${statusColors[editingInvoice?.status || 'draft']}`}>
+  {currentType === 'draft' && 'OSNUTEK'}
+  {currentType === 'estimate' && `${(statusLabels[editingInvoice?.status || 'draft'] || '').toUpperCase()} PREDRAČUN`}
+  {currentType === 'invoice' && `${(statusLabels[editingInvoice?.status || 'draft'] || '').toUpperCase()} RAČUN`}
+</span>
+      </div>
+    </div>
+  </div>
       
 
       <Card>

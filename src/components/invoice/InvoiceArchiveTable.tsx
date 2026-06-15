@@ -13,10 +13,37 @@ interface InvoiceArchiveTableProps {
 }
 
 export function InvoiceArchiveTable({ invoices, customers, onInvoiceClick }: InvoiceArchiveTableProps) {
-  // Sort invoices from newest to oldest (descending by issueDate)
-  const sortedInvoices = [...invoices].sort((a, b) => 
-    new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime()
-  )
+  // Sort invoices: first by date (newest to oldest), then by invoice number (for same date)
+  // Draft invoices (without number) go to the end for the same date
+  const sortedInvoices = [...invoices].sort((a, b) => {
+    // First compare by issueDate
+    const dateA = new Date(a.issueDate).getTime()
+    const dateB = new Date(b.issueDate).getTime()
+    
+    if (dateA !== dateB) {
+      return dateB - dateA // Descending (newest first)
+    }
+    
+    // Same date - sort by invoice number
+    // Handle missing invoice numbers (drafts)
+    const numA = a.number || ''
+    const numB = b.number || ''
+    
+    // If both have numbers, compare numerically
+    if (numA && numB) {
+      // Extract numeric part if numbers have format like "INV-001"
+      const numericA = parseInt(numA.replace(/\D/g, '')) || 0
+      const numericB = parseInt(numB.replace(/\D/g, '')) || 0
+      return numericB - numericA // Descending (higher number first)
+    }
+    
+    // If only one has a number, the one with number comes first
+    if (numA && !numB) return -1
+    if (!numA && numB) return 1
+    
+    // Both don't have numbers (drafts) - sort by id or keep as is
+    return (b.id || '').localeCompare(a.id || '')
+  })
 
   return (
     <div>
@@ -26,7 +53,6 @@ export function InvoiceArchiveTable({ invoices, customers, onInvoiceClick }: Inv
             <TableHead className="px-1 py-3 text-left w-[110px]">Številka računa</TableHead>
             <TableHead className="px-4 py-3 text-center">Datum</TableHead>
             <TableHead className="px-4 py-3 text-left w-[240px]">Kupec</TableHead>
-            <TableHead className="px-4 py-3 text-left">Občina</TableHead>
             <TableHead className="px-4 py-3 text-right">Neto</TableHead>
             <TableHead className="px-4 py-3 text-right">DDV</TableHead>
             <TableHead className="px-4 py-3 text-right">Bruto</TableHead>
@@ -50,13 +76,14 @@ export function InvoiceArchiveTable({ invoices, customers, onInvoiceClick }: Inv
                 className={`${inv.status === 'overdue' ? 'bg-red-50' : ''} cursor-pointer hover:bg-gray-50 transition-colors`}
                 onClick={() => onInvoiceClick(inv)}
               >
-                <TableCell className="px-2 py-1 text-xs whitespace-nowrap">{inv.number}</TableCell>
+                <TableCell className="px-2 py-1 text-xs whitespace-nowrap">
+                  {inv.number || <span className="text-gray-400 italic">Osnutek</span>}
+                </TableCell>
                 <TableCell className="px-2 py-1 text-center text-xs whitespace-nowrap">{formatDate(inv.issueDate)}</TableCell>
                 <TableCell className="px-2 py-1 text-xs whitespace-nowrap">
                   <div className="font-medium">{inv.customerName}</div>
                   <div className="text-[10px] text-gray-500">{inv.customerTaxId}</div>
                 </TableCell>
-                <TableCell className="px-2 py-1 text-xs whitespace-nowrap">{municipality}</TableCell>
                 <TableCell className="px-2 py-1 text-right text-xs whitespace-nowrap">{formatCurrency(inv.totalNet)}</TableCell>
                 <TableCell className="px-2 py-1 text-right text-xs whitespace-nowrap">{formatCurrency(inv.totalVat)}</TableCell>
                 <TableCell className="px-2 py-1 text-right font-semibold text-xs whitespace-nowrap">{formatCurrency(inv.totalGross)}</TableCell>
@@ -93,7 +120,16 @@ export function InvoiceArchiveTable({ invoices, customers, onInvoiceClick }: Inv
           <span className="text-sm text-gray-500">
             Stran 1 / {Math.ceil(sortedInvoices.length / 10) || 1}
           </span>
-        </div>
+        </div>           
+        <div>
+         <Button 
+            size="sm" 
+            variant="ghost" 
+            className="text-xs h-7 px-2 text-gray-500 hover:text-gray-700"
+          >
+            Naslednja stran
+          </Button>
+          </div>
       </div>
     </div>
   )

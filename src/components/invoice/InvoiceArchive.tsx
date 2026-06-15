@@ -213,8 +213,8 @@ const openEditModal = (invoice: Invoice) => {
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="all">Vsi ({filteredAll.length})</TabsTrigger>
-              <TabsTrigger value="issued">Izdani ({filteredIssued.length})</TabsTrigger>
               <TabsTrigger value="drafts">Osnutki ({filteredDrafts.length})</TabsTrigger>
+              <TabsTrigger value="issued">Izdani ({filteredIssued.length})</TabsTrigger>
               <TabsTrigger value="paid">Plačani ({filteredPaid.length})</TabsTrigger>
               <TabsTrigger value="overdue">Zapadli ({filteredOverdue.length})</TabsTrigger>
             </TabsList>

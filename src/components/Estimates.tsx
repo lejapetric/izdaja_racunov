@@ -278,7 +278,7 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
     <div className="space-y-6">
       <div className="flex justify-between items-center flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Predračuni</h1>
+          <h1 className="text-xl lg:text-2xl font-bold">Predračuni</h1>
         </div>
       </div>
 
@@ -298,7 +298,7 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
           />
           
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-5 text-xs lg:text-sm">
               <TabsTrigger value="all">Vsi ({filteredAll.length})</TabsTrigger>
               <TabsTrigger value="issued">Izdani ({filteredIssued.length})</TabsTrigger>
               <TabsTrigger value="sent">Poslani ({filteredSent.length})</TabsTrigger>
@@ -353,10 +353,10 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
       <Card className="bg-blue-50 border-blue-200">
         <CardContent className="pt-4 pb-4">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-blue-500 mt-0.5" />
-            <div className="text-sm text-blue-700">
+            <AlertTriangle className="w-4 h-4 lg:w-5 lg:h-5 text-blue-500 mt-0.5" />
+            <div className="text-xs lg:text-sm text-blue-700">
               <p className="font-medium">Informacije o predračunih</p>
-              <p className="text-xs mt-1">Predračun nima pravne veljave. Ko ustvarite račun iz predračuna, se predračun označi kot "Spremenjen v račun" in ga ni več mogoče ponovno uporabiti. Predračuni so veljavni 30 dni.</p>
+              <p className="text-[10px] lg:text-xs mt-1">Predračun nima pravne veljave. Ko ustvarite račun iz predračuna, se predračun označi kot "Spremenjen v račun" in ga ni več mogoče ponovno uporabiti. Predračuni so veljavni 30 dni.</p>
             </div>
           </div>
         </CardContent>
@@ -366,44 +366,44 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
       <Dialog open={emailModalOpen} onOpenChange={setEmailModalOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-blue-700">
-              <Mail className="w-5 h-5 text-blue-600" />
+            <DialogTitle className="flex items-center gap-2 text-blue-700 text-base lg:text-lg">
+              <Mail className="w-4 h-4 lg:w-5 lg:h-5 text-blue-600" />
               Pošlji predračun po e-pošti
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <label className="text-sm font-medium block mb-1 text-gray-700">Prejemnik (e-pošta) *</label>
+              <label className="text-xs lg:text-sm font-medium block mb-1 text-gray-700">Prejemnik (e-pošta) *</label>
               <Input 
                 value={customers.find(c => c.id === emailInvoice?.customerId)?.email || 'E-pošta ni vpisan'} 
                 disabled 
-                className="bg-gray-50 border-gray-200" 
+                className="bg-gray-50 border-gray-200 text-xs lg:text-sm" 
               />
             </div>
             
             <div>
-              <label className="text-sm font-medium block mb-1 text-gray-700">Zadeva *</label>
+              <label className="text-xs lg:text-sm font-medium block mb-1 text-gray-700">Zadeva *</label>
               <Input 
                 value={emailSubject} 
                 onChange={(e) => setEmailSubject(e.target.value)} 
-                className="border-gray-200 focus:border-blue-400 focus:ring-blue-400"
+                className="border-gray-200 focus:border-blue-400 focus:ring-blue-400 text-xs lg:text-sm"
               />
             </div>
             
             <div>
-              <label className="text-sm font-medium block mb-1 text-gray-700">Sporočilo *</label>
+              <label className="text-xs lg:text-sm font-medium block mb-1 text-gray-700">Sporočilo *</label>
               <Textarea 
                 value={emailBody} 
                 onChange={(e) => setEmailBody(e.target.value)} 
                 rows={10} 
-                className="font-normal text-sm border-gray-200 focus:border-blue-400 focus:ring-blue-400"
+                className="font-normal text-xs lg:text-sm border-gray-200 focus:border-blue-400 focus:ring-blue-400"
               />
             </div>
             
             <div className="mt-2 px-3 py-1.5 bg-gray-50 rounded border border-gray-200 inline-block">
               <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-gray-600" />
-                <span className="text-sm text-gray-700">
+                <FileText className="w-3 h-3 lg:w-4 lg:h-4 text-gray-600" />
+                <span className="text-xs lg:text-sm text-gray-700">
                   Priponka: <span className="font-medium">{emailInvoice?.number || 'predracun'}.pdf</span>
                 </span>
               </div>
@@ -414,11 +414,11 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
             <Button variant="outline" onClick={() => {
               setEmailModalOpen(false)
               setEmailInvoice(null)
-            }}>
-              <X className="w-4 h-4 mr-2" /> Prekliči
+            }} className="text-xs lg:text-sm">
+              <X className="w-3 h-3 lg:w-4 lg:h-4 mr-2" /> Prekliči
             </Button>
-            <Button onClick={handleSendEmail} className="bg-blue-600 hover:bg-blue-700">
-              <Send className="w-4 h-4 mr-2" /> Pošlji po e-pošti
+            <Button onClick={handleSendEmail} className="bg-blue-600 hover:bg-blue-700 text-xs lg:text-sm">
+              <Send className="w-3 h-3 lg:w-4 lg:h-4 mr-2" /> Pošlji po e-pošti
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -428,42 +428,42 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
       <Dialog open={postModalOpen} onOpenChange={setPostModalOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-blue-700">
-              <Package className="w-5 h-5 text-blue-600" />
+            <DialogTitle className="flex items-center gap-2 text-blue-700 text-base lg:text-lg">
+              <Package className="w-4 h-4 lg:w-5 lg:h-5 text-blue-600" />
               Pošlji predračun po navadni pošti
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm font-medium text-blue-800">Predračun: {postInvoice?.number}</p>
-              <p className="text-sm text-blue-600">Kupec: {postInvoice?.customerName}</p>
-              <p className="text-sm text-blue-600">Znesek: {postInvoice && formatCurrency(postInvoice.totalGross)}</p>
+              <p className="text-xs lg:text-sm font-medium text-blue-800">Predračun: {postInvoice?.number}</p>
+              <p className="text-xs lg:text-sm text-blue-600">Kupec: {postInvoice?.customerName}</p>
+              <p className="text-xs lg:text-sm text-blue-600">Znesek: {postInvoice && formatCurrency(postInvoice.totalGross)}</p>
             </div>
             
             <div>
-              <label className="text-sm font-medium block mb-1 text-gray-700">Naslov za pošiljanje *</label>
+              <label className="text-xs lg:text-sm font-medium block mb-1 text-gray-700">Naslov za pošiljanje *</label>
               <textarea 
                 value={postAddress} 
                 onChange={(e) => setPostAddress(e.target.value)} 
-                className="w-full min-h-[100px] px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full min-h-[100px] px-3 py-2 text-xs lg:text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 placeholder="Ime in priimek / podjetje&#10;Ulica in hišna številka&#10;Poštna številka in kraj"
               />
-              <p className="text-xs text-gray-500 mt-1">Preverite naslov pred pošiljanjem</p>
+              <p className="text-[10px] lg:text-xs text-gray-500 mt-1">Preverite naslov pred pošiljanjem</p>
             </div>
             
             <div>
-              <label className="text-sm font-medium block mb-1 text-gray-700">Opomba (neobvezno)</label>
+              <label className="text-xs lg:text-sm font-medium block mb-1 text-gray-700">Opomba (neobvezno)</label>
               <Input 
                 value={postNote} 
                 onChange={(e) => setPostNote(e.target.value)} 
                 placeholder="Npr. priporočeno, s povratnico, dostava na dom..."
-                className="border-gray-200 focus:border-blue-400 focus:ring-blue-400"
+                className="border-gray-200 focus:border-blue-400 focus:ring-blue-400 text-xs lg:text-sm"
               />
             </div>
             
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm">
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs lg:text-sm">
               <div className="flex items-start gap-2">
-                <AlertTriangle className="w-4 h-4 text-gray-600 flex-shrink-0 mt-0.5" />
+                <AlertTriangle className="w-3 h-3 lg:w-4 lg:h-4 text-gray-600 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-medium text-gray-800">Potrditev pošiljanja:</p>
                   <p className="text-gray-700">S klikom na "Potrdi pošiljanje" potrjujete, da ste predračun fizično poslali po navadni pošti na zgornji naslov.</p>
@@ -477,11 +477,11 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
               setPostInvoice(null)
               setPostAddress('')
               setPostNote('')
-            }}>
-              <X className="w-4 h-4 mr-2" /> Prekliči
+            }} className="text-xs lg:text-sm">
+              <X className="w-3 h-3 lg:w-4 lg:h-4 mr-2" /> Prekliči
             </Button>
-            <Button onClick={handleSendPost} className="bg-blue-600 hover:bg-blue-700">
-              <Package className="w-4 h-4 mr-2" /> Potrdi pošiljanje
+            <Button onClick={handleSendPost} className="bg-blue-600 hover:bg-blue-700 text-xs lg:text-sm">
+              <Package className="w-3 h-3 lg:w-4 lg:h-4 mr-2" /> Potrdi pošiljanje
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -501,19 +501,19 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
       }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-green-700">
-              <FileText className="w-5 h-5 text-green-600" />
+            <DialogTitle className="flex items-center gap-2 text-green-700 text-base lg:text-lg">
+              <FileText className="w-4 h-4 lg:w-5 lg:h-5 text-green-600" />
               Ustvari račun iz predračuna
             </DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <div className="bg-yellow-50 border border-yellow-200 rounded p-4 mb-4">
-              <p className="text-sm text-yellow-800">
+              <p className="text-xs lg:text-sm text-yellow-800">
                 S tem dejanjem boste iz predračuna <span className="font-semibold">{convertInvoice?.number}</span>
                 ustvarili račun. Predračun bo označen kot "Spremenjen v račun".
               </p>
             </div>
-            <p className="text-sm text-gray-600">Ste prepričani, da želite to narediti?</p>
+            <p className="text-xs lg:text-sm text-gray-600">Ste prepričani, da želite to narediti?</p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => {
@@ -523,13 +523,13 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
                   setSelectedInvoiceId(convertInvoice.id)
                 }, 50)
               }
-            }}>Prekliči</Button>
+            }} className="text-xs lg:text-sm">Prekliči</Button>
             <Button onClick={() => {
               handleConvertToInvoice()
               setConvertModalOpen(false)
               setConvertInvoice(null)
-            }} className="bg-green-600">
-              <FileText className="w-4 h-4 mr-2" /> Ustvari račun
+            }} className="bg-green-600 text-xs lg:text-sm">
+              <FileText className="w-3 h-3 lg:w-4 lg:h-4 mr-2" /> Ustvari račun
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -539,18 +539,18 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
       <Dialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-red-700">
-              <Ban className="w-5 h-5 text-red-600" />
+            <DialogTitle className="flex items-center gap-2 text-red-700 text-base lg:text-lg">
+              <Ban className="w-4 h-4 lg:w-5 lg:h-5 text-red-600" />
               Storniraj predračun
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-6 py-4">
             <div className="bg-red-50 border border-red-200 rounded-lg p-5">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+                <AlertTriangle className="w-5 h-5 lg:w-6 lg:h-6 text-red-600 flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-base font-semibold text-red-800">OPOZORILO!</p>
-                  <p className="text-sm text-red-700 mt-2 leading-relaxed">
+                  <p className="text-sm lg:text-base font-semibold text-red-800">OPOZORILO!</p>
+                  <p className="text-xs lg:text-sm text-red-700 mt-2 leading-relaxed">
                     Storniranje predračuna <span className="font-semibold">{cancelInvoice?.number}</span> 
                     za kupca <span className="font-semibold">{cancelInvoice?.customerName}</span> 
                     v znesku <span className="font-semibold">{formatCurrency(cancelInvoice?.totalGross)}</span> 
@@ -562,16 +562,16 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
             
             <div className="grid gap-4">
               <div>
-                <label className="text-sm font-medium block mb-2 text-gray-700">Številka predračuna</label>
+                <label className="text-xs lg:text-sm font-medium block mb-2 text-gray-700">Številka predračuna</label>
                 <Input 
                   value={cancelInvoice?.number || ''} 
                   disabled 
-                  className="bg-gray-50 border-gray-200 text-base"
+                  className="bg-gray-50 border-gray-200 text-sm lg:text-base"
                 />
               </div>
               
               <div>
-                <label className="text-sm font-medium block mb-2 text-gray-700">
+                <label className="text-xs lg:text-sm font-medium block mb-2 text-gray-700">
                   Razlog za stornacijo <span className="text-red-500">*</span>
                 </label>
                 <Textarea 
@@ -579,9 +579,9 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
                   onChange={(e) => setCancelReason(e.target.value)} 
                   placeholder="Vpišite podroben razlog za stornacijo (obvezno)..."
                   rows={4}
-                  className="border-red-200 focus:border-red-400 focus:ring-red-400 resize-none"
+                  className="border-red-200 focus:border-red-400 focus:ring-red-400 resize-none text-xs lg:text-sm"
                 />
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-[10px] lg:text-xs text-gray-500 mt-2">
                   Razlog bo zabeležen v dnevniku sprememb predračuna in viden v zgodovini.
                 </p>
               </div>
@@ -591,17 +591,17 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
             <Button 
               variant="outline" 
               onClick={() => setCancelModalOpen(false)}
-              className="px-6"
+              className="px-6 text-xs lg:text-sm"
             >
-              <X className="w-4 h-4 mr-2" /> Prekliči
+              <X className="w-3 h-3 lg:w-4 lg:h-4 mr-2" /> Prekliči
             </Button>
             <Button 
               variant="destructive" 
               onClick={handleCancelInvoice} 
               disabled={!cancelReason.trim()}
-              className="px-6"
+              className="px-6 text-xs lg:text-sm"
             >
-              <Ban className="w-4 h-4 mr-2" /> Storniraj predračun
+              <Ban className="w-3 h-3 lg:w-4 lg:h-4 mr-2" /> Storniraj predračun
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -611,8 +611,8 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
       <Dialog open={auditModalOpen} onOpenChange={setAuditModalOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader className="sticky top-0 bg-white pb-4 border-b">
-            <DialogTitle className="flex items-center gap-2 text-gray-800">
-              <History className="w-5 h-5 text-blue-600" />
+            <DialogTitle className="flex items-center gap-2 text-gray-800 text-base lg:text-lg">
+              <History className="w-4 h-4 lg:w-5 lg:h-5 text-blue-600" />
               Dnevnik sprememb - {auditInvoice?.number}
             </DialogTitle>
           </DialogHeader>
@@ -628,23 +628,23 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
                   <div className="flex gap-4">
                     <div className="flex-shrink-0 z-10">
                       {log.action === 'created' && (
-                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                          <FileText className="w-5 h-5 text-green-600" />
+                        <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-green-100 flex items-center justify-center">
+                          <FileText className="w-4 h-4 lg:w-5 lg:h-5 text-green-600" />
                         </div>
                       )}
                       {log.action === 'edited' && (
-                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                          <History className="w-5 h-5 text-blue-600" />
+                        <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                          <History className="w-4 h-4 lg:w-5 lg:h-5 text-blue-600" />
                         </div>
                       )}
                       {log.action === 'status_changed' && (
-                        <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
-                          <Badge className="w-5 h-5 text-yellow-600" />
+                        <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                          <Badge className="w-4 h-4 lg:w-5 lg:h-5 text-yellow-600" />
                         </div>
                       )}
                       {!['created', 'edited', 'status_changed'].includes(log.action) && (
-                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                          <History className="w-5 h-5 text-gray-600" />
+                        <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                          <History className="w-4 h-4 lg:w-5 lg:h-5 text-gray-600" />
                         </div>
                       )}
                     </div>
@@ -652,10 +652,10 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
                     <div className="flex-1 bg-gray-50 rounded-lg p-4">
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-gray-900">{log.user}</span>
-                          <span className="text-xs text-gray-500">{formatDate(log.timestamp)}</span>
+                          <span className="text-xs lg:text-sm font-semibold text-gray-900">{log.user}</span>
+                          <span className="text-[10px] lg:text-xs text-gray-500">{formatDate(log.timestamp)}</span>
                         </div>
-                        <div className="px-2 py-1 rounded-md text-xs font-medium uppercase bg-gray-200 text-gray-700">
+                        <div className="px-2 py-1 rounded-md text-[10px] lg:text-xs font-medium uppercase bg-gray-200 text-gray-700">
                           {log.action === 'created' && 'Ustvarjeno'}
                           {log.action === 'edited' && 'Posodobljeno'}
                           {log.action === 'status_changed' && 'Status spremenjen'}
@@ -663,21 +663,21 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
                         </div>
                       </div>
                       
-                      <p className="text-sm text-gray-700 leading-relaxed">{log.details}</p>
+                      <p className="text-xs lg:text-sm text-gray-700 leading-relaxed">{log.details}</p>
                     </div>
                   </div>
                 </div>
               ))
             ) : (
               <div className="text-center py-8 text-gray-500">
-                <History className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p>Za ta predračun ni zabeleženih sprememb.</p>
+                <History className="w-10 h-10 lg:w-12 lg:h-12 mx-auto mb-3 text-gray-300" />
+                <p className="text-xs lg:text-sm">Za ta predračun ni zabeleženih sprememb.</p>
               </div>
             )}
           </div>
           
           <DialogFooter className="sticky bottom-0 bg-white pt-4 border-t">
-            <Button onClick={() => setAuditModalOpen(false)} className="bg-blue-600 hover:bg-blue-700">
+            <Button onClick={() => setAuditModalOpen(false)} className="bg-blue-600 hover:bg-blue-700 text-xs lg:text-sm">
               Zapri
             </Button>
           </DialogFooter>
@@ -691,13 +691,13 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
           <div className="fixed inset-0 z-50 bg-white overflow-y-auto md:left-64 !mt-0">
             <div className="sticky top-0 bg-white border-b p-4">
               <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold">Uredi predračun</h2>
+                <h2 className="text-lg lg:text-xl font-bold">Uredi predračun</h2>
                 <button onClick={handleCloseEditModal} className="p-2 bg-gray-100 rounded-full">
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4 lg:w-5 lg:h-5" />
                 </button>
               </div>
             </div>
-            <div className="p-6">
+            <div className="p-4 lg:p-6">
               <EditInvoice 
                 editingInvoice={editingInvoiceData} 
                 onClose={handleCloseEditModal}
@@ -743,75 +743,75 @@ function EstimatesTable({ estimates, onEstimateClick, getStatusLabel, getStatusC
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="px-1 py-3 text-left w-[110px]">Številka</TableHead>
-          <TableHead className="px-4 py-3 text-center">Datum</TableHead>
-          <TableHead className="px-4 py-3 text-left w-[240px]">Kupec</TableHead>
-          <TableHead className="px-4 py-3 text-right">Neto</TableHead>
-          <TableHead className="px-4 py-3 text-right">DDV</TableHead>
-          <TableHead className="px-4 py-3 text-right">Bruto</TableHead>
-          <TableHead className="px-4 py-3 text-center w-[90px]">Popust</TableHead>
-          <TableHead className="px-4 py-3 text-center w-[120px]">Status</TableHead>
-          <TableHead className="px-4 py-3 text-center w-[140px]">Velja do</TableHead>
-          <TableHead className="px-4 py-3 text-center w-[150px]"></TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {estimates.map(est => {
-          const daysUntilExpiry = getDaysUntilExpiry(est.dueDate)
-          const isExpired = daysUntilExpiry !== null && daysUntilExpiry < 0
-          
-          return (
-            <TableRow 
-              key={est.id} 
-              className={`${isExpired ? 'bg-red-50' : ''} cursor-pointer hover:bg-gray-50 transition-colors`}
-              onClick={() => onEstimateClick(est)}
-            >
-              <TableCell className="px-2 py-2 font-left">{est.number}</TableCell>
-              <TableCell className="px-4 py-2 text-center">{formatDate(est.issueDate)}</TableCell>
-              <TableCell className="px-4 py-2">
-                <div className="font-medium">{est.customerName}</div>
-                <div className="text-xs text-gray-500">{est.customerTaxId}</div>
-              </TableCell>
-              <TableCell className="px-4 py-2 text-right">{formatCurrency(est.totalNet)}</TableCell>
-              <TableCell className="px-4 py-2 text-right">{formatCurrency(est.totalVat)}</TableCell>
-              <TableCell className="px-4 py-2 text-right font-semibold">{formatCurrency(est.totalGross)}</TableCell>
-              <TableCell className="px-4 py-2 text-center">{(est.discountPercent ?? 0)}%</TableCell>
-              <TableCell className="px-4 py-2 text-center">
-                <Badge className={getStatusColor(est.status)}>
-                  {getStatusLabel(est.status)}
-                </Badge>
-              </TableCell>
-              <TableCell className="px-4 py-2 text-center">
-                {est.dueDate && est.dueDate !== 'null' ? formatDate(est.dueDate) : '-'}
-                {!isExpired && daysUntilExpiry !== null && daysUntilExpiry <= 7 && daysUntilExpiry > 0 && (
-                  <div className="text-xs text-orange-500">Poteče čez {daysUntilExpiry} dni</div>
-                )}
-                {isExpired && <div className="text-xs text-red-500">POTEČEN</div>}
-              </TableCell>
-              <TableCell className="px-4 py-2 text-center" onClick={(e) => e.stopPropagation()}>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  className="text-xs h-7 px-2"
-                  onClick={() => onEstimateClick(est)}
-                >
-                  Več o računu
-                </Button>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="px-1 py-3 text-left w-[110px] text-xs lg:text-sm">Številka</TableHead>
+            <TableHead className="px-4 py-3 text-center text-xs lg:text-sm">Datum</TableHead>
+            <TableHead className="px-4 py-3 text-left w-[240px] text-xs lg:text-sm">Kupec</TableHead>
+            <TableHead className="px-4 py-3 text-right text-xs lg:text-sm">Neto</TableHead>
+            <TableHead className="px-4 py-3 text-right text-xs lg:text-sm">DDV</TableHead>
+            <TableHead className="px-4 py-3 text-right text-xs lg:text-sm">Bruto</TableHead>
+            <TableHead className="px-4 py-3 text-center w-[150px] text-xs lg:text-sm">Status</TableHead>
+            <TableHead className="px-4 py-3 text-center w-[140px] text-xs lg:text-sm">Velja do</TableHead>
+            <TableHead className="px-4 py-3 text-center w-[150px] text-xs lg:text-sm"></TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {estimates.map(est => {
+            const daysUntilExpiry = getDaysUntilExpiry(est.dueDate)
+            const isExpired = daysUntilExpiry !== null && daysUntilExpiry < 0
+            
+            return (
+              <TableRow 
+                key={est.id} 
+                className={`${isExpired ? 'bg-red-50' : ''} cursor-pointer hover:bg-gray-50 transition-colors`}
+                onClick={() => onEstimateClick(est)}
+              >
+                <TableCell className="px-2 py-2 text-xs lg:text-sm font-left">{est.number}</TableCell>
+                <TableCell className="px-4 py-2 text-center text-xs lg:text-sm">{formatDate(est.issueDate)}</TableCell>
+                <TableCell className="px-4 py-2 text-xs lg:text-sm">
+                  <div className="font-medium">{est.customerName}</div>
+                  <div className="text-[10px] lg:text-xs text-gray-500">{est.customerTaxId}</div>
+                </TableCell>
+                <TableCell className="px-4 py-2 text-right text-xs lg:text-sm">{formatCurrency(est.totalNet)}</TableCell>
+                <TableCell className="px-4 py-2 text-right text-xs lg:text-sm">{formatCurrency(est.totalVat)}</TableCell>
+                <TableCell className="px-4 py-2 text-right font-semibold text-xs lg:text-sm">{formatCurrency(est.totalGross)}</TableCell>
+                <TableCell className="px-4 py-2 text-center text-xs lg:text-sm">
+                  <Badge className={`${getStatusColor(est.status)} text-[10px] lg:text-xs`}>
+                    {getStatusLabel(est.status)}
+                  </Badge>
+                </TableCell>
+                <TableCell className="px-4 py-2 text-center text-xs lg:text-sm">
+                  {est.dueDate && est.dueDate !== 'null' ? formatDate(est.dueDate) : '-'}
+                  {!isExpired && daysUntilExpiry !== null && daysUntilExpiry <= 7 && daysUntilExpiry > 0 && (
+                    <div className="text-[10px] lg:text-xs text-orange-500">Poteče čez {daysUntilExpiry} dni</div>
+                  )}
+                  {isExpired && <div className="text-[10px] lg:text-xs text-red-500">POTEČEN</div>}
+                </TableCell>
+                <TableCell className="px-4 py-2 text-center" onClick={(e) => e.stopPropagation()}>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    className="text-[10px] lg:text-xs h-6 lg:h-7 px-1.5 lg:px-2"
+                    onClick={() => onEstimateClick(est)}
+                  >
+                    Več o računu
+                  </Button>
+                </TableCell>
+              </TableRow>
+            )
+          })}
+          {estimates.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={10} className="text-center text-gray-400 py-8 text-xs lg:text-sm">
+                Ni predračunov
               </TableCell>
             </TableRow>
-          )
-        })}
-        {estimates.length === 0 && (
-          <TableRow>
-            <TableCell colSpan={10} className="text-center text-gray-400 py-8">
-              Ni predračunov
-            </TableCell>
-          </TableRow>
-        )}
-      </TableBody>
-    </Table>
+          )}
+        </TableBody>
+      </Table>
+    </div>
   )
 }

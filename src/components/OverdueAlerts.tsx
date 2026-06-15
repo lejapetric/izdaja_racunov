@@ -612,8 +612,7 @@ function OverdueTable({ invoices, customers, onInvoiceClick, getStatusLabel, get
           <TableHead className="px-4 py-3 text-right">Neto</TableHead>
           <TableHead className="px-4 py-3 text-right">DDV</TableHead>
           <TableHead className="px-4 py-3 text-right">Bruto</TableHead>
-          <TableHead className="px-4 py-3 text-center w-[90px]">Popust</TableHead>
-          <TableHead className="px-4 py-3 text-center w-[120px]">Status</TableHead>
+          <TableHead className="px-4 py-3 text-center w-[150px]">Status</TableHead>
           <TableHead className="px-4 py-3 text-center w-[140px]">Zapadlost</TableHead>
           <TableHead className="px-4 py-3 text-center w-[150px]"></TableHead>
         </TableRow>
@@ -641,7 +640,6 @@ function OverdueTable({ invoices, customers, onInvoiceClick, getStatusLabel, get
               <TableCell className="px-4 py-2 text-right">{formatCurrency(inv.totalNet)}</TableCell>
               <TableCell className="px-4 py-2 text-right">{formatCurrency(inv.totalVat)}</TableCell>
               <TableCell className="px-4 py-2 text-right font-semibold">{formatCurrency(inv.totalGross)}</TableCell>
-              <TableCell className="px-4 py-2 text-center">{inv.discountPercent ?? 0}%</TableCell>
               <TableCell className="px-4 py-2 text-center">
                 <Badge className={getStatusColor(inv.status)}>
                   {getStatusLabel(inv.status)}

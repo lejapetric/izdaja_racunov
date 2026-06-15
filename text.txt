@@ -1,29 +1,24 @@
+DAVČNI ZAVEZANEC
+    -dodaj v  bazo podatkov primer da oseba ni davcni zavezanec
+če je kupec davčni nezavezanec, potem samo v račun ne napises njegovega ID
+če podjetje bi davčni zavezanec, ne napises id in vsi DDV pri stroskih avtomatsko 0% in rabim samo pod opombe napisati da je oprosceno po 94. členu
 
-dodajna racun ID za DDV ce je davcni zacezanec oz. samo davcna stevilka ce ni
+dodaj v kodod ce je podjetje davcni nezavezanec
+
+POPRAVI IZGLED RAČUNA
+popravi da so pike med tisoc in sto
+
 
 poslji po posti/mail avtomatko potrjenao
 
-ali lahko plačaš že predračun, če ja kako potem urejas ce se je spremenil skupnu znesek
 
-
-
-
-
-
-
-
-
-
-
-
+MOCK BAZA
+popravi da je ppust na postavko in ne vec skupno
 
 BAZA
-v bazi dodaj za izdajatelja in prevernika polje jeDavcniZavzanec : boolean
+odstrani povezavo pri racunu samega nase
+dodaj povezanRacuId (ideja ko si v racunu napises predracunId, ko si v predracunu napises racunId)
+dodaj placanoPredracun (koliko je stranka placala v predracunu)
 
-dodaj v bazo se vec statusov
-dodaj delno plačilo, kako naj se shrani in updejta vsakic ko placa delno
-    resitev: placal-kolicina, timestamp
-             placalDoSedaj
-             poravnalRacun boolean
-    ce placa vse naenkrat je to kul in gre na true
-    ce placa delno potem se shrani v dnevnik kdaj in kolliko, poveca placaDoSedaj
+
+

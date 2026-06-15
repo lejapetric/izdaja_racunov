@@ -221,10 +221,7 @@ export function InvoiceItemModal({ open, onOpenChange, editingItem, onSave, serv
               <Select value={newItem.vatExemptionReason || ''} onValueChange={(val) => setNewItem({ ...newItem, vatExemptionReason: val })}>
                 <SelectTrigger><SelectValue placeholder="Izberite zakonsko podlago" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="91. člen ZDDV-1 – oprostitev pri izvozu">91. člen ZDDV-1 – oprostitev pri izvozu</SelectItem>
-                  <SelectItem value="92. člen ZDDV-1 – oprostitev pri uvozu">92. člen ZDDV-1 – oprostitev pri uvozu</SelectItem>
-                  <SelectItem value="94. člen ZDDV-1 – mednarodni prevoz">94. člen ZDDV-1 – mednarodni prevoz</SelectItem>
-                  <SelectItem value="96. člen ZDDV-1 – nepremičnine">96. člen ZDDV-1 – nepremičnine</SelectItem>
+                  <SelectItem value="76. člen ZDDV-1 – obrnjena davčna obveznost">76. a člen ZDDV-1 – obrnjena davčna obveznost</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -46,20 +46,19 @@ export function InvoiceArchiveTable({ invoices, customers, onInvoiceClick }: Inv
   })
 
   return (
-    <div>
+    <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="px-1 py-3 text-left w-[110px]">Številka računa</TableHead>
-            <TableHead className="px-4 py-3 text-center">Datum</TableHead>
-            <TableHead className="px-4 py-3 text-left w-[240px]">Kupec</TableHead>
-            <TableHead className="px-4 py-3 text-right">Neto</TableHead>
-            <TableHead className="px-4 py-3 text-right">DDV</TableHead>
-            <TableHead className="px-4 py-3 text-right">Bruto</TableHead>
-            <TableHead className="px-4 py-3 text-center w-[90px]">Popust</TableHead>
-            <TableHead className="px-4 py-3 text-center w-[120px]">Status</TableHead>
-            <TableHead className="px-4 py-3 text-center w-[140px]">Zapadlost</TableHead>
-            <TableHead className="px-4 py-3 text-center w-[150px]"></TableHead>
+            <TableHead className="px-1 py-3 text-left w-[110px] text-xs lg:text-sm">Številka računa</TableHead>
+            <TableHead className="px-4 py-3 text-center text-xs lg:text-sm">Datum</TableHead>
+            <TableHead className="px-4 py-3 text-left w-[240px] text-xs lg:text-sm">Kupec</TableHead>
+            <TableHead className="px-4 py-3 text-right text-xs lg:text-sm">Neto</TableHead>
+            <TableHead className="px-4 py-3 text-right text-xs lg:text-sm">DDV</TableHead>
+            <TableHead className="px-4 py-3 text-right text-xs lg:text-sm">Bruto</TableHead>
+            <TableHead className="px-4 py-3 text-center w-[180px] text-xs lg:text-sm">Status</TableHead>
+            <TableHead className="px-4 py-3 text-center w-[140px] text-xs lg:text-sm">Zapadlost</TableHead>
+            <TableHead className="px-4 py-3 text-center w-[150px] text-xs lg:text-sm"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -76,30 +75,29 @@ export function InvoiceArchiveTable({ invoices, customers, onInvoiceClick }: Inv
                 className={`${inv.status === 'overdue' ? 'bg-red-50' : ''} cursor-pointer hover:bg-gray-50 transition-colors`}
                 onClick={() => onInvoiceClick(inv)}
               >
-                <TableCell className="px-2 py-1 text-xs whitespace-nowrap">
+                <TableCell className="px-2 py-1 whitespace-nowrap text-xs lg:text-sm">
                   {inv.number || <span className="text-gray-400 italic">Osnutek</span>}
                 </TableCell>
-                <TableCell className="px-2 py-1 text-center text-xs whitespace-nowrap">{formatDate(inv.issueDate)}</TableCell>
-                <TableCell className="px-2 py-1 text-xs whitespace-nowrap">
+                <TableCell className="px-2 py-1 text-center whitespace-nowrap text-xs lg:text-sm">{formatDate(inv.issueDate)}</TableCell>
+                <TableCell className="px-2 py-1 whitespace-nowrap text-xs lg:text-sm">
                   <div className="font-medium">{inv.customerName}</div>
-                  <div className="text-[10px] text-gray-500">{inv.customerTaxId}</div>
+                  <div className="text-[10px] lg:text-xs text-gray-500">{inv.customerTaxId}</div>
                 </TableCell>
-                <TableCell className="px-2 py-1 text-right text-xs whitespace-nowrap">{formatCurrency(inv.totalNet)}</TableCell>
-                <TableCell className="px-2 py-1 text-right text-xs whitespace-nowrap">{formatCurrency(inv.totalVat)}</TableCell>
-                <TableCell className="px-2 py-1 text-right font-semibold text-xs whitespace-nowrap">{formatCurrency(inv.totalGross)}</TableCell>
-                <TableCell className="px-2 py-1 text-center text-xs whitespace-nowrap">{inv.discountPercent}%</TableCell>
-                <TableCell className="px-2 py-1 text-center text-xs whitespace-nowrap">
-                  <Badge className={statusColors[inv.status]}>{statusLabels[inv.status]}</Badge>
+                <TableCell className="px-2 py-1 text-right whitespace-nowrap text-xs lg:text-sm">{formatCurrency(inv.totalNet)}</TableCell>
+                <TableCell className="px-2 py-1 text-right whitespace-nowrap text-xs lg:text-sm">{formatCurrency(inv.totalVat)}</TableCell>
+                <TableCell className="px-2 py-1 text-right font-semibold whitespace-nowrap text-xs lg:text-sm">{formatCurrency(inv.totalGross)}</TableCell>
+                <TableCell className="px-2 py-1 text-center whitespace-nowrap text-xs lg:text-sm">
+                  <Badge className={`${statusColors[inv.status]} text-[10px] lg:text-xs`}>{statusLabels[inv.status]}</Badge>
                 </TableCell>
-                <TableCell className="px-2 py-1 text-center text-xs whitespace-nowrap">
+                <TableCell className="px-2 py-1 text-center whitespace-nowrap text-xs lg:text-sm">
                   {formatDate(inv.dueDate)}
-                  {inv.status === 'overdue' && <div className="text-[10px] text-red-500 whitespace-nowrap">{daysLate} dni zamude</div>}
+                  {inv.status === 'overdue' && <div className="text-[10px] lg:text-xs text-red-500 whitespace-nowrap">{daysLate} dni zamude</div>}
                 </TableCell>
                 <TableCell className="px-2 py-1 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                   <Button 
                     size="sm" 
                     variant="outline"
-                    className="text-[10px] h-6 px-1.5 whitespace-nowrap"
+                    className="text-[10px] lg:text-xs h-6 lg:h-7 px-1.5 lg:px-2 whitespace-nowrap"
                     onClick={() => onInvoiceClick(inv)}
                   >
                     Več o računu
@@ -113,11 +111,11 @@ export function InvoiceArchiveTable({ invoices, customers, onInvoiceClick }: Inv
       
       {/* Pagination footer */}
       <div className="flex items-center justify-between px-4 py-3 border-t">
-        <div className="text-sm text-gray-500">
+        <div className="text-xs lg:text-sm text-gray-500">
           Skupaj: {sortedInvoices.length} računov
         </div>
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-500">
+          <span className="text-xs lg:text-sm text-gray-500">
             Stran 1 / {Math.ceil(sortedInvoices.length / 10) || 1}
           </span>
         </div>           
@@ -125,7 +123,7 @@ export function InvoiceArchiveTable({ invoices, customers, onInvoiceClick }: Inv
          <Button 
             size="sm" 
             variant="ghost" 
-            className="text-xs h-7 px-2 text-gray-500 hover:text-gray-700"
+            className="text-xs lg:text-sm h-7 px-2 text-gray-500 hover:text-gray-700"
           >
             Naslednja stran
           </Button>

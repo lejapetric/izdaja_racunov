@@ -11,6 +11,8 @@ popravi da so pike med tisoc in sto
 
 poslji po posti/mail avtomatko potrjenao
 
+opomini
+popravi da se pokaze poslji popmin vsem tipom racuna
 
 MOCK BAZA
 popravi da je ppust na postavko in ne vec skupno

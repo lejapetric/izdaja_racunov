@@ -691,7 +691,6 @@ export function OverdueInvoices() {
     </div>
   )
 }
-
 // Tabela za zapadle račune
 interface OverdueTableProps {
   invoices: any[]
@@ -708,18 +707,29 @@ function OverdueTable({ invoices, customers, reminders, onInvoiceClick, onSendEm
   const getReminderStatus = (invoice: any, reminders: Reminder[]) => {
     const sentReminders = reminders.map(r => r.reminderNumber)
     const daysLate = getDaysLate(invoice.dueDate)
+    const remindersSentCount = sentReminders.length
     
-    // Določi naslednji opomin, ki ga je treba poslati
-    if (daysLate >= 21 && !sentReminders.includes(3)) return { number: 3, needed: true, text: 'Potreben 3. opomin!' }
-    if (daysLate >= 14 && !sentReminders.includes(2)) return { number: 2, needed: true, text: 'Potreben 2. opomin!' }
-    if (daysLate >= 7 && !sentReminders.includes(1)) return { number: 1, needed: true, text: 'Potreben 1. opomin!' }
+    let needsReminder = false
+    let nextReminderNumber = 0
     
-    // Če so vsi opomini poslani
-    if (sentReminders.includes(3)) return { number: 3, needed: false, text: '3/3 poslani' }
-    if (sentReminders.includes(2)) return { number: 2, needed: false, text: '2/3 poslani' }
-    if (sentReminders.includes(1)) return { number: 1, needed: false, text: '1/3 poslani' }
+    if (remindersSentCount < 3 && invoice.status === 'overdue') {
+      if (remindersSentCount === 0 && daysLate >= 7) {
+        needsReminder = true
+        nextReminderNumber = 1
+      } else if (remindersSentCount === 1 && daysLate >= 14) {
+        needsReminder = true
+        nextReminderNumber = 2
+      } else if (remindersSentCount === 2 && daysLate >= 21) {
+        needsReminder = true
+        nextReminderNumber = 3
+      }
+    }
     
-    return { number: 0, needed: false, text: '0/3' }
+    return { 
+      sentCount: remindersSentCount,
+      needsReminder, 
+      nextReminderNumber
+    }
   }
 
   return (
@@ -735,19 +745,14 @@ function OverdueTable({ invoices, customers, reminders, onInvoiceClick, onSendEm
           <TableHead className="px-4 py-3 text-center w-[150px]">Status</TableHead>
           <TableHead className="px-4 py-3 text-center w-[140px]">Zapadlost</TableHead>
           <TableHead className="px-4 py-3 text-center w-[100px]">Opomini</TableHead>
-          <TableHead className="px-4 py-3 text-center w-[150px]"></TableHead>
+          <TableHead className="px-4 py-3 text-center w-[150px]">Akcije</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {invoices.map(inv => {
-          const customer = customers.find(c => c.id === inv.customerId)
-          const address = customer?.address || ''
-          const parts = address.split(',')
-          const municipality = parts.length > 1 ? parts[parts.length - 1].trim() : address.trim()
-          const daysLate = getDaysLate(inv.dueDate)
           const invoiceReminders = reminders[inv.id] || []
           const reminderStatus = getReminderStatus(inv, invoiceReminders)
-          const needsReminder = reminderStatus.needed && inv.status === 'overdue'
+          const daysLate = getDaysLate(inv.dueDate)
           
           return (
             <TableRow 
@@ -755,10 +760,8 @@ function OverdueTable({ invoices, customers, reminders, onInvoiceClick, onSendEm
               className="cursor-pointer hover:bg-gray-50 transition-colors"
               onClick={() => onInvoiceClick(inv)}
             >
-              <TableCell className="px-2 py-2 font-left">
-                <div className="flex items-center gap-2">
-                  <span>{inv.number}</span>
-                </div>
+              <TableCell className="px-2 py-2">
+                <span>{inv.number}</span>
               </TableCell>
               <TableCell className="px-4 py-2 text-center">{formatDate(inv.issueDate)}</TableCell>
               <TableCell className="px-4 py-2">
@@ -779,29 +782,30 @@ function OverdueTable({ invoices, customers, reminders, onInvoiceClick, onSendEm
                   <div className="text-xs text-red-500">{daysLate} dni zamude</div>
                 )}
               </TableCell>
-
-
-                <TableCell className="px-4 py-2 text-center">
-                  <div className="flex items-center justify-center">
-                    {inv.status === 'overdue' ? (
-
-                      
-                      <div className="relative">
-                        <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
-                          <span className="text-sm font-bold text-red-600">
-                            {reminderStatus.number > 0 ? reminderStatus.number : '!'}
-                          </span>
+              
+              {/* Stolpec Opomini - samo številka, rdeč krog samo ko je potreben opomin */}
+              <TableCell className="px-4 py-2 text-center" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-center">
+                  {inv.status === 'overdue' ? (
+                    <div className="relative">
+                      {reminderStatus.needsReminder ? (
+                        <div className="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center">
+                          <span className="text-sm font-bold">{reminderStatus.sentCount}</span>
                         </div>
-
-                      </div>
-                    ) : (
-                      <span className="text-sm text-gray-400">—</span>
-                    )}
-                  </div>
-                </TableCell>
-
-
-
+                      ) : (
+                        <span className="text-sm font-medium text-gray-700">{reminderStatus.sentCount}</span>
+                      )}
+                      {reminderStatus.needsReminder && (
+                        <div className="absolute inset-0 rounded-full border-2 border-red-600 animate-pulse" />
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-sm text-gray-400">—</span>
+                  )}
+                </div>
+              </TableCell>
+              
+              {/* Stolpec Akcije - SAMO gumb "Več o računu" */}
               <TableCell className="px-4 py-2 text-center" onClick={(e) => e.stopPropagation()}>
                 <Button 
                   size="sm" 

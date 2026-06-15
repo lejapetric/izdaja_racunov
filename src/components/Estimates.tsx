@@ -268,7 +268,7 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
     switch (status) {
       case 'issued': return 'Izdan'
       case 'sent': return 'Poslan'
-      case 'overdue': return 'Potečen'
+      case 'overdue': return 'Zapadel'
       case 'paid': return 'Spremenjen v račun'
       case 'cancelled': return 'Storniran'
       default: return status

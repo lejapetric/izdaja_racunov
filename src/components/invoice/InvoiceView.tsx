@@ -355,7 +355,7 @@ ${companyData.name}`)
                         <th className="text-right p-2 w-20">Cena</th>
                         <th className="text-right p-2 w-16">R%</th>
                         <th className="text-right p-2 w-16">DDV%</th>
-                        <th className="text-right p-2 w-24">Vrednost</th>
+                        <th className="text-right p-2 w-24">Znesek z DDV</th>
                       </tr>
                     </thead>
                     <tbody>

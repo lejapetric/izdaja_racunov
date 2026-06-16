@@ -403,15 +403,15 @@ const getRequiredFieldsMessage = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Storitev</TableHead>
+                <TableHead>Naziv</TableHead>
                 <TableHead className="text-right">Količina</TableHead>
-                <TableHead className="text-right">Enota</TableHead>
-                <TableHead className="text-right">Cena/enoto (€)</TableHead>
+                <TableHead className="text-right">Enota merjenja</TableHead>
+                <TableHead className="text-right">Cena (€)</TableHead>
                 <TableHead className="text-right">Popust %</TableHead>
-                <TableHead className="text-right">Neto</TableHead>
+                <TableHead className="text-right">Znesek brez DDV</TableHead>
                 <TableHead className="text-right">DDV %</TableHead>
                 <TableHead className="text-right">Znesek DDV</TableHead>
-                <TableHead className="text-right">Bruto</TableHead>
+                <TableHead className="text-right">Znesek z DDV</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>

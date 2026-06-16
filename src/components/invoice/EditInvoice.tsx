@@ -391,16 +391,16 @@ return (
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="text-xs sm:text-sm">Storitev</TableHead>
-            <TableHead className="text-right text-xs sm:text-sm">Količina</TableHead>
-            <TableHead className="text-xs sm:text-sm">Enota</TableHead>
-            <TableHead className="text-right text-xs sm:text-sm">Cena/enoto</TableHead>
-            <TableHead className="text-right text-xs sm:text-sm">Popust %</TableHead>
-            <TableHead className="text-right text-xs sm:text-sm">Neto</TableHead>
-            <TableHead className="text-right text-xs sm:text-sm">DDV %</TableHead>
-            <TableHead className="text-right text-xs sm:text-sm">Znesek DDV</TableHead>
-            <TableHead className="text-right text-xs sm:text-sm">Bruto</TableHead>
-            <TableHead className="w-16"></TableHead>
+            <TableHead>Naziv</TableHead>
+                <TableHead className="text-right">Količina</TableHead>
+                <TableHead className="text-right">Enota merjenja</TableHead>
+                <TableHead className="text-right">Cena (€)</TableHead>
+                <TableHead className="text-right">Popust %</TableHead>
+                <TableHead className="text-right">Znesek brez DDV</TableHead>
+                <TableHead className="text-right">DDV %</TableHead>
+                <TableHead className="text-right">Znesek DDV</TableHead>
+                <TableHead className="text-right">Znesek z DDV</TableHead>
+                <TableHead></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

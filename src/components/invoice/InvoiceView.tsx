@@ -381,7 +381,7 @@ ${companyData.name}`)
                         <th className="text-right p-2 w-20">Cena</th>
                         <th className="text-right p-2 w-16">R%</th>
                         <th className="text-right p-2 w-16">DDV%</th>
-                        <th className="text-right p-2 w-24">Vrednost</th>
+                        <th className="text-right p-2 w-24">Znesek z DDV</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -560,6 +560,37 @@ ${companyData.name}`)
                   )}
                 </div>
 
+<<<<<<< HEAD
+=======
+                {/* Delno plačani računi */}
+                {documentType === 'invoice' && invoice.status === 'partially_paid' && (
+                  <div className="mt-8 p-4 bg-orange-50 rounded-lg border border-orange-200">
+                    <h4 className="font-bold text-orange-800 mb-3">PREGLED PLAČILA</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm">Skupni znesek:</span>
+                        <span className="font-bold">{formatCurrency(invoice.totalGross)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Plačano do sedaj:</span>
+                        <span className="font-bold text-black-600">{formatCurrency(invoice.totalGross * 0.5)}</span>
+                      </div>
+                      <div className="flex justify-between pt-1 border-t border-orange-200">
+                        <span className="text-sm font-medium">Preostanek:</span>
+                        <span className="font-bold text-orange-600">{formatCurrency(invoice.totalGross * 0.5)}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-gray-500 pt-2">
+                        <Calendar className="w-3 h-3" />
+                        <span>Zadnje plačilo: 15.08.2025</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <Clock className="w-3 h-3" />
+                        <span>Rok plačila: {formatDate(invoice.dueDate)}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+>>>>>>> f3c581a3979ac6051779d502ee579f727a56fccc
               </div>
             </div>
           </div>

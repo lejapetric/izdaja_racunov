@@ -22,11 +22,12 @@ const estimateStatusOptions: { value: string; label: string }[] = [
   { value: 'all', label: 'Vsi' },
   { value: 'issued', label: 'Izdani' },
   { value: 'sent', label: 'Poslani' },
-  { value: 'paied', label: 'Plačan' },
+  { value: 'paid', label: 'Plačani' }, //
   { value: 'overdue', label: 'Potečeni' },
   { value: 'converted', label: 'Spremenjeni v račun' },
+  { value: 'cancelled', label: 'Stornirani' },
+  { value: 'partially_paid', label: 'Delno plačani' },
 ]
-
 interface EstimatesProps { 
   onNewEstimate?: () => void
   setActiveView?: (view: string) => void 
@@ -787,7 +788,11 @@ function EstimatesTable({ estimates, onEstimateClick, getStatusLabel, getStatusC
                   {!isExpired && daysUntilExpiry !== null && daysUntilExpiry <= 7 && daysUntilExpiry > 0 && (
                     <div className="text-[10px] lg:text-xs text-orange-500">Zapade čez {daysUntilExpiry} dni</div>
                   )}
+<<<<<<< HEAD
                   {isExpired && <div className="text-[10px] lg:text-xs text-red-500">Zapadel</div>}
+=======
+                  {isExpired && <div className="text-[10px] lg:text-xs text-red-500">ZAPADEN</div>}
+>>>>>>> f3c581a3979ac6051779d502ee579f727a56fccc
                 </TableCell>
                 <TableCell className="px-4 py-2 text-center" onClick={(e) => e.stopPropagation()}>
                   <Button 

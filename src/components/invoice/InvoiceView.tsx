@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { useRef, useState } from 'react'
 import { companyData, statusColors, statusLabels, mockServices } from '@/data/mockData'
-import { Printer, Edit, Mail, Ban, FileText, Package, ArrowRight, Calendar, Clock, Send, X } from 'lucide-react'
+import { Printer, Edit, Mail, Ban, FileText, Package, ArrowRight, Calendar, Clock, Send, X, Trash2 } from 'lucide-react'
 
 interface InvoiceViewProps {
   invoiceId: string | null
@@ -16,6 +16,7 @@ interface InvoiceViewProps {
   onMarkAsPaid?: (invoiceId: string) => void
   onCancel?: (invoice: any) => void
   onAudit?: (invoice: any) => void
+  onDelete?: (invoiceId: string) => void  // <-- NOVO
   documentType?: 'invoice' | 'estimate' | 'draft'
 }
 
@@ -56,6 +57,7 @@ export function InvoiceView({
   onMarkAsPaid, 
   onCancel, 
   onAudit,
+  onDelete,  // <-- NOVO
   documentType = 'invoice'
 }: InvoiceViewProps) {
   const { invoices, customers } = useInvoices()
@@ -69,6 +71,10 @@ export function InvoiceView({
   const [reminderSubject, setReminderSubject] = useState('')
   const [reminderMessage, setReminderMessage] = useState('')
   const [isSending, setIsSending] = useState(false)
+  
+  // State za modalno okno brisanja
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   if (!invoice) return null
 
@@ -152,6 +158,26 @@ ${companyData.name}`)
     alert(`Opomin uspešno poslan na naslov: ${reminderEmail}`)
     setIsSending(false)
     setReminderDialogOpen(false)
+  }
+
+  // Funkcija za brisanje osnutka
+  const handleDelete = () => {
+    setDeleteDialogOpen(true)
+  }
+
+  // Potrditev brisanja
+  const confirmDelete = () => {
+    setIsDeleting(true)
+    
+    // Simulacija brisanja
+    setTimeout(() => {
+      if (onDelete) {
+        onDelete(invoice.id)
+      }
+      setIsDeleting(false)
+      setDeleteDialogOpen(false)
+      onClose()
+    }, 500)
   }
 
   // Pomožna funkcija za prikaz geodetskih podatkov z vejicami
@@ -483,6 +509,18 @@ ${companyData.name}`)
                   <Button variant="outline" className="w-full justify-start" onClick={() => onEdit?.(invoice)}>
                     <Edit className="w-4 h-4 mr-2" /> Uredi
                   </Button>
+                  
+                  {/* Gumb za brisanje - samo za osnutke */}
+                  {documentType === 'draft' && (
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
+                      onClick={handleDelete}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" /> Izbriši
+                    </Button>
+                  )}
+                  
                   <Button variant="outline" className="w-full justify-start" onClick={() => onSendEmail?.(invoice)}>
                     <Mail className="w-4 h-4 mr-2" /> Pošlji e-mail
                   </Button>
@@ -490,7 +528,20 @@ ${companyData.name}`)
                     <Package className="w-4 h-4 mr-2" /> Pošlji po pošti
                   </Button>
                   {documentType === 'estimate' && invoice.status === 'issued' && (
-                    <Button variant="outline" className="w-full justify-start" onClick={() => onMarkAsPaid?.(invoice.id)}>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start" 
+                      onClick={() => {
+                        // Zapri trenutni pogled
+                        onClose()
+                        // Pokliči onEdit s podatki predračuna
+                        onEdit?.({
+                          ...invoice,
+                          _isEstimateConversion: true,  // oznaka da gre za pretvorbo iz predračuna
+                          _sourceType: 'estimate'
+                        })
+                      }}
+                    >
                       <ArrowRight className="w-4 h-4 mr-2" /> Ustvari račun
                     </Button>
                   )}
@@ -509,43 +560,6 @@ ${companyData.name}`)
                   )}
                 </div>
 
-                {/* Delno plačani računi */}
-                {documentType === 'invoice' && invoice.status === 'partially_paid' && (
-                  <div className="mt-8 p-4 bg-orange-50 rounded-lg border border-orange-200">
-                    <h4 className="font-bold text-orange-800 mb-3">PREGLED PLAČILA</h4>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm">Skupni znesek:</span>
-                        <span className="font-bold">{formatCurrency(invoice.totalGross)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm">Plačano do sedaj:</span>
-                        <span className="font-bold text-black-600">{formatCurrency(invoice.totalGross * 0.5)}</span>
-                      </div>
-                      <div className="flex justify-between pt-1 border-t border-orange-200">
-                        <span className="text-sm font-medium">Preostanek:</span>
-                        <span className="font-bold text-orange-600">{formatCurrency(invoice.totalGross * 0.5)}</span>
-                      </div>
-                      <div className="pt-2">
-                        <div className="flex justify-between text-xs mb-1">
-                          <span>Plačano: 50%</span>
-                          <span>Ostalo: 50%</span>
-                        </div>
-                        <div className="w-full bg-gray-300 rounded-full h-2">
-                          <div className="bg-orange-500 h-2 rounded-full" style={{ width: '50%' }}></div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-gray-500 pt-2 border-t border-orange-200">
-                        <Calendar className="w-3 h-3" />
-                        <span>Zadnje plačilo: 15.08.2025</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <Clock className="w-3 h-3" />
-                        <span>Rok plačila: {formatDate(invoice.dueDate)}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -606,6 +620,79 @@ ${companyData.name}`)
                 <>
                   <Send className="w-4 h-4" />
                   Pošlji opomin
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* MODALNO OKNO ZA BRISANJE OSNUTKA */}
+      <Dialog open={deleteDialogOpen} onOpenChange={(isOpen) => !isOpen && setDeleteDialogOpen(false)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="w-5 h-5" />
+              Izbriši osnutek
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-6 space-y-4">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-5">
+              <div className="flex items-start gap-3">
+                <Trash2 className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-base font-semibold text-red-800">OPOZORILO!</p>
+                  <p className="text-sm text-red-700 mt-2 leading-relaxed">
+                    Ali ste prepričani, da želite izbrisati osnutek{' '}
+                    <span className="font-semibold">{invoice.number}</span>?
+                  </p>
+                  <p className="text-sm text-red-600 mt-2">
+                    To dejanje bo trajno izbrisalo osnutek iz sistema in{' '}
+                    <span className="font-semibold underline">ga ne bo mogoče razveljaviti</span>.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <span className="text-gray-500">Kupec:</span>
+                  <div className="font-medium">{invoice.customerName}</div>
+                </div>
+                <div>
+                  <span className="text-gray-500">Znesek:</span>
+                  <div className="font-medium">{formatCurrency(invoice.totalGross)}</div>
+                </div>
+                <div>
+                  <span className="text-gray-500">Datum izdaje:</span>
+                  <div className="font-medium">{formatDate(invoice.issueDate)}</div>
+                </div>
+                <div>
+                  <span className="text-gray-500">Št. postavk:</span>
+                  <div className="font-medium">{invoice.items.length}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Prekliči
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={confirmDelete} 
+              disabled={isDeleting}
+              className="gap-2"
+            >
+              {isDeleting ? (
+                <>Brisanje...</>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4" />
+                  Izbriši osnutek
                 </>
               )}
             </Button>

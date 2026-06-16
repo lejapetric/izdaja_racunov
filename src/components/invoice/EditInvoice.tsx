@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useInvoices } from '@/hooks/useInvoices'
+import { useSettings } from '@/hooks/useSettings'
 import { InvoiceItem, Customer, Invoice } from '@/types'
 import { formatCurrency } from '@/lib/utils'
-import { Plus, Trash2, Edit, Calendar, AlertCircle, ReceiptText, FileText, CheckCircle, X, Save } from 'lucide-react'
+import { Plus, Trash2, Edit, Calendar, AlertCircle, ReceiptText, FileText, CheckCircle, X, Save, Building2, MapPin, Phone, Mail, Landmark } from 'lucide-react'
 import DatePicker from 'react-datepicker'
 import { sl } from 'date-fns/locale'
 import 'react-datepicker/dist/react-datepicker.css'
@@ -25,6 +26,7 @@ interface EditInvoiceProps {
 
 export function EditInvoice({ editingInvoice, onClose, onSaved }: EditInvoiceProps) {
   const { customers, updateInvoice, services } = useInvoices()
+  const { settings, loading } = useSettings()
   const [modalOpen, setModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<InvoiceItem | null>(null)
   
@@ -62,41 +64,40 @@ export function EditInvoice({ editingInvoice, onClose, onSaved }: EditInvoicePro
     }
   }, [serviceDateFrom, serviceDateTo])
 
- useEffect(() => {
-  if (editingInvoice) {
-    const cust = customers.find(c => c.id === editingInvoice.customerId)
-    setSelectedCustomer(cust || null)
-    setItems(editingInvoice.items)
-    
-    // Fix: Only set dates if they are valid
-    if (editingInvoice.issueDate && editingInvoice.issueDate !== 'null') {
-      setIssueDate(new Date(editingInvoice.issueDate))
-    } else {
-      setIssueDate(null)
+  useEffect(() => {
+    if (editingInvoice) {
+      const cust = customers.find(c => c.id === editingInvoice.customerId)
+      setSelectedCustomer(cust || null)
+      setItems(editingInvoice.items)
+      
+      if (editingInvoice.issueDate && editingInvoice.issueDate !== 'null') {
+        setIssueDate(new Date(editingInvoice.issueDate))
+      } else {
+        setIssueDate(null)
+      }
+      
+      if (editingInvoice.serviceDateFrom && editingInvoice.serviceDateFrom !== 'null') {
+        setServiceDateFrom(new Date(editingInvoice.serviceDateFrom))
+      } else {
+        setServiceDateFrom(null)
+      }
+      
+      if (editingInvoice.serviceDateTo && editingInvoice.serviceDateTo !== 'null') {
+        setServiceDateTo(new Date(editingInvoice.serviceDateTo))
+      } else {
+        setServiceDateTo(null)
+      }
+      
+      if (editingInvoice.dueDate && editingInvoice.dueDate !== 'null') {
+        setDueDate(new Date(editingInvoice.dueDate))
+      } else {
+        setDueDate(null)
+      }
+      
+      setNote(editingInvoice.note || '')
+      if (cust) setSearchTerm(cust.name)
     }
-    
-    if (editingInvoice.serviceDateFrom && editingInvoice.serviceDateFrom !== 'null') {
-      setServiceDateFrom(new Date(editingInvoice.serviceDateFrom))
-    } else {
-      setServiceDateFrom(null)
-    }
-    
-    if (editingInvoice.serviceDateTo && editingInvoice.serviceDateTo !== 'null') {
-      setServiceDateTo(new Date(editingInvoice.serviceDateTo))
-    } else {
-      setServiceDateTo(null)
-    }
-    
-    if (editingInvoice.dueDate && editingInvoice.dueDate !== 'null') {
-      setDueDate(new Date(editingInvoice.dueDate))
-    } else {
-      setDueDate(null)
-    }
-    
-    setNote(editingInvoice.note || '')
-    if (cust) setSearchTerm(cust.name)
-  }
-}, [editingInvoice, customers])
+  }, [editingInvoice, customers])
 
   // Preveri ali je obrazec veljaven za trenutni tip
   const isFormValid = () => {
@@ -163,62 +164,60 @@ export function EditInvoice({ editingInvoice, onClose, onSaved }: EditInvoicePro
 
   const totals = calculateTotals()
 
-// Shrani spremembe
-const handleSave = () => {
-  if (!isFormValid()) {
-    return
+  // Shrani spremembe
+  const handleSave = () => {
+    if (!isFormValid()) {
+      return
+    }
+
+    const hasReverseCharge = items.some(item => item.reverseCharge)
+    const reverseChargeClause = hasReverseCharge ? '\n\nObrnjena davčna obveznost – DDV obračuna kupec.' : ''
+    const selfBillingClause = selectedCustomer?.selfBilling ? '\n\nSamofakturiranje – račun izdal kupec v imenu in za račun dobavitelja.' : ''
+
+    const updatedInvoice = {
+      ...editingInvoice,
+      customerId: selectedCustomer?.id || '',
+      customerName: selectedCustomer?.name || '',
+      customerTaxId: selectedCustomer?.taxId || '',
+      issueDate: issueDate ? formatDateForStorage(issueDate) : '',
+      serviceDateFrom: serviceDateFrom ? formatDateForStorage(serviceDateFrom) : '',
+      serviceDateTo: serviceDateTo ? formatDateForStorage(serviceDateTo) : '',
+      dueDate: dueDate ? formatDateForStorage(dueDate) : '',
+      items,
+      totalNet: totals.totalNet,
+      totalVat: totals.totalVat,
+      totalGross: totals.totalGross,
+      vatBreakdown: totals.vatBreakdown,
+      note: note + reverseChargeClause + selfBillingClause,
+      updatedAt: new Date().toISOString(),
+    }
+
+    updateInvoice(editingInvoice!.id, updatedInvoice)
+    
+    if (onSaved) onSaved()
+    onClose()
   }
 
-  const hasReverseCharge = items.some(item => item.reverseCharge)
-  const reverseChargeClause = hasReverseCharge ? '\n\nObrnjena davčna obveznost – DDV obračuna kupec.' : ''
-  const selfBillingClause = selectedCustomer?.selfBilling ? '\n\nSamofakturiranje – račun izdal kupec v imenu in za račun dobavitelja.' : ''
+  // Pretvori predračun v račun
+  const handleConvertToInvoice = () => {
+    if (!isFormValid()) {
+      return
+    }
 
-  const updatedInvoice = {
-    ...editingInvoice,
-    customerId: selectedCustomer?.id || '',
-    customerName: selectedCustomer?.name || '',
-    customerTaxId: selectedCustomer?.taxId || '',
-    issueDate: issueDate ? formatDateForStorage(issueDate) : '',
-    serviceDateFrom: serviceDateFrom ? formatDateForStorage(serviceDateFrom) : '',
-    serviceDateTo: serviceDateTo ? formatDateForStorage(serviceDateTo) : '',
-    dueDate: dueDate ? formatDateForStorage(dueDate) : '',
-    items,
-    totalNet: totals.totalNet,
-    totalVat: totals.totalVat,
-    totalGross: totals.totalGross,
-    vatBreakdown: totals.vatBreakdown,
-    note: note + reverseChargeClause + selfBillingClause,
-    updatedAt: new Date().toISOString(),
+    const newInvoiceNumber = `2026-${String(Math.floor(Math.random() * 1000)).padStart(4, '0')}`
+    
+    const convertedInvoice = {
+      ...editingInvoice,
+      number: newInvoiceNumber,
+      status: 'issued' as const,
+      updatedAt: new Date().toISOString(),
+    }
+
+    updateInvoice(editingInvoice!.id, convertedInvoice)
+    
+    if (onSaved) onSaved()
+    onClose()
   }
-
-  updateInvoice(editingInvoice!.id, updatedInvoice)
-  // Odstranjen alert - tiho shranjevanje
-  
-  if (onSaved) onSaved()
-  onClose() // Zapre edit modal in se vrne nazaj
-}
-
-// Pretvori predračun v račun
-const handleConvertToInvoice = () => {
-  if (!isFormValid()) {
-    return
-  }
-
-  const newInvoiceNumber = `2026-${String(Math.floor(Math.random() * 1000)).padStart(4, '0')}`
-  
-  const convertedInvoice = {
-    ...editingInvoice,
-    number: newInvoiceNumber,
-    status: 'issued' as const,
-    updatedAt: new Date().toISOString(),
-  }
-
-  updateInvoice(editingInvoice!.id, convertedInvoice)
-  // Odstranjen alert - tiho pretvarjanje
-  
-  if (onSaved) onSaved()
-  onClose() // Zapre edit modal in se vrne nazaj
-}
 
   const handleAddOrUpdateItem = (item: InvoiceItem) => {
     const processedItem = {
@@ -260,37 +259,100 @@ const handleConvertToInvoice = () => {
     return 'text-gray-700'
   }
 
-return (
-<div className="space-y-6">
-  {/* Header */}
-  <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-4 border border-primary/20">
-    <div className="flex items-center justify-between flex-wrap gap-4">
-      {/* Left side - Invoice info */}
-      <div className="flex items-center gap-3">
-        <div className="bg-primary/20 rounded-lg p-2">
-          <ReceiptText className="w-6 h-6 text-primary" />
-        </div>
-        <div>
-          <div className="text-lg font-bold text-gray-900">
-            Urejanje: {editingInvoice?.number || (currentType === 'draft' ? 'Nov osnutek' : currentType === 'estimate' ? 'Nov predračun' : 'Nov račun')}
+  // Če se podatki še nalagajo, prikažemo loading
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-500">Nalaganje nastavitev...</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-4 border border-primary/20">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-primary/20 rounded-lg p-2">
+              <ReceiptText className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <div className="text-lg font-bold text-gray-900">
+                Urejanje: {editingInvoice?.number || (currentType === 'draft' ? 'Nov osnutek' : currentType === 'estimate' ? 'Nov predračun' : 'Nov račun')}
+              </div>
+              <div className="text-sm text-gray-500">
+                {editingInvoice?.customerName || 'Izberite kupca'}
+              </div>
+            </div>
           </div>
-          <div className="text-sm text-gray-500">
-            {editingInvoice?.customerName || 'Izberite kupca'}
+          
+          <div>
+            <span className={`px-4 py-2 rounded-lg font-medium text-base uppercase inline-block ${statusColors[editingInvoice?.status || 'draft']}`}>
+              {currentType === 'draft' && 'OSNUTEK'}
+              {currentType === 'estimate' && `${(statusLabels[editingInvoice?.status || 'draft'] || '').toUpperCase()} PREDRAČUN`}
+              {currentType === 'invoice' && `${(statusLabels[editingInvoice?.status || 'draft'] || '').toUpperCase()} RAČUN`}
+            </span>
           </div>
         </div>
       </div>
-      
-      {/* Right side - Status badge */}
-      <div>
-<span className={`px-4 py-2 rounded-lg font-medium text-base uppercase inline-block ${statusColors[editingInvoice?.status || 'draft']}`}>
-  {currentType === 'draft' && 'OSNUTEK'}
-  {currentType === 'estimate' && `${(statusLabels[editingInvoice?.status || 'draft'] || '').toUpperCase()} PREDRAČUN`}
-  {currentType === 'invoice' && `${(statusLabels[editingInvoice?.status || 'draft'] || '').toUpperCase()} RAČUN`}
-</span>
-      </div>
-    </div>
-  </div>
-      
+
+      {/* Podatki podjetja - enako kot v NewInvoice */}
+      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 font-bold text-lg text-gray-800">
+                <Building2 className="w-5 h-5 text-blue-600" />
+                {settings.companyName || 'Ime podjetja'}
+              </div>
+              <div className="text-sm text-gray-600 space-y-1">
+                <div className="flex items-start gap-1">
+                  <MapPin className="w-3.5 h-3.5 text-gray-400 mt-0.5" />
+                  <span>{settings.companyAddress || 'Naslov podjetja'}</span>
+                </div>
+                <div className="pl-5">
+                  <span className="font-medium">ID za DDV:</span>{' '}
+                  {settings.isVatPayer ? settings.taxId : 'NI DAVČNI ZAVEZANEC'}
+                </div>
+                <div className="pl-5">
+                  <span className="font-medium">Matična številka:</span>{' '}
+                  {settings.registrationNumber || 'NI VNOSA'}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2 text-sm text-gray-600">
+              {settings.phone && (
+                <div className="flex items-center gap-2">
+                  <Phone className="w-3.5 h-3.5 text-gray-400" />
+                  <span>{settings.phone}</span>
+                </div>
+              )}
+              {settings.email && (
+                <div className="flex items-center gap-2">
+                  <Mail className="w-3.5 h-3.5 text-gray-400" />
+                  <span>{settings.email}</span>
+                </div>
+              )}
+              {(settings.trr || settings.bic) && (
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  <div className="flex items-center gap-2 font-medium text-xs text-gray-500 mb-1">
+                    <Landmark className="w-3.5 h-3.5" />
+                    <span>BANČNI RAČUN</span>
+                  </div>
+                  {settings.trr && (
+                    <div className="font-mono text-xs pl-5">{settings.trr}</div>
+                  )}
+                  {settings.bic && (
+                    <div className="font-mono text-xs text-gray-500 pl-5">{settings.bic}</div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader><CardTitle>Podatki o računu</CardTitle></CardHeader>
@@ -380,198 +442,198 @@ return (
       </Card>
 
       <Card>
-  <CardHeader className="flex-row justify-between items-center flex-wrap gap-2">
-    <CardTitle className="text-sm sm:text-base md:text-lg">Postavke računa</CardTitle>
-    <Button size="sm" onClick={() => { setEditingItem(null); setModalOpen(true); }}>
-      <Plus className="w-4 h-4 mr-1" /> Dodaj postavko
-    </Button>
-  </CardHeader>
-  <CardContent className="overflow-x-auto">
-    <div className="min-w-[800px] md:min-w-0">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="text-xs sm:text-sm">Storitev</TableHead>
-            <TableHead className="text-right text-xs sm:text-sm">Količina</TableHead>
-            <TableHead className="text-xs sm:text-sm">Enota</TableHead>
-            <TableHead className="text-right text-xs sm:text-sm">Cena/enoto</TableHead>
-            <TableHead className="text-right text-xs sm:text-sm">Popust %</TableHead>
-            <TableHead className="text-right text-xs sm:text-sm">Neto</TableHead>
-            <TableHead className="text-right text-xs sm:text-sm">DDV %</TableHead>
-            <TableHead className="text-right text-xs sm:text-sm">Znesek DDV</TableHead>
-            <TableHead className="text-right text-xs sm:text-sm">Bruto</TableHead>
-            <TableHead className="w-16"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {items.map(item => (
-            <TableRow key={item.id}>
-              <TableCell className="max-w-[200px] sm:max-w-[300px] md:max-w-none">
-                <div className="text-xs sm:text-sm font-medium break-words">{item.description}</div>
-                {(item.parcelNumber || item.cadastralMunicipality || item.cadastreName || item.landRegisterId) && (
-                  <div className="text-[10px] sm:text-xs text-gray-500 mt-1">
-                    {[
-                      item.parcelNumber && `št. parcele: ${item.parcelNumber}`,
-                      item.cadastralMunicipality && `kat. občina: ${item.cadastralMunicipality}`,
-                      (item.cadastreName || (item.parcelNumber && 'Kataster stavb')) && 
-                        `ime katastra: ${item.cadastreName || 'Kataster stavb'}`,
-                      (item.landRegisterId || (item.parcelNumber && item.cadastralMunicipality && 
-                        `${item.cadastralMunicipality.split(' ')[0]} ${item.parcelNumber}`)) && 
-                        `ID zaznambe: ${item.landRegisterId || `${item.cadastralMunicipality?.split(' ')[0]} ${item.parcelNumber}`}`
-                    ].filter(Boolean).join(' | ')}
-                  </div>
+        <CardHeader className="flex-row justify-between items-center flex-wrap gap-2">
+          <CardTitle className="text-sm sm:text-base md:text-lg">Postavke računa</CardTitle>
+          <Button size="sm" onClick={() => { setEditingItem(null); setModalOpen(true); }}>
+            <Plus className="w-4 h-4 mr-1" /> Dodaj postavko
+          </Button>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          <div className="min-w-[800px] md:min-w-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs sm:text-sm">Storitev</TableHead>
+                  <TableHead className="text-right text-xs sm:text-sm">Količina</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Enota</TableHead>
+                  <TableHead className="text-right text-xs sm:text-sm">Cena/enoto</TableHead>
+                  <TableHead className="text-right text-xs sm:text-sm">Popust %</TableHead>
+                  <TableHead className="text-right text-xs sm:text-sm">Neto</TableHead>
+                  <TableHead className="text-right text-xs sm:text-sm">DDV %</TableHead>
+                  <TableHead className="text-right text-xs sm:text-sm">Znesek DDV</TableHead>
+                  <TableHead className="text-right text-xs sm:text-sm">Bruto</TableHead>
+                  <TableHead className="w-16"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.map(item => (
+                  <TableRow key={item.id}>
+                    <TableCell className="max-w-[200px] sm:max-w-[300px] md:max-w-none">
+                      <div className="text-xs sm:text-sm font-medium break-words">{item.description}</div>
+                      {(item.parcelNumber || item.cadastralMunicipality || item.cadastreName || item.landRegisterId) && (
+                        <div className="text-[10px] sm:text-xs text-gray-500 mt-1">
+                          {[
+                            item.parcelNumber && `št. parcele: ${item.parcelNumber}`,
+                            item.cadastralMunicipality && `kat. občina: ${item.cadastralMunicipality}`,
+                            (item.cadastreName || (item.parcelNumber && 'Kataster stavb')) && 
+                              `ime katastra: ${item.cadastreName || 'Kataster stavb'}`,
+                            (item.landRegisterId || (item.parcelNumber && item.cadastralMunicipality && 
+                              `${item.cadastralMunicipality.split(' ')[0]} ${item.parcelNumber}`)) && 
+                              `ID zaznambe: ${item.landRegisterId || `${item.cadastralMunicipality?.split(' ')[0]} ${item.parcelNumber}`}`
+                          ].filter(Boolean).join(' | ')}
+                        </div>
+                      )}
+                      {item.itemNote && (
+                        <div className="text-[10px] sm:text-xs text-gray-500 mt-1 break-words">{item.itemNote}</div>
+                      )}
+                      {item.vatRate === 0 && item.vatExemptionReason && (
+                        <div className="text-[10px] sm:text-xs text-gray-600 mt-1 break-words">{item.vatExemptionReason}</div>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right text-xs sm:text-sm whitespace-nowrap">{item.quantity}</TableCell>
+                    <TableCell className="text-xs sm:text-sm whitespace-nowrap">{item.unit}</TableCell>
+                    <TableCell className="text-right text-xs sm:text-sm whitespace-nowrap">{formatCurrency(item.price)}</TableCell>
+                    <TableCell className="text-right text-xs sm:text-sm whitespace-nowrap">{item.discountPercent || 0}%</TableCell>
+                    <TableCell className="text-right text-xs sm:text-sm whitespace-nowrap">{formatCurrency(item.net)}</TableCell>
+                    <TableCell className="text-right text-xs sm:text-sm whitespace-nowrap">{item.vatRate}%</TableCell>
+                    <TableCell className="text-right text-xs sm:text-sm whitespace-nowrap">{formatCurrency(item.vatAmount)}</TableCell>
+                    <TableCell className="text-right text-xs sm:text-sm whitespace-nowrap font-bold">{formatCurrency(item.gross)}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="ghost" onClick={() => editItem(item)} className="h-7 w-7 p-0">
+                          <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => deleteItem(item.id)} className="h-7 w-7 p-0">
+                          <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {items.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={10} className="text-center text-gray-400 text-xs sm:text-sm">
+                      Ni postavk. Kliknite "Dodaj postavko".
+                    </TableCell>
+                  </TableRow>
                 )}
-                {item.itemNote && (
-                  <div className="text-[10px] sm:text-xs text-gray-500 mt-1 break-words">{item.itemNote}</div>
-                )}
-                {item.vatRate === 0 && item.vatExemptionReason && (
-                  <div className="text-[10px] sm:text-xs text-gray-600 mt-1 break-words">{item.vatExemptionReason}</div>
-                )}
-              </TableCell>
-              <TableCell className="text-right text-xs sm:text-sm whitespace-nowrap">{item.quantity}</TableCell>
-              <TableCell className="text-xs sm:text-sm whitespace-nowrap">{item.unit}</TableCell>
-              <TableCell className="text-right text-xs sm:text-sm whitespace-nowrap">{formatCurrency(item.price)}</TableCell>
-              <TableCell className="text-right text-xs sm:text-sm whitespace-nowrap">{item.discountPercent || 0}%</TableCell>
-              <TableCell className="text-right text-xs sm:text-sm whitespace-nowrap">{formatCurrency(item.net)}</TableCell>
-              <TableCell className="text-right text-xs sm:text-sm whitespace-nowrap">{item.vatRate}%</TableCell>
-              <TableCell className="text-right text-xs sm:text-sm whitespace-nowrap">{formatCurrency(item.vatAmount)}</TableCell>
-              <TableCell className="text-right text-xs sm:text-sm whitespace-nowrap font-bold">{formatCurrency(item.gross)}</TableCell>
-              <TableCell>
-                <div className="flex gap-1">
-                  <Button size="sm" variant="ghost" onClick={() => editItem(item)} className="h-7 w-7 p-0">
-                    <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => deleteItem(item.id)} className="h-7 w-7 p-0">
-                    <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-          {items.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={10} className="text-center text-gray-400 text-xs sm:text-sm">
-                Ni postavk. Kliknite "Dodaj postavko".
-              </TableCell>
-            </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+
+          <InvoiceTotals totals={totals} />
+        </CardContent>
+      </Card>
+
+      {/* Footer z gumbi */}
+      <div className="flex justify-between items-center">
+        {validationMessage && (
+          <div className="text-sm text-amber-600 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4" />
+            {validationMessage}
+          </div>
+        )}
+        <div className="flex gap-3 ml-auto">
+          <Button variant="outline" onClick={onClose}>
+            Prekliči
+          </Button>
+          
+          {/* Za osnutek - shrani osnutek, ustvari predračun, izdaj račun */}
+          {currentType === 'draft' && (
+            <>
+              <Button 
+                onClick={handleSave} 
+                disabled={!selectedCustomer || items.length === 0}
+                variant="default"
+              >
+                <Save className="w-4 h-4 mr-2" /> Shrani osnutek
+              </Button>
+              <Button 
+                onClick={() => {
+                  const newNumber = `PR-2026-${String(Math.floor(Math.random() * 1000)).padStart(4, '0')}`
+                  const updatedInvoice = {
+                    ...editingInvoice,
+                    number: newNumber,
+                    status: 'draft' as const,
+                    issueDate: issueDate ? formatDateForStorage(issueDate) : '',
+                    serviceDateFrom: serviceDateFrom ? formatDateForStorage(serviceDateFrom) : '',
+                    serviceDateTo: serviceDateTo ? formatDateForStorage(serviceDateTo) : '',
+                    items,
+                    totalNet: totals.totalNet,
+                    totalVat: totals.totalVat,
+                    totalGross: totals.totalGross,
+                    vatBreakdown: totals.vatBreakdown,
+                    updatedAt: new Date().toISOString(),
+                  }
+                  updateInvoice(editingInvoice!.id, updatedInvoice)
+                  onClose()
+                }} 
+                disabled={!selectedCustomer || items.length === 0 || !issueDate || !serviceDateFrom || !serviceDateTo || !!dateError}
+                variant="default"
+              >
+                <FileText className="w-4 h-4 mr-2" /> Ustvari predračun
+              </Button>
+              <Button 
+                onClick={() => {
+                  const newNumber = `2026-${String(Math.floor(Math.random() * 1000)).padStart(4, '0')}`
+                  const updatedInvoice = {
+                    ...editingInvoice,
+                    number: newNumber,
+                    status: 'issued' as const,
+                    issueDate: issueDate ? formatDateForStorage(issueDate) : '',
+                    serviceDateFrom: serviceDateFrom ? formatDateForStorage(serviceDateFrom) : '',
+                    serviceDateTo: serviceDateTo ? formatDateForStorage(serviceDateTo) : '',
+                    dueDate: dueDate ? formatDateForStorage(dueDate) : '',
+                    items,
+                    totalNet: totals.totalNet,
+                    totalVat: totals.totalVat,
+                    totalGross: totals.totalGross,
+                    vatBreakdown: totals.vatBreakdown,
+                    updatedAt: new Date().toISOString(),
+                  }
+                  updateInvoice(editingInvoice!.id, updatedInvoice)
+                  onClose()
+                }} 
+                disabled={!selectedCustomer || items.length === 0 || !issueDate || !serviceDateFrom || !serviceDateTo || !dueDate || !!dateError}
+                variant="default"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" /> Izdaj račun
+              </Button>
+            </>
           )}
-        </TableBody>
-      </Table>
-    </div>
-
-    <InvoiceTotals totals={totals} />
-  </CardContent>
-</Card>
-
-{/* Footer z gumbi */}
-<div className="flex justify-between items-center">
-  {validationMessage && (
-    <div className="text-sm text-amber-600 flex items-center gap-2">
-      <AlertCircle className="w-4 h-4" />
-      {validationMessage}
-    </div>
-  )}
-  <div className="flex gap-3 ml-auto">
-    <Button variant="outline" onClick={onClose}>
-      Prekliči
-    </Button>
-    
-    {/* Za osnutek - shrani osnutek, ustvari predračun, izdaj račun */}
-    {currentType === 'draft' && (
-      <>
-        <Button 
-          onClick={handleSave} 
-          disabled={!selectedCustomer || items.length === 0}
-          variant="default"
-        >
-          <Save className="w-4 h-4 mr-2" /> Shrani osnutek
-        </Button>
-        <Button 
-          onClick={() => {
-            const newNumber = `PR-2026-${String(Math.floor(Math.random() * 1000)).padStart(4, '0')}`;
-            const updatedInvoice = {
-              ...editingInvoice,
-              number: newNumber,
-              status: 'draft' as const,
-              issueDate: issueDate ? formatDateForStorage(issueDate) : '',
-              serviceDateFrom: serviceDateFrom ? formatDateForStorage(serviceDateFrom) : '',
-              serviceDateTo: serviceDateTo ? formatDateForStorage(serviceDateTo) : '',
-              items,
-              totalNet: totals.totalNet,
-              totalVat: totals.totalVat,
-              totalGross: totals.totalGross,
-              vatBreakdown: totals.vatBreakdown,
-              updatedAt: new Date().toISOString(),
-            };
-            updateInvoice(editingInvoice!.id, updatedInvoice);
-            onClose();
-          }} 
-          disabled={!selectedCustomer || items.length === 0 || !issueDate || !serviceDateFrom || !serviceDateTo || !!dateError}
-          variant="default"
-        >
-          <FileText className="w-4 h-4 mr-2" /> Ustvari predračun
-        </Button>
-        <Button 
-          onClick={() => {
-            const newNumber = `2026-${String(Math.floor(Math.random() * 1000)).padStart(4, '0')}`;
-            const updatedInvoice = {
-              ...editingInvoice,
-              number: newNumber,
-              status: 'issued' as const,
-              issueDate: issueDate ? formatDateForStorage(issueDate) : '',
-              serviceDateFrom: serviceDateFrom ? formatDateForStorage(serviceDateFrom) : '',
-              serviceDateTo: serviceDateTo ? formatDateForStorage(serviceDateTo) : '',
-              dueDate: dueDate ? formatDateForStorage(dueDate) : '',
-              items,
-              totalNet: totals.totalNet,
-              totalVat: totals.totalVat,
-              totalGross: totals.totalGross,
-              vatBreakdown: totals.vatBreakdown,
-              updatedAt: new Date().toISOString(),
-            };
-            updateInvoice(editingInvoice!.id, updatedInvoice);
-            onClose();
-          }} 
-          disabled={!selectedCustomer || items.length === 0 || !issueDate || !serviceDateFrom || !serviceDateTo || !dueDate || !!dateError}
-          variant="default"
-        >
-          <CheckCircle className="w-4 h-4 mr-2" /> Izdaj račun
-        </Button>
-      </>
-    )}
-    
-    {/* Za predračun - shrani predračun in izdaj račun */}
-    {currentType === 'estimate' && (
-      <>
-        <Button 
-          onClick={handleSave} 
-          disabled={!selectedCustomer || items.length === 0 || !issueDate || !serviceDateFrom || !serviceDateTo || !!dateError}
-          variant="default"
-        >
-          <Save className="w-4 h-4 mr-2" /> Shrani predračun
-        </Button>
-        <Button 
-          onClick={handleConvertToInvoice} 
-          disabled={!selectedCustomer || items.length === 0 || !issueDate || !serviceDateFrom || !serviceDateTo || !dueDate || !!dateError}
-          variant="default"
-        >
-          <CheckCircle className="w-4 h-4 mr-2" /> Izdaj račun
-        </Button>
-      </>
-    )}
-    
-    {/* Za račun - samo shrani račun */}
-    {currentType === 'invoice' && (
-      <Button 
-        onClick={handleSave} 
-        disabled={!selectedCustomer || items.length === 0 || !issueDate || !serviceDateFrom || !serviceDateTo || !dueDate || !!dateError}
-        variant="default"
-      >
-        <Save className="w-4 h-4 mr-2" /> Shrani račun
-      </Button>
-    )}
-  </div>
-</div>
+          
+          {/* Za predračun - shrani predračun in izdaj račun */}
+          {currentType === 'estimate' && (
+            <>
+              <Button 
+                onClick={handleSave} 
+                disabled={!selectedCustomer || items.length === 0 || !issueDate || !serviceDateFrom || !serviceDateTo || !!dateError}
+                variant="default"
+              >
+                <Save className="w-4 h-4 mr-2" /> Shrani predračun
+              </Button>
+              <Button 
+                onClick={handleConvertToInvoice} 
+                disabled={!selectedCustomer || items.length === 0 || !issueDate || !serviceDateFrom || !serviceDateTo || !dueDate || !!dateError}
+                variant="default"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" /> Izdaj račun
+              </Button>
+            </>
+          )}
+          
+          {/* Za račun - samo shrani račun */}
+          {currentType === 'invoice' && (
+            <Button 
+              onClick={handleSave} 
+              disabled={!selectedCustomer || items.length === 0 || !issueDate || !serviceDateFrom || !serviceDateTo || !dueDate || !!dateError}
+              variant="default"
+            >
+              <Save className="w-4 h-4 mr-2" /> Shrani račun
+            </Button>
+          )}
+        </div>
+      </div>
 
       <InvoiceItemModal
         open={modalOpen}

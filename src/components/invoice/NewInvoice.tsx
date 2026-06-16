@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useInvoices } from '@/hooks/useInvoices'
+import { useSettings } from '@/hooks/useSettings'
 import { InvoiceItem, Customer, Invoice } from '@/types'
 import { formatCurrency } from '@/lib/utils'
-import { Plus, Trash2, Edit, Calendar, AlertCircle, ReceiptText, FileText, CheckCircle } from 'lucide-react'
+import { Plus, Trash2, Edit, Calendar, AlertCircle, ReceiptText, FileText, CheckCircle, Building2, MapPin, Phone, Mail, Landmark } from 'lucide-react'
 import DatePicker from 'react-datepicker'
 import { sl } from 'date-fns/locale'
 import 'react-datepicker/dist/react-datepicker.css'
@@ -40,7 +41,8 @@ const enrichItemWithGeodeticData = (item: InvoiceItem): InvoiceItem => {
 }
 
 export function NewInvoice({ editingInvoice, clearEditing }: NewInvoiceProps) {
-  const { customers, addInvoice, updateInvoice, services } = useInvoices()
+  const { customers, invoices, addInvoice, updateInvoice, services } = useInvoices()
+  const { settings, loading } = useSettings()
   const [modalOpen, setModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<InvoiceItem | null>(null)
   const [invoiceType, setInvoiceType] = useState<InvoiceType>('draft')
@@ -55,11 +57,87 @@ export function NewInvoice({ editingInvoice, clearEditing }: NewInvoiceProps) {
   const [dueDate, setDueDate] = useState<Date | null>(null)
   const [note, setNote] = useState('')
   const [dateError, setDateError] = useState('')
+  const [previewNumber, setPreviewNumber] = useState<string>('OSNUTEK')
 
   const clearIssueDate = () => setIssueDate(null)
   const clearDueDate = () => setDueDate(null)
   const clearServiceDateFrom = () => setServiceDateFrom(null)
   const clearServiceDateTo = () => setServiceDateTo(null)
+
+  // Funkcija za generiranje zaporedne številke
+  const generatePreviewNumber = (type: InvoiceType): string => {
+    const year = new Date().getFullYear()
+    
+    // Filtriramo račune glede na tip in leto
+    let existingNumbers: string[] = []
+    
+    if (type === 'estimate') {
+      // Predračuni: PR-2026-0001
+      existingNumbers = invoices
+        .filter(inv => inv.number?.startsWith(`PR-${year}`))
+        .map(inv => inv.number || '')
+        .filter(num => num !== '')
+    } else if (type === 'invoice') {
+      // Računi: 2026-0001
+      existingNumbers = invoices
+        .filter(inv => inv.number?.startsWith(`${year}-`))
+        .map(inv => inv.number || '')
+        .filter(num => num !== '')
+    } else {
+      return 'OSNUTEK'
+    }
+
+    // Če ni obstoječih številk, začnemo z 1
+    if (existingNumbers.length === 0) {
+      if (type === 'estimate') {
+        return `PR-${year}-0001`
+      } else if (type === 'invoice') {
+        return `${year}-0001`
+      }
+    }
+
+    // Poiščemo največjo številko
+    let maxNumber = 0
+    existingNumbers.forEach(num => {
+      let numberPart = ''
+      if (type === 'estimate') {
+        // PR-2026-0001 -> izluščimo 0001
+        const parts = num.split('-')
+        numberPart = parts[parts.length - 1]
+      } else if (type === 'invoice') {
+        // 2026-0001 -> izluščimo 0001
+        const parts = num.split('-')
+        numberPart = parts[parts.length - 1]
+      }
+      
+      const numValue = parseInt(numberPart, 10)
+      if (!isNaN(numValue) && numValue > maxNumber) {
+        maxNumber = numValue
+      }
+    })
+
+    // Generiramo novo številko
+    const nextNumber = maxNumber + 1
+    const paddedNumber = String(nextNumber).padStart(4, '0')
+    
+    if (type === 'estimate') {
+      return `PR-${year}-${paddedNumber}`
+    } else if (type === 'invoice') {
+      return `${year}-${paddedNumber}`
+    }
+    
+    return 'OSNUTEK'
+  }
+
+  // Posodobi predvideno številko ko se spremeni invoiceType ali invoices
+  useEffect(() => {
+    if (!editingInvoice) {
+      const newPreview = generatePreviewNumber(invoiceType)
+      setPreviewNumber(newPreview)
+    } else {
+      setPreviewNumber(editingInvoice.number || '')
+    }
+  }, [invoiceType, invoices, editingInvoice])
 
   useEffect(() => {
     if (serviceDateFrom && serviceDateTo && serviceDateTo < serviceDateFrom) {
@@ -74,7 +152,6 @@ export function NewInvoice({ editingInvoice, clearEditing }: NewInvoiceProps) {
       const cust = customers.find(c => c.id === editingInvoice.customerId)
       setSelectedCustomer(cust || null)
       
-      // Obogati vsak item z geodetskimi podatki
       const enrichedItems = editingInvoice.items.map(item => enrichItemWithGeodeticData(item))
       setItems(enrichedItems)
       
@@ -99,44 +176,43 @@ export function NewInvoice({ editingInvoice, clearEditing }: NewInvoiceProps) {
     setServiceDateFrom(null)
     setServiceDateTo(null)
     setDueDate(null)
+    setPreviewNumber(generatePreviewNumber(invoiceType))
   }
 
-// Validation based on invoice type
-const getRequiredFieldsMessage = () => {
-  if (invoiceType === 'draft') {
-    const missing = []
-    if (!selectedCustomer) missing.push('kupec')
-    if (items.length === 0) missing.push('vsaj ena postavka')
-    if (missing.length > 0) return `Manjkajo podatki: ${missing.join(', ')}`
+  const getRequiredFieldsMessage = () => {
+    if (invoiceType === 'draft') {
+      const missing = []
+      if (!selectedCustomer) missing.push('kupec')
+      if (items.length === 0) missing.push('vsaj ena postavka')
+      if (missing.length > 0) return `Manjkajo podatki: ${missing.join(', ')}`
+      return null
+    }
+    if (invoiceType === 'estimate') {
+      const missing = []
+      if (!selectedCustomer) missing.push('kupec')
+      if (items.length === 0) missing.push('vsaj ena postavka')
+      if (!issueDate) missing.push('datum izdaje')
+      if (!serviceDateFrom) missing.push('datum storitve (od)')
+      if (!serviceDateTo) missing.push('datum storitve (do)')
+      if (dateError) missing.push(dateError)
+      if (missing.length > 0) return `Manjkajo podatki: ${missing.join(', ')}`
+      return null
+    }
+    if (invoiceType === 'invoice') {
+      const missing = []
+      if (!selectedCustomer) missing.push('kupec')
+      if (items.length === 0) missing.push('vsaj ena postavka')
+      if (!issueDate) missing.push('datum izdaje')
+      if (!serviceDateFrom) missing.push('datum storitve (od)')
+      if (!serviceDateTo) missing.push('datum storitve (do)')
+      if (!dueDate) missing.push('rok plačila')
+      if (dateError) missing.push(dateError)
+      if (missing.length > 0) return `Manjkajo podatki: ${missing.join(', ')}`
+      return null
+    }
     return null
   }
-  if (invoiceType === 'estimate') {
-    const missing = []
-    if (!selectedCustomer) missing.push('kupec')
-    if (items.length === 0) missing.push('vsaj ena postavka')
-    if (!issueDate) missing.push('datum izdaje')
-    if (!serviceDateFrom) missing.push('datum storitve (od)')
-    if (!serviceDateTo) missing.push('datum storitve (do)')
-    if (dateError) missing.push(dateError)
-    if (missing.length > 0) return `Manjkajo podatki: ${missing.join(', ')}`
-    return null
-  }
-  if (invoiceType === 'invoice') {
-    const missing = []
-    if (!selectedCustomer) missing.push('kupec')
-    if (items.length === 0) missing.push('vsaj ena postavka')
-    if (!issueDate) missing.push('datum izdaje')
-    if (!serviceDateFrom) missing.push('datum storitve (od)')
-    if (!serviceDateTo) missing.push('datum storitve (do)')
-    if (!dueDate) missing.push('rok plačila')
-    if (dateError) missing.push(dateError)
-    if (missing.length > 0) return `Manjkajo podatki: ${missing.join(', ')}`
-    return null
-  }
-  return null
-}
 
-  // Check if form is valid for current invoice type
   const isFormValid = () => {
     if (invoiceType === 'draft') {
       return selectedCustomer !== null && items.length > 0
@@ -196,10 +272,10 @@ const getRequiredFieldsMessage = () => {
     let status = 'draft'
     
     if (invoiceType === 'invoice') {
-      invoiceNumber = editingInvoice?.number || `2026-${String(Math.floor(Math.random() * 1000)).padStart(4, '0')}`
+      invoiceNumber = editingInvoice?.number || previewNumber
       status = 'issued'
     } else if (invoiceType === 'estimate') {
-      invoiceNumber = editingInvoice?.number || `PR-2026-${String(Math.floor(Math.random() * 1000)).padStart(4, '0')}`
+      invoiceNumber = editingInvoice?.number || previewNumber
       status = 'draft'
     } else {
       invoiceNumber = editingInvoice?.number || 'OSNUTEK'
@@ -234,16 +310,19 @@ const getRequiredFieldsMessage = () => {
       updatedAt: new Date().toISOString(),
     }
 
+    if (editingInvoice) {
+      updateInvoice(editingInvoice.id, invoiceData)
+    } else {
+      addInvoice(invoiceData)
+    }
 
     if (!editingInvoice) resetForm()
     if (clearEditing) clearEditing()
   }
 
   const handleAddOrUpdateItem = (item: InvoiceItem) => {
-    // Prepričajte se, da so vsi podatki za DDV 0% pravilno shranjeni
     const processedItem = {
       ...item,
-      // Če je DDV 0%, shranimo razlog, sicer ga odstranimo
       vatExemptionReason: item.vatRate === 0 ? item.vatExemptionReason : undefined,
       reverseCharge: item.vatRate === 0 ? item.reverseCharge : false,
     }
@@ -268,15 +347,22 @@ const getRequiredFieldsMessage = () => {
 
   const isValid = isFormValid()
 
+  // Če se podatki še nalagajo, prikažemo loading
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-500">Nalaganje nastavitev...</div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Ustvari račun</h1>
-
       </div>
 
-
-      {/* Invoice Type Selector */}
+       {/* Invoice Type Selector s predvideno številko */}
       <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-4 border border-primary/20">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
@@ -285,7 +371,19 @@ const getRequiredFieldsMessage = () => {
               <div className="text-md font-bold text-primary">
                 {editingInvoice ? editingInvoice.number : (invoiceType === 'invoice' ? 'Ustvari račun' : invoiceType === 'estimate' ? 'Ustvari predračun' : 'Ustvari osnutek')}
               </div>
-              {!editingInvoice && <div className="text-xs text-gray-500">Številka bo dodeljena ob shranjevanju</div>}
+              {!editingInvoice && (
+              <div className="text-xs text-gray-500">
+                {invoiceType === 'invoice' && (
+                  `Številka bo avtomatsko dodeljena ob shranjevanju (predvidena številka računa: ${previewNumber})`
+                )}
+                {invoiceType === 'estimate' && (
+                  `Številka bo avtomatsko dodeljena ob shranjevanju (predvidena številka predračuna: ${previewNumber})`
+                )}
+                {invoiceType === 'draft' && (
+                  'Številka bo dodeljena ob shranjevanju'
+                )}
+              </div>
+            )}
             </div>
           </div>
           <div className="flex gap-2 bg-white rounded-lg p-1 border">
@@ -310,6 +408,65 @@ const getRequiredFieldsMessage = () => {
           </div>
         </div>
       </div>
+
+      {/* Podatki podjetja */}
+      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 font-bold text-lg text-gray-800">
+                <Building2 className="w-5 h-5 text-blue-600" />
+                {settings.companyName || 'Ime podjetja'}
+              </div>
+              <div className="text-sm text-gray-600 space-y-1">
+                <div className="flex items-start gap-1">
+                  <MapPin className="w-3.5 h-3.5 text-gray-400 mt-0.5" />
+                  <span>{settings.companyAddress || 'Naslov podjetja'}</span>
+                </div>
+                <div className="pl-5">
+                  <span className="font-medium">ID za DDV:</span>{' '}
+                  {settings.isVatPayer ? settings.taxId : 'NI DAVČNI ZAVEZANEC'}
+                </div>
+                <div className="pl-5">
+                  <span className="font-medium">Matična številka:</span>{' '}
+                  {settings.registrationNumber || 'NI VNOSA'}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2 text-sm text-gray-600">
+              {settings.phone && (
+                <div className="flex items-center gap-2">
+                  <Phone className="w-3.5 h-3.5 text-gray-400" />
+                  <span>{settings.phone}</span>
+                </div>
+              )}
+              {settings.email && (
+                <div className="flex items-center gap-2">
+                  <Mail className="w-3.5 h-3.5 text-gray-400" />
+                  <span>{settings.email}</span>
+                </div>
+              )}
+              {(settings.trr || settings.bic) && (
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  <div className="flex items-center gap-2 font-medium text-xs text-gray-500 mb-1">
+                    <Landmark className="w-3.5 h-3.5" />
+                    <span>BANČNI RAČUN</span>
+                  </div>
+                  {settings.trr && (
+                    <div className="font-mono text-xs pl-5">{settings.trr}</div>
+                  )}
+                  {settings.bic && (
+                    <div className="font-mono text-xs text-gray-500 pl-5">{settings.bic}</div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+     
 
       <Card>
         <CardHeader><CardTitle>Podatki o računu</CardTitle></CardHeader>
@@ -387,7 +544,13 @@ const getRequiredFieldsMessage = () => {
 
           <div className="pt-4 border-t">
             <label className="text-sm font-medium mb-2 block flex items-center gap-1"> Opombe</label>
-            <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Sklic na naročilnico, dodatna pojasnila, način plačila..." className="w-full min-h-[80px] px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-y" rows={3} />
+            <textarea 
+              value={note} 
+              onChange={e => setNote(e.target.value)} 
+              placeholder="Sklic na naročilnico, dodatna pojasnila, način plačila..." 
+              className="w-full min-h-[80px] px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-y" 
+              rows={3} 
+            />
           </div>
         </CardContent>
       </Card>
@@ -418,23 +581,23 @@ const getRequiredFieldsMessage = () => {
             <TableBody>
               {items.map(item => (
                 <TableRow key={item.id}>
-                 <TableCell>
-                  <div className="font-medium">{item.description}</div>
-                  {(item.parcelNumber || item.cadastralMunicipality || item.cadastreName || item.landRegisterId) && (
-                    <div className="text-xs text-gray-500 mt-1">
-                      {[
-                        item.parcelNumber && `št. parcele: ${item.parcelNumber}`,
-                        item.cadastralMunicipality && `kat. občina: ${item.cadastralMunicipality}`,
-                        item.cadastreName && `ime katastra: ${item.cadastreName}`,
-                        item.landRegisterId && `ID zaznambe: ${item.landRegisterId}`
-                      ].filter(Boolean).join(' | ')}
-                    </div>
-                  )}
-                  {item.itemNote && <div className="text-xs text-gray-500 mt-1">{item.itemNote}</div>}
-                  {item.vatRate === 0 && item.vatExemptionReason && (
-                    <div className="text-xs text-gray-500 mt-1">{item.vatExemptionReason}</div>
-                  )}
-                </TableCell>
+                  <TableCell>
+                    <div className="font-medium">{item.description}</div>
+                    {(item.parcelNumber || item.cadastralMunicipality || item.cadastreName || item.landRegisterId) && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        {[
+                          item.parcelNumber && `št. parcele: ${item.parcelNumber}`,
+                          item.cadastralMunicipality && `kat. občina: ${item.cadastralMunicipality}`,
+                          item.cadastreName && `ime katastra: ${item.cadastreName}`,
+                          item.landRegisterId && `ID zaznambe: ${item.landRegisterId}`
+                        ].filter(Boolean).join(' | ')}
+                      </div>
+                    )}
+                    {item.itemNote && <div className="text-xs text-gray-500 mt-1">{item.itemNote}</div>}
+                    {item.vatRate === 0 && item.vatExemptionReason && (
+                      <div className="text-xs text-gray-500 mt-1">{item.vatExemptionReason}</div>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right">{item.quantity}</TableCell>
                   <TableCell className="text-right">{item.unit}</TableCell>
                   <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>

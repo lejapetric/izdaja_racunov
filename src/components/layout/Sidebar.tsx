@@ -1,7 +1,7 @@
 // src/components/layout/Sidebar.tsx
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
-import { FileText, Archive, AlertCircle, Receipt, BarChart3, Settings, LogOut, Menu, X } from 'lucide-react'
+import { FileText, Archive, AlertCircle, Receipt, BarChart3, Settings, LogOut, Menu, X, CheckCircle } from 'lucide-react'
 
 const navItems = [
   { id: 'new-invoice', label: 'Ustvari račun', icon: FileText, roles: ['tajnistvo', 'projektant'] },
@@ -9,6 +9,7 @@ const navItems = [
   { id: 'estimates', label: 'Predračuni', icon: Receipt, roles: ['tajnistvo'] },
   { id: 'overdue', label: 'Zapadli računi', icon: AlertCircle, roles: ['tajnistvo'] },
   { id: 'reports', label: 'Poročila in analize', icon: BarChart3, roles: ['tajnistvo', 'direktor'] },
+  { id: 'confirmation', label: 'Potrditev računov', icon: CheckCircle, roles: ['direktor'] },
   { id: 'settings', label: 'Možnosti', icon: Settings, roles: ['admin'] },
 ]
 
@@ -46,7 +47,6 @@ export function Sidebar({ activeView, setActiveView, userRole, onLogout }: Sideb
   if (isMobile) {
     return (
       <>
-        {/* Hamburger gumb */}
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           className="fixed top-4 left-4 z-50 p-2 bg-primary rounded-lg shadow-lg text-primary-foreground"
@@ -54,7 +54,6 @@ export function Sidebar({ activeView, setActiveView, userRole, onLogout }: Sideb
           <Menu className="w-5 h-5" />
         </button>
 
-        {/* Overlay */}
         {isMobileMenuOpen && (
           <div
             className="fixed inset-0 bg-black/50 z-40"
@@ -62,7 +61,6 @@ export function Sidebar({ activeView, setActiveView, userRole, onLogout }: Sideb
           />
         )}
 
-        {/* Stranski meni (zdrs iz leve) */}
         <aside
           className={cn(
             'fixed top-0 left-0 z-40 w-64 bg-primary text-primary-foreground flex flex-col h-full transition-transform duration-300 ease-in-out',
@@ -99,6 +97,9 @@ export function Sidebar({ activeView, setActiveView, userRole, onLogout }: Sideb
                   {item.id === 'overdue' && (
                     <span className="ml-auto bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">3</span>
                   )}
+                  {item.id === 'confirmation' && (
+                    <span className="ml-auto bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded-full">5</span>
+                  )}
                 </button>
               )
             })}
@@ -124,7 +125,7 @@ export function Sidebar({ activeView, setActiveView, userRole, onLogout }: Sideb
     )
   }
 
-  // Namizni pogled - fiksni sidebar
+  // Namizni pogled
   return (
     <aside className="w-64 bg-primary text-primary-foreground flex flex-col h-screen sticky top-0">
       <div className="p-6 border-b border-white/20">
@@ -147,6 +148,9 @@ export function Sidebar({ activeView, setActiveView, userRole, onLogout }: Sideb
               {item.label}
               {item.id === 'overdue' && (
                 <span className="ml-auto bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">3</span>
+              )}
+              {item.id === 'confirmation' && (
+                <span className="ml-auto bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded-full">5</span>
               )}
             </button>
           )

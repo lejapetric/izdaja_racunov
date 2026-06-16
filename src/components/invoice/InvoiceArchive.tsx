@@ -188,6 +188,9 @@ const openEditModal = (invoice: Invoice) => {
     setCancelReason('')
     // Ne zapremo InvoiceView, ostane odprt
   }
+
+  
+  
   
   const getAuditLogsForInvoice = (invoiceId: string) => mockAuditLogs.filter(log => log.invoiceId === invoiceId).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
 
@@ -204,7 +207,6 @@ const openEditModal = (invoice: Invoice) => {
             searchCustomer={searchCustomer} setSearchCustomer={setSearchCustomer} selectedCustomer={selectedCustomer} setSelectedCustomer={setSelectedCustomer}
             searchMunicipality={searchMunicipality} setSearchMunicipality={setSearchMunicipality} selectedMunicipality={selectedMunicipality} setSelectedMunicipality={setSelectedMunicipality}
             priceMin={priceMin} setPriceMin={setPriceMin} priceMax={priceMax} setPriceMax={setPriceMax}
-            discountMin={discountMin} setDiscountMin={setDiscountMin} discountMax={discountMax} setDiscountMax={setDiscountMax}
             dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo}
             dueDateFrom={dueDateFrom} setDueDateFrom={setDueDateFrom} dueDateTo={dueDateTo} setDueDateTo={setDueDateTo}
             selectedStatus={selectedStatus} setSelectedStatus={setSelectedStatus}
@@ -212,7 +214,9 @@ const openEditModal = (invoice: Invoice) => {
             clearAllFilters={clearAllFilters}
           />
           
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <div className="mt-10">
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} >
             <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="all">Vsi ({filteredAll.length})</TabsTrigger>
               <TabsTrigger value="drafts">Osnutki ({filteredDrafts.length})</TabsTrigger>
@@ -256,6 +260,8 @@ const openEditModal = (invoice: Invoice) => {
               />
             </TabsContent>
           </Tabs>
+            </div>
+
         </CardContent>
       </Card>
 

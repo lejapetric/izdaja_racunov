@@ -6,51 +6,37 @@ import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Info, X } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
+import { useSettings } from '@/contexts/SettingsContext'
 
 export function Settings() {
-  const [sklicFormat, setSklicFormat] = useState('SI00 {leto}-{stevilka}')
+  const { settings, updateSettings } = useSettings()
+  
+  const [sklicFormat, setSklicFormat] = useState(settings.sklicFormat)
   const [showInfo, setShowInfo] = useState(false)
   
   // Nastavitve za opomine
-  const [firstReminderDays, setFirstReminderDays] = useState(7)
-  const [secondReminderDays, setSecondReminderDays] = useState(14)
-  const [thirdReminderDays, setThirdReminderDays] = useState(21)
+  const [firstReminderDays, setFirstReminderDays] = useState(settings.firstReminderDays)
+  const [secondReminderDays, setSecondReminderDays] = useState(settings.secondReminderDays)
+  const [thirdReminderDays, setThirdReminderDays] = useState(settings.thirdReminderDays)
 
   // BIC izbira
-  const [selectedBic, setSelectedBic] = useState('BKSI SI22')
+  const [selectedBic, setSelectedBic] = useState(settings.bic)
   
   // Davčni zavezanec
-  const [isVatPayer, setIsVatPayer] = useState(true)
-  const [taxId, setTaxId] = useState('SI78945612')
-  const [registrationNumber, setRegistrationNumber] = useState('65412378')
+  const [isVatPayer, setIsVatPayer] = useState(settings.isVatPayer)
+  const [taxId, setTaxId] = useState(settings.taxId)
+  const [registrationNumber, setRegistrationNumber] = useState(settings.registrationNumber)
   
   // Podatki podjetja
-  const [companyName, setCompanyName] = useState('Geodetski biro Kranj d.o.o.')
-  const [companyAddress, setCompanyAddress] = useState('Prešernova cesta 22, 4000 Kranj')
-  const [phone, setPhone] = useState('+386 4 123 4567')
-  const [email, setEmail] = useState('info@geodetstvo-kranj.si')
-  const [trr, setTrr] = useState('SI56 2900 0000 1234 567')
+  const [companyName, setCompanyName] = useState(settings.companyName)
+  const [companyAddress, setCompanyAddress] = useState(settings.companyAddress)
+  const [phone, setPhone] = useState(settings.phone)
+  const [email, setEmail] = useState(settings.email)
+  const [trr, setTrr] = useState(settings.trr)
   
   // Besedila za pošiljanje
-  const [invoiceEmailText, setInvoiceEmailText] = useState(`Spoštovani,
-
-V priponki vam pošiljamo račun št. {stevilka} z dne {datumIzdaje} v skupnem znesku {znesek}.
-
-Prosimo, da račun poravnate v roku {rokPlacila} dni.
-
-Lep pozdrav,
-{imePodjetja}`)
-
-  const [reminderEmailText, setReminderEmailText] = useState(`Spoštovani,
-
-Opominjamo vas, da je račun št. {stevilka} z dne {datumIzdaje} v znesku {znesek} zapadel v plačilo dne {datumZapadlosti}.
-
-Trenutno stanje zamude: {dniZamude} dni.
-
-Prosimo, da račun poravnate v najkrajšem možnem času.
-
-Lep pozdrav,
-{imePodjetja}`)
+  const [invoiceEmailText, setInvoiceEmailText] = useState(settings.invoiceEmailText)
+  const [reminderEmailText, setReminderEmailText] = useState(settings.reminderEmailText)
 
   // Vnaprej pripravljeni formati sklica UPN - razširjeni
   const sklicFormats = [
@@ -88,25 +74,25 @@ Lep pozdrav,
   }
 
   const handleSaveSettings = () => {
-    console.log('Shranjene nastavitve:', {
+    const newSettings = {
       companyName,
       companyAddress,
       isVatPayer,
-      taxId: isVatPayer ? taxId : 'Ni davčni zavezanec',
+      taxId: isVatPayer ? taxId : '',
       registrationNumber,
       phone,
       email,
       trr,
       bic: selectedBic,
       sklicFormat,
-      reminderDays: {
-        first: firstReminderDays,
-        second: secondReminderDays,
-        third: thirdReminderDays
-      },
+      firstReminderDays,
+      secondReminderDays,
+      thirdReminderDays,
       invoiceEmailText,
       reminderEmailText
-    })
+    }
+    
+    updateSettings(newSettings)
     alert('Nastavitve so bile shranjene!')
   }
 

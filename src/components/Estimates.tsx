@@ -289,7 +289,6 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
             searchCustomer={searchCustomer} setSearchCustomer={setSearchCustomer} selectedCustomer={selectedCustomer} setSelectedCustomer={setSelectedCustomer}
             searchMunicipality={searchMunicipality} setSearchMunicipality={setSearchMunicipality} selectedMunicipality={selectedMunicipality} setSelectedMunicipality={setSelectedMunicipality}
             priceMin={priceMin} setPriceMin={setPriceMin} priceMax={priceMax} setPriceMax={setPriceMax}
-            discountMin={discountMin} setDiscountMin={setDiscountMin} discountMax={discountMax} setDiscountMax={setDiscountMax}
             dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo}
             dueDateFrom={dueDateFrom} setDueDateFrom={setDueDateFrom} dueDateTo={dueDateTo} setDueDateTo={setDueDateTo}
             selectedStatus={selectedStatus as any} setSelectedStatus={setSelectedStatus as any}
@@ -303,7 +302,7 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
               <TabsTrigger value="issued">Izdani ({filteredIssued.length})</TabsTrigger>
               <TabsTrigger value="sent">Poslani ({filteredSent.length})</TabsTrigger>
               <TabsTrigger value="converted">Spremenjeni v račun ({filteredConverted.length})</TabsTrigger>
-              <TabsTrigger value="expired">Potečeni ({filteredExpired.length})</TabsTrigger>
+              <TabsTrigger value="expired">Zapadli ({filteredExpired.length})</TabsTrigger>
             </TabsList>
             
             <TabsContent value="all">
@@ -786,9 +785,9 @@ function EstimatesTable({ estimates, onEstimateClick, getStatusLabel, getStatusC
                 <TableCell className="px-4 py-2 text-center text-xs lg:text-sm">
                   {est.dueDate && est.dueDate !== 'null' ? formatDate(est.dueDate) : '-'}
                   {!isExpired && daysUntilExpiry !== null && daysUntilExpiry <= 7 && daysUntilExpiry > 0 && (
-                    <div className="text-[10px] lg:text-xs text-orange-500">Poteče čez {daysUntilExpiry} dni</div>
+                    <div className="text-[10px] lg:text-xs text-orange-500">Zapade čez {daysUntilExpiry} dni</div>
                   )}
-                  {isExpired && <div className="text-[10px] lg:text-xs text-red-500">POTEČEN</div>}
+                  {isExpired && <div className="text-[10px] lg:text-xs text-red-500">Zapadel</div>}
                 </TableCell>
                 <TableCell className="px-4 py-2 text-center" onClick={(e) => e.stopPropagation()}>
                   <Button 

@@ -56,6 +56,7 @@ export type InvoiceStatus =
   | 'cancelled'
   | 'converted'
   | 'estimate'
+  | 'confirmed'
 
 export interface Invoice {
   id: string

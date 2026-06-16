@@ -461,7 +461,7 @@ export function Reports() {
                 <CardContent className="pt-6">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="text-sm text-red-600 font-medium">Zapadlo neplačano</p>
+                      <p className="text-sm text-red-600 font-medium">Zapadlo, neplačano</p>
                       <p className="text-2xl font-bold text-red-800">{formatCurrency(stats.overdueAmount)}</p>
                       <p className="text-xs text-red-500 mt-1">potrebno ukrepanje</p>
                     </div>
@@ -591,7 +591,7 @@ export function Reports() {
                   {stats.topCustomers.map((customer, idx) => (
                     <div key={customer.name} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                       <div className="flex items-center gap-3">
-                        <span className="font-bold text-lg text-gray-500 w-6">{idx + 1}.</spppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp
+                        <span className="font-bold text-lg text-gray-500 w-6">{idx + 1}</span>
                       </div>
                       <p className="font-semibold text-primary">{formatCurrency(customer.amount)}</p>
                     </div>

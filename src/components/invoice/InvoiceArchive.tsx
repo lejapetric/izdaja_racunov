@@ -19,8 +19,15 @@ import { Edit, RefreshCw, ArrowRight } from 'lucide-react'
 import { statusColors, statusLabels } from '@/data/mockData'
 
 const statusOptions: { value: InvoiceStatus | 'all'; label: string }[] = [
-  { value: 'all', label: 'Vsi' }, { value: 'draft', label: 'Osnutki' }, { value: 'issued', label: 'Izdani' },
-  { value: 'sent', label: 'Poslani' }, { value: 'overdue', label: 'Zapadli' }, { value: 'paid', label: 'Plačani' }, { value: 'cancelled', label: 'Stornirani' },
+  { value: 'all', label: 'Vsi' }, 
+  { value: 'draft', label: 'Osnutki' }, 
+  { value: 'issued', label: 'Izdani' },
+  { value: 'sent', label: 'Poslani' }, 
+  { value: 'overdue', label: 'Zapadli' }, 
+  { value: 'paid', label: 'Plačani' },
+  { value: 'partially_paid', label: 'Delno plačani' }, 
+  { value: 'converted', label: 'Pretvorjeni' },        
+  { value: 'cancelled', label: 'Stornirani' },
 ]
 
 interface InvoiceArchiveProps { onEditInvoice: (invoice: Invoice) => void }

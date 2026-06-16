@@ -22,11 +22,12 @@ const estimateStatusOptions: { value: string; label: string }[] = [
   { value: 'all', label: 'Vsi' },
   { value: 'issued', label: 'Izdani' },
   { value: 'sent', label: 'Poslani' },
-  { value: 'paied', label: 'Plačan' },
+  { value: 'paid', label: 'Plačani' }, //
   { value: 'overdue', label: 'Potečeni' },
   { value: 'converted', label: 'Spremenjeni v račun' },
+  { value: 'cancelled', label: 'Stornirani' },
+  { value: 'partially_paid', label: 'Delno plačani' },
 ]
-
 interface EstimatesProps { 
   onNewEstimate?: () => void
   setActiveView?: (view: string) => void 

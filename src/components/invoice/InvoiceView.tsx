@@ -526,16 +526,7 @@ ${companyData.name}`)
                         <span className="text-sm font-medium">Preostanek:</span>
                         <span className="font-bold text-orange-600">{formatCurrency(invoice.totalGross * 0.5)}</span>
                       </div>
-                      <div className="pt-2">
-                        <div className="flex justify-between text-xs mb-1">
-                          <span>Plačano: 50%</span>
-                          <span>Ostalo: 50%</span>
-                        </div>
-                        <div className="w-full bg-gray-300 rounded-full h-2">
-                          <div className="bg-orange-500 h-2 rounded-full" style={{ width: '50%' }}></div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-gray-500 pt-2 border-t border-orange-200">
+                      <div className="flex items-center gap-2 text-xs text-gray-500 pt-2">
                         <Calendar className="w-3 h-3" />
                         <span>Zadnje plačilo: 15.08.2025</span>
                       </div>

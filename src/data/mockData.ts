@@ -48,7 +48,7 @@ export const companyData = {
 export const statusLabels: Record<string, string> = {
   draft: 'Osnutek',
   issued: 'Izdan',
-  confirmed: 'Potrjen',
+  unconfirmed: 'Nepotrjen',
   sent: 'Poslan',
   overdue: 'Zapadel',
   paid: 'Plačan',

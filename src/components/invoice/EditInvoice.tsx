@@ -442,7 +442,6 @@ export function EditInvoice({ editingInvoice, onClose, onSaved }: EditInvoicePro
       </Card>
 
       <Card>
-<<<<<<< HEAD
         <CardHeader className="flex-row justify-between items-center flex-wrap gap-2">
           <CardTitle className="text-sm sm:text-base md:text-lg">Postavke računa</CardTitle>
           <Button size="sm" onClick={() => { setEditingItem(null); setModalOpen(true); }}>
@@ -517,48 +516,6 @@ export function EditInvoice({ editingInvoice, onClose, onSaved }: EditInvoicePro
                       Ni postavk. Kliknite "Dodaj postavko".
                     </TableCell>
                   </TableRow>
-=======
-  <CardHeader className="flex-row justify-between items-center flex-wrap gap-2">
-    <CardTitle className="text-sm sm:text-base md:text-lg">Postavke računa</CardTitle>
-    <Button size="sm" onClick={() => { setEditingItem(null); setModalOpen(true); }}>
-      <Plus className="w-4 h-4 mr-1" /> Dodaj postavko
-    </Button>
-  </CardHeader>
-  <CardContent className="overflow-x-auto">
-    <div className="min-w-[800px] md:min-w-0">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Naziv</TableHead>
-                <TableHead className="text-right">Količina</TableHead>
-                <TableHead className="text-right">Enota merjenja</TableHead>
-                <TableHead className="text-right">Cena (€)</TableHead>
-                <TableHead className="text-right">Popust %</TableHead>
-                <TableHead className="text-right">Znesek brez DDV</TableHead>
-                <TableHead className="text-right">DDV %</TableHead>
-                <TableHead className="text-right">Znesek DDV</TableHead>
-                <TableHead className="text-right">Znesek z DDV</TableHead>
-                <TableHead></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {items.map(item => (
-            <TableRow key={item.id}>
-              <TableCell className="max-w-[200px] sm:max-w-[300px] md:max-w-none">
-                <div className="text-xs sm:text-sm font-medium break-words">{item.description}</div>
-                {(item.parcelNumber || item.cadastralMunicipality || item.cadastreName || item.landRegisterId) && (
-                  <div className="text-[10px] sm:text-xs text-gray-500 mt-1">
-                    {[
-                      item.parcelNumber && `št. parcele: ${item.parcelNumber}`,
-                      item.cadastralMunicipality && `kat. občina: ${item.cadastralMunicipality}`,
-                      (item.cadastreName || (item.parcelNumber && 'Kataster stavb')) && 
-                        `ime katastra: ${item.cadastreName || 'Kataster stavb'}`,
-                      (item.landRegisterId || (item.parcelNumber && item.cadastralMunicipality && 
-                        `${item.cadastralMunicipality.split(' ')[0]} ${item.parcelNumber}`)) && 
-                        `ID zaznambe: ${item.landRegisterId || `${item.cadastralMunicipality?.split(' ')[0]} ${item.parcelNumber}`}`
-                    ].filter(Boolean).join(' | ')}
-                  </div>
->>>>>>> f3c581a3979ac6051779d502ee579f727a56fccc
                 )}
               </TableBody>
             </Table>

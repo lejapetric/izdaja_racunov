@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Potek statusov dokumentov</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* ============================================================
+           OSNOVNI SLOGI
+           ============================================================ */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #f1f5f9;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            padding: 2rem 1.5rem;
+            color: #0f172a;
+            line-height: 1.6;
+        }
+
+        /* ============================================================
+           GLAVNI NASLOV
+           ============================================================ */
+        .page-title {
+            text-align: center;
+            font-size: 2.25rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 3px solid #e2e8f0;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .page-subtitle {
+            text-align: center;
+            font-size: 1rem;
+            color: #475569;
+            margin-top: -0.5rem;
+            margin-bottom: 2.5rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* ============================================================
+           KARTICE
+           ============================================================ */
+        .flow-card {
+            background: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e9edf2;
+            overflow: hidden;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: box-shadow 0.25s ease;
+        }
+
+        .flow-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 8px 40px rgba(0, 0, 0, 0.05);
+        }
+
+        .flow-card-header {
+            padding: 1.25rem 2rem;
+            border-bottom: 1px solid #e9edf2;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .flow-card-header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .flow-card-header-left .badge-type {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 0.2rem 0.7rem;
+            border-radius: 9999px;
+        }
+
+        .flow-card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            margin: 0;
+        }
+
+        .flow-card-description {
+            font-size: 0.9rem;
+            color: #475569;
+            margin: 0;
+            padding-right: 0.5rem;
+        }
+
+        .flow-card-body {
+            padding: 2rem 2rem 1.75rem;
+        }
+
+        /* ============================================================
+           STATUS BADGE
+           ============================================================ */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.55rem 1.1rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+            white-space: nowrap;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            cursor: default;
+            line-height: 1.4;
+        }
+
+        .status-badge:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        /* ============================================================
+           PUŠČICE
+           ============================================================ */
+        .flow-arrow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-shrink: 0;
+            margin: 0 0.15rem;
+            min-width: 52px;
+        }
+
+        .flow-arrow .arrow-symbol {
+            font-size: 1.25rem;
+            font-weight: 300;
+            line-height: 1.2;
+        }
+
+        .flow-arrow .arrow-label {
+            font-size: 0.6rem;
+            font-weight: 500;
+            text-align: center;
+            max-width: 72px;
+            line-height: 1.3;
+            letter-spacing: 0.02em;
+            margin-top: 0.1rem;
+        }
+
+        .flow-arrow.automatic .arrow-symbol {
+            color: #2563eb;
+        }
+
+        .flow-arrow.automatic .arrow-label {
+            color: #2563eb;
+        }
+
+        .flow-arrow.manual .arrow-symbol {
+            color: #64748b;
+        }
+
+        .flow-arrow.manual .arrow-label {
+            color: #64748b;
+        }
+
+        /* ============================================================
+           LEGENDA
+           ============================================================ */
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem 1.25rem;
+            margin-top: 1.5rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid #e9edf2;
+            font-size: 0.7rem;
+            color: #475569;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .legend-color {
+            width: 0.9rem;
+            height: 0.9rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            flex-shrink: 0;
+        }
+
+        .legend-arrow {
+            font-size: 0.9rem;
+            font-weight: 300;
+        }
+
+        /* ============================================================
+           KOMBINIRANI POGLED
+           ============================================================ */
+        .combined-flow-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .combined-flow-group .group-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.25rem;
+        }
+
+        .combined-flow-group .flow-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 0.15rem;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.75rem;
+            border: 1px solid #e9edf2;
+            background-color: #fafbfc;
+        }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @media (max-width: 640px) {
+            body {
+                padding: 1rem 0.75rem;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .flow-card-header {
+                padding: 1rem 1.25rem;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .flow-card-header .flow-card-description {
+                font-size: 0.8rem;
+                padding-right: 0;
+            }
+
+            .flow-card-body {
+                padding: 1.25rem 0.75rem;
+            }
+
+            .status-badge {
+                font-size: 0.7rem;
+                padding: 0.35rem 0.7rem;
+            }
+
+            .flow-arrow {
+                min-width: 32px;
+                margin: 0 0.05rem;
+            }
+
+            .flow-arrow .arrow-symbol {
+                font-size: 1rem;
+            }
+
+            .flow-arrow .arrow-label {
+                font-size: 0.5rem;
+                max-width: 48px;
+            }
+
+            .legend {
+                font-size: 0.6rem;
+                gap: 0.3rem 0.75rem;
+            }
+
+            .combined-flow-group .flow-row {
+                padding: 0.5rem 0.5rem;
+            }
+
+            .flow-card-title {
+                font-size: 1.05rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .status-badge {
+                font-size: 0.6rem;
+                padding: 0.25rem 0.5rem;
+                gap: 0.25rem;
+            }
+
+            .flow-arrow .arrow-label {
+                display: none;
+            }
+
+            .flow-arrow {
+                min-width: 16px;
+            }
+
+            .flow-arrow .arrow-symbol {
+                font-size: 0.85rem;
+            }
+        }
+
+        /* ============================================================
+           TISK
+           ============================================================ */
+        @media print {
+            body {
+                background: white;
+                padding: 0.5in;
+            }
+
+            .flow-card {
+                box-shadow: none;
+                border: 1px solid #ccc;
+                page-break-inside: avoid;
+                margin-bottom: 1rem;
+            }
+
+            .flow-card:hover {
+                box-shadow: none;
+            }
+
+            .status-badge:hover {
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============================================================
+    NASLOV
+    ============================================================ -->
+    <h1 class="page-title">Potek statusov dokumentov</h1>
+    <p class="page-subtitle">
+        Pregled življenjskega cikla računov in predračunov z vsemi možnimi prehodi med statusi.
+    </p>
+
+    <!-- ============================================================
+    VSEBINA
+    ============================================================ -->
+    <div id="app" style="display:flex;flex-direction:column;gap:2rem;max-width:1200px;margin:0 auto;"></div>
+
+    <script>
+        // ============================================================
+        // 1. DEFINICIJE
+        // ============================================================
+
+        const LABELS = {
+            draft: 'Osnutek',
+            issued: 'Izdan',
+            unconfirmed: 'Nepotrjen',
+            confirmed: 'Potrjen',
+            sent: 'Poslan',
+            overdue: 'Zapadel',
+            paid: 'Plačan',
+            partially_paid: 'Delno plačan',
+            cancelled: 'Storniran',
+            converted: 'Spremenjen v račun'
+        };
+
+        const COLORS = {
+            draft: 'bg-slate-200 text-slate-800',
+            issued: 'bg-blue-100 text-blue-800 border-blue-200',
+            unconfirmed: 'bg-amber-100 text-amber-800 border-amber-200',
+            confirmed: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+            sent: 'bg-sky-100 text-sky-800 border-sky-200',
+            overdue: 'bg-rose-100 text-rose-800 border-rose-200',
+            paid: 'bg-teal-200 text-teal-800 border-teal-300',
+            partially_paid: 'bg-orange-100 text-orange-800 border-orange-200',
+            cancelled: 'bg-red-500 text-white border-red-600',
+            converted: 'bg-violet-100 text-violet-800 border-violet-200'
+        };
+
+        // ============================================================
+        // 2. POMOŽNE FUNKCIJE
+        // ============================================================
+
+        function getTransitionLabel(from, to) {
+            const map = {
+                'draft_unconfirmed': 'Izdaj račun',
+                'unconfirmed_confirmed': 'Potrdi (direktor)',
+                'confirmed_sent': 'Pošlji',
+                'sent_overdue': 'Rok poteče',
+                'overdue_partially_paid': 'Delno plačilo',
+                'partially_paid_paid': 'Doplačilo',
+                'overdue_paid': 'Plačano',
+                'draft_issued': 'Ustvari predračun',
+                'issued_sent': 'Pošlji',
+                'paid_converted': 'Pretvori v račun',
+                'draft_cancelled': 'Storniraj',
+                'unconfirmed_cancelled': 'Storniraj',
+                'confirmed_cancelled': 'Storniraj',
+                'issued_cancelled': 'Storniraj',
+                'sent_cancelled': 'Storniraj',
+                'overdue_cancelled': 'Storniraj',
+                'paid_cancelled': 'Storniraj',
+                'partially_paid_cancelled': 'Storniraj'
+            };
+            return map[from + '_' + to] || '→';
+        }
+
+        function isAutomatic(from, to) {
+            return ['sent_overdue', 'overdue_paid', 'overdue_partially_paid', 'partially_paid_paid'].includes(from + '_' + to);
+        }
+
+        // ============================================================
+        // 3. RENDER FUNKCIJE
+        // ============================================================
+
+        function renderBadge(status) {
+            const label = LABELS[status] || status;
+            const color = COLORS[status] || 'bg-gray-100 text-gray-800';
+            return `<span class="status-badge ${color}">${label}</span>`;
+        }
+
+        function renderArrow(from, to) {
+            const label = getTransitionLabel(from, to);
+            const auto = isAutomatic(from, to);
+            const cls = auto ? 'automatic' : 'manual';
+            const sym = auto ? '⇢' : '→';
+            const labelHtml = label !== '→' ? `<span class="arrow-label">${label}</span>` : '';
+            return `
+                <div class="flow-arrow ${cls}">
+                    <span class="arrow-symbol">${sym}</span>
+                    ${labelHtml}
+                </div>
+            `;
+        }
+
+        function renderFlow(flow) {
+            return flow.map((status, idx) => {
+                let html = renderBadge(status);
+                if (idx < flow.length - 1) {
+                    html += renderArrow(status, flow[idx + 1]);
+                }
+                return html;
+            }).join('');
+        }
+
+        // ============================================================
+        // 4. KARTICE
+        // ============================================================
+
+        function renderInvoiceCard() {
+            const flow = ['draft', 'unconfirmed', 'confirmed', 'sent', 'overdue', 'partially_paid', 'paid', 'cancelled'];
+            return `
+                <div class="flow-card">
+                    <div class="flow-card-header" style="background:#f7faff;border-color:#dbeafe;">
+                        <div class="flow-card-header-left">
+                            <span class="badge-type" style="background:#dbeafe;color:#1e40af;">Računi</span>
+                            <h3 class="flow-card-title" style="color:#1e3a5f;">Življenjski cikel računa</h3>
+                        </div>
+                        <p class="flow-card-description">
+                            Račun gre skozi obvezno potrditev direktorja pred pošiljanjem.
+                        </p>
+                    </div>
+                    <div class="flow-card-body">
+                        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:0.15rem;">
+                            ${renderFlow(flow)}
+                        </div>
+                        <div class="legend">
+                            <span class="legend-item">
+                                <span class="legend-arrow" style="color:#64748b;">→</span>
+                                <span>Ročno dejanje</span>
+                            </span>
+                            <span class="legend-item">
+                                <span class="legend-arrow" style="color:#2563eb;">⇢</span>
+                                <span>Samodejno (sistem)</span>
+                            </span>
+                            <span class="legend-item">
+                                <span class="legend-color" style="background:#fef3c7;border-color:#f59e0b;"></span>
+                                <span>Nepotrjen – čaka na direktorja</span>
+                            </span>
+                            <span class="legend-item">
+                                <span class="legend-color" style="background:#d1fae5;border-color:#34d399;"></span>
+                                <span>Potrjen – uradno veljaven</span>
+                            </span>
+                            <span class="legend-item">
+                                <span class="legend-color" style="background:#fed7aa;border-color:#fb923c;"></span>
+                                <span>Delno plačan (samo računi)</span>
+                            </span>
+                            <span class="legend-item">
+                                <span class="legend-color" style="background:#f87171;border-color:#dc2626;"></span>
+                                <span>Storniran – dokončno</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderProformaCard() {
+            const flow = ['draft', 'issued', 'sent', 'overdue', 'paid', 'converted', 'cancelled'];
+            return `
+                <div class="flow-card">
+                    <div class="flow-card-header" style="background:#faf5ff;border-color:#e9d5ff;">
+                        <div class="flow-card-header-left">
+                            <span class="badge-type" style="background:#e9d5ff;color:#6b21a5;">Predračuni</span>
+                            <h3 class="flow-card-title" style="color:#4c1d95;">Življenjski cikel predračuna</h3>
+                        </div>
+                        <p class="flow-card-description">
+                            Predračun ne potrebuje potrditve direktorja – gre neposredno naprej.
+                        </p>
+                    </div>
+                    <div class="flow-card-body">
+                        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:0.15rem;">
+                            ${renderFlow(flow)}
+                        </div>
+                        <div class="legend">
+                            <span class="legend-item">
+                                <span class="legend-arrow" style="color:#64748b;">→</span>
+                                <span>Ročno dejanje</span>
+                            </span>
+                            <span class="legend-item">
+                                <span class="legend-arrow" style="color:#2563eb;">⇢</span>
+                                <span>Samodejno (sistem)</span>
+                            </span>
+                            <span class="legend-item">
+                                <span class="legend-color" style="background:#dbeafe;border-color:#60a5fa;"></span>
+                                <span>Izdan – gre neposredno naprej</span>
+                            </span>
+                            <span class="legend-item">
+                                <span class="legend-color" style="background:#e9d5ff;border-color:#a78bfa;"></span>
+                                <span>Spremenjen v račun – zaključen</span>
+                            </span>
+                            <span class="legend-item">
+                                <span class="legend-color" style="background:#f87171;border-color:#dc2626;"></span>
+                                <span>Storniran – dokončno</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderCombinedCard() {
+            const invoice = ['draft', 'unconfirmed', 'confirmed', 'sent', 'overdue', 'partially_paid', 'paid', 'cancelled'];
+            const proforma = ['draft', 'issued', 'sent', 'overdue', 'paid', 'converted', 'cancelled'];
+
+            return `
+                <div class="flow-card">
+                    <div class="flow-card-header" style="background:#f8fafc;border-color:#e2e8f0;">
+                        <div class="flow-card-header-left">
+                            <span class="badge-type" style="background:#e2e8f0;color:#1e293b;">Celoten pregled</span>
+                            <h3 class="flow-card-title" style="color:#0f172a;">Vsi statusi in prehodi</h3>
+                        </div>
+                        <p class="flow-card-description">
+                            Primerjava življenjskih ciklov računov in predračunov.
+                        </p>
+                    </div>
+                    <div class="flow-card-body">
+                        <div class="combined-flow-group">
+                            <div>
+                                <div class="group-label" style="color:#1e40af;">Računi</div>
+                                <div class="flow-row">${renderFlow(invoice)}</div>
+                            </div>
+                            <div>
+                                <div class="group-label" style="color:#6b21a5;">Predračuni</div>
+                                <div class="flow-row">${renderFlow(proforma)}</div>
+                            </div>
+                        </div>
+                        <div class="legend">
+                            <span class="legend-item">
+                                <span class="legend-arrow" style="color:#64748b;">→</span>
+                                <span>Ročno dejanje</span>
+                            </span>
+                            <span class="legend-item">
+                                <span class="legend-arrow" style="color:#2563eb;">⇢</span>
+                                <span>Samodejno (sistem)</span>
+                            </span>
+                            <span class="legend-item">
+                                <span class="legend-color" style="background:#fef3c7;border-color:#f59e0b;"></span>
+                                <span>Nepotrjen (računi)</span>
+                            </span>
+                            <span class="legend-item">
+                                <span class="legend-color" style="background:#d1fae5;border-color:#34d399;"></span>
+                                <span>Potrjen (računi)</span>
+                            </span>
+                            <span class="legend-item">
+                                <span class="legend-color" style="background:#dbeafe;border-color:#60a5fa;"></span>
+                                <span>Izdan (predračuni)</span>
+                            </span>
+                            <span class="legend-item">
+                                <span class="legend-color" style="background:#e9d5ff;border-color:#a78bfa;"></span>
+                                <span>Spremenjen v račun (predračuni)</span>
+                            </span>
+                            <span class="legend-item">
+                                <span class="legend-color" style="background:#f87171;border-color:#dc2626;"></span>
+                                <span>Storniran (dokončno)</span>
+                            </span>
+                            <span class="legend-item">
+                                <span class="legend-color" style="background:#fed7aa;border-color:#fb923c;"></span>
+                                <span>Delno plačan (samo računi)</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ============================================================
+        // 5. POŽENI
+        // ============================================================
+
+        document.getElementById('app').innerHTML = `
+            ${renderInvoiceCard()}
+            ${renderProformaCard()}
+            ${renderCombinedCard()}
+        `;
+    </script>
+
+</body>
+</html>

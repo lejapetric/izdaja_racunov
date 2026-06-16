@@ -330,23 +330,7 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
           )}
         </div>
 
-        <div className="relative" ref={statusDropdownRef}>
-          <label className="text-xs font-medium text-gray-600 mb-1 block">Status</label>
-          <div className="flex items-center border rounded-md px-3 py-1.5 bg-white cursor-pointer focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary" onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}>
-            <Tag className="w-3.5 h-3.5 text-gray-400 mr-2" />
-            <span className="flex-1 text-sm truncate">{statusOptions.find(s => s.value === selectedStatus)?.label || 'Vsi'}</span>
-            <ChevronDown className={`w-3.5 h-3.5 text-gray-400 ml-2 transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''}`} />
-          </div>
-          {isStatusDropdownOpen && (
-            <div className="absolute z-50 w-full mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-auto">
-              {statusOptions.map(option => (
-                <div key={option.value} className="p-2 hover:bg-gray-50 cursor-pointer text-sm border-b last:border-0" onClick={() => { setSelectedStatus(option.value); setIsStatusDropdownOpen(false) }}>
-                  {option.label}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+
       </div>
 
       {/* Dodatni filtri */}

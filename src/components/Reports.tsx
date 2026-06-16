@@ -591,11 +591,7 @@ export function Reports() {
                   {stats.topCustomers.map((customer, idx) => (
                     <div key={customer.name} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                       <div className="flex items-center gap-3">
-                        <span className="font-bold text-lg text-gray-500 w-6">{idx + 1}.</span>
-                        <div>
-                          <p className="font-medium">{customer.name}</p>
-                          <p className="text-xs text-gray-500">{customer.count} računov</p>
-                        </div>
+                        <span className="font-bold text-lg text-gray-500 w-6">{idx + 1}.</spppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp
                       </div>
                       <p className="font-semibold text-primary">{formatCurrency(customer.amount)}</p>
                     </div>

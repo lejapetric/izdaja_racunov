@@ -189,6 +189,17 @@ export function InvoiceItemModal({ open, onOpenChange, editingItem, onSave, serv
               <SelectContent><SelectItem value="22">22%</SelectItem><SelectItem value="9.5">9,5%</SelectItem><SelectItem value="5">5%</SelectItem><SelectItem value="0">0% (oprostitev DDV)</SelectItem></SelectContent>
             </Select>
           </div>
+          {newItem.vatRate === 0 && (
+            <div className="col-span-2">
+              <label className="text-sm font-medium mb-1 block">Zakonska podlaga za oprostitev DDV *</label>
+              <Select value={newItem.vatExemptionReason || ''} onValueChange={(val) => setNewItem({ ...newItem, vatExemptionReason: val })}>
+                <SelectTrigger><SelectValue placeholder="Izberite zakonsko podlago" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="76. člen ZDDV-1 – obrnjena davčna obveznost">76. a člen ZDDV-1 – obrnjena davčna obveznost</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="col-span-2 border-t pt-3">
             <div className="font-medium mb-2 text-sm">Popust na postavko</div>
@@ -215,17 +226,6 @@ export function InvoiceItemModal({ open, onOpenChange, editingItem, onSave, serv
             </div>
           </div>
 
-          {newItem.vatRate === 0 && (
-            <div className="col-span-2">
-              <label className="text-sm font-medium mb-1 block">Zakonska podlaga za oprostitev DDV *</label>
-              <Select value={newItem.vatExemptionReason || ''} onValueChange={(val) => setNewItem({ ...newItem, vatExemptionReason: val })}>
-                <SelectTrigger><SelectValue placeholder="Izberite zakonsko podlago" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="76. člen ZDDV-1 – obrnjena davčna obveznost">76. a člen ZDDV-1 – obrnjena davčna obveznost</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
 
           <div className="col-span-2 bg-gray-50 p-3 rounded-md">
             <div className="grid grid-cols-4 gap-4">

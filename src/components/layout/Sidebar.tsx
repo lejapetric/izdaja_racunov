@@ -10,7 +10,7 @@ const navItems = [
   { id: 'overdue', label: 'Zapadli računi', icon: AlertCircle, roles: ['tajnistvo'] },
   { id: 'reports', label: 'Poročila in analize', icon: BarChart3, roles: ['tajnistvo', 'direktor'] },
   { id: 'confirmation', label: 'Potrditev računov', icon: CheckCircle, roles: ['direktor'] },
-  { id: 'settings', label: 'Možnosti', icon: Settings, roles: ['admin'] },
+  { id: 'settings', label: 'Sistemske nastavitve', icon: Settings, roles: ['admin'] },
 ]
 
 interface SidebarProps {

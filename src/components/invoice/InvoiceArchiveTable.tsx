@@ -87,7 +87,7 @@ export function InvoiceArchiveTable({ invoices, customers, onInvoiceClick }: Inv
             <TableHead className="px-4 py-3 text-left w-[240px] text-xs lg:text-sm">Kupec</TableHead>
             <TableHead className="px-4 py-3 text-right text-xs lg:text-sm">Neto</TableHead>
             <TableHead className="px-4 py-3 text-right text-xs lg:text-sm">DDV</TableHead>
-            <TableHead className="px-4 py-3 text-right text-xs lg:text-sm">Bruto</TableHead>
+            <TableHead className="px-4 py-3 text-right text-xs lg:text-sm">Skupni znesek</TableHead>
             <TableHead className="px-4 py-3 text-right w-[120px] text-xs lg:text-sm">Plačano</TableHead>
             <TableHead className="px-4 py-3 text-right w-[120px] text-xs lg:text-sm">Preostanek</TableHead>
             <TableHead className="px-4 py-3 text-center w-[180px] text-xs lg:text-sm">Status</TableHead>

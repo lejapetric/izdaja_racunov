@@ -174,7 +174,7 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
   const clearMunicipality = () => { setSelectedMunicipality(''); setSearchMunicipality('') }
 
   const sortOptions: { value: SortField; label: string }[] = [
-    { value: 'number', label: 'Številka' },
+    { value: 'number', label: 'Številka računa' },
     { value: 'issueDate', label: 'Datum izdaje' },
     { value: 'dueDate', label: 'Datum zapadlosti' },
     { value: 'customerName', label: 'Kupec (naziv)' },
@@ -228,6 +228,12 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
 
   const activeFilterCount = getActiveFilterCount()
 
+  // Pridobi oznako za izbran status
+  const getStatusLabel = () => {
+    const found = statusOptions.find(s => s.value === selectedStatus)
+    return found ? found.label : 'Vsi'
+  }
+
   return (
     <div className="space-y-4">
       {/* Header z gumbi */}
@@ -235,7 +241,7 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
         <div className="flex items-center gap-3">
           <h3 className="text-lg font-semibold text-gray-700">Filtri</h3>
           {activeFilterCount > 0 && (
-            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+            <span className="text-xs bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full font-medium">
               {activeFilterCount} aktivnih filtrov
             </span>
           )}
@@ -262,8 +268,13 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
             {showSorting ? <ChevronUp className="w-3.5 h-3.5 ml-1.5" /> : <ChevronDown className="w-3.5 h-3.5 ml-1.5" />}
           </Button>
           {activeFilterCount > 0 && (
-            <Button size="sm" variant="ghost" onClick={clearAllFilters} className="text-sm text-red-500 hover:text-red-700">
-              <X className="w-4 h-4 mr-1" /> Počisti
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              onClick={clearAllFilters} 
+              className="text-sm text-red-500 hover:text-red-700 hover:bg-red-50"
+            >
+              <X className="w-4 h-4 mr-1" /> Počisti vse
             </Button>
           )}
         </div>
@@ -271,28 +282,32 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
 
       {/* Osnovni filtri - 3 v vrsti */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {/* Filter: Številka */}
         <div className="relative" ref={numberDropdownRef}>
-          <label className="text-xs font-medium text-gray-600 mb-1 block">Številka</label>
-          <div className="flex items-center border rounded-md px-3 py-1.5 bg-white focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary">
-            <Search className="w-3.5 h-3.5 text-gray-400 mr-2" />
+          <label className="text-xs font-medium text-gray-600 mb-1 block">Številka računa</label>
+          <div className="flex items-center border rounded-md px-3 py-2 bg-white focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-shadow">
             <input 
               type="text" 
-              placeholder="Išči..." 
+              placeholder="Išči po številki računa..." 
               value={searchNumber} 
               onChange={(e) => { setSearchNumber(e.target.value); setIsNumberDropdownOpen(true); if (e.target.value === '') setSelectedNumber('') }} 
               className="flex-1 outline-none bg-transparent text-sm" 
               onFocus={() => setIsNumberDropdownOpen(true)} 
             />
             {selectedNumber ? (
-              <X className="w-3.5 h-3.5 text-gray-400 ml-2 cursor-pointer hover:text-red-500" onClick={clearNumber} />
+              <X className="w-4 h-4 text-gray-400 ml-2 cursor-pointer hover:text-red-500 transition-colors" onClick={clearNumber} />
             ) : (
-              <ChevronDown className={`w-3.5 h-3.5 text-gray-400 ml-2 transition-transform ${isNumberDropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-4 h-4 text-gray-400 ml-2 transition-transform ${isNumberDropdownOpen ? 'rotate-180' : ''}`} />
             )}
           </div>
           {isNumberDropdownOpen && uniqueNumbers.length > 0 && (
             <div className="absolute z-50 w-full mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-auto">
               {uniqueNumbers.map(inv => (
-                <div key={inv.number} className="p-2 hover:bg-gray-50 cursor-pointer text-sm border-b last:border-0" onClick={() => { setSelectedNumber(inv.number); setSearchNumber(inv.number); setIsNumberDropdownOpen(false) }}>
+                <div 
+                  key={inv.number} 
+                  className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm border-b last:border-0 transition-colors"
+                  onClick={() => { setSelectedNumber(inv.number); setSearchNumber(inv.number); setIsNumberDropdownOpen(false) }}
+                >
                   {inv.number}
                 </div>
               ))}
@@ -300,30 +315,34 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
           )}
         </div>
 
+        {/* Filter: Kupec */}
         <div className="relative" ref={customerDropdownRef}>
-          <label className="text-xs font-medium text-gray-600 mb-1 block">Kupec</label>
-          <div className="flex items-center border rounded-md px-3 py-1.5 bg-white focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary">
-            <User className="w-3.5 h-3.5 text-gray-400 mr-2" />
+          <label className="text-xs font-medium text-gray-600 mb-1 block">Naziv kupeca</label>
+          <div className="flex items-center border rounded-md px-3 py-2 bg-white focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-shadow">
             <input 
               type="text" 
-              placeholder="Išči..." 
+              placeholder="Išči po nazivu kupcu..." 
               value={searchCustomer} 
               onChange={(e) => { setSearchCustomer(e.target.value); setIsCustomerDropdownOpen(true); if (e.target.value === '') setSelectedCustomer(null) }} 
               className="flex-1 outline-none bg-transparent text-sm" 
               onFocus={() => setIsCustomerDropdownOpen(true)} 
             />
             {selectedCustomer ? (
-              <X className="w-3.5 h-3.5 text-gray-400 ml-2 cursor-pointer hover:text-red-500" onClick={clearCustomer} />
+              <X className="w-4 h-4 text-gray-400 ml-2 cursor-pointer hover:text-red-500 transition-colors" onClick={clearCustomer} />
             ) : (
-              <ChevronDown className={`w-3.5 h-3.5 text-gray-400 ml-2 transition-transform ${isCustomerDropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-4 h-4 text-gray-400 ml-2 transition-transform ${isCustomerDropdownOpen ? 'rotate-180' : ''}`} />
             )}
           </div>
           {isCustomerDropdownOpen && uniqueCustomers.length > 0 && (
             <div className="absolute z-50 w-full mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-auto">
               {uniqueCustomers.map(customer => (
-                <div key={customer.id} className="p-2 hover:bg-gray-50 cursor-pointer text-sm border-b last:border-0" onClick={() => { setSelectedCustomer(customer); setSearchCustomer(customer.name); setIsCustomerDropdownOpen(false) }}>
+                <div 
+                  key={customer.id} 
+                  className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm border-b last:border-0 transition-colors"
+                  onClick={() => { setSelectedCustomer(customer); setSearchCustomer(customer.name); setIsCustomerDropdownOpen(false) }}
+                >
                   <div className="font-medium">{customer.name}</div>
-                  <div className="text-xs text-gray-500">{customer.taxId}</div>
+                  <div className="text-xs text-gray-500">ID: {customer.taxId}</div>
                 </div>
               ))}
             </div>
@@ -336,14 +355,14 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
       {/* Dodatni filtri */}
       {showAdditionalFilters && (
         <div className="space-y-3 pt-3 border-t">
-          {/* Vrstica 1: Tip dokumenta, DDV, Občina */}
+          {/* Vrstica 1: Tip dokumenta, DDV, Občina, Št. postavk */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div>
-              <label className="text-xs font-medium text-gray-600 mb-1 block">Tip dokumenta</label>
+              <label className="text-xs font-medium text-gray-600 mb-1 block">Vrsta računa</label>
               <select 
                 value={documentType} 
                 onChange={(e) => setDocumentType(e.target.value as any)}
-                className="w-full border rounded-md px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full border rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow"
               >
                 {documentTypeOptions.map(opt => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -352,11 +371,11 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
             </div>
 
             <div>
-              <label className="text-xs font-medium text-gray-600 mb-1 block">DDV stopnja</label>
+              <label className="text-xs font-medium text-gray-600 mb-1 block">Stopnja DDV</label>
               <select 
                 value={vatRate} 
                 onChange={(e) => setVatRate(e.target.value as any)}
-                className="w-full border rounded-md px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full border rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow"
               >
                 {vatRateOptions.map(opt => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -365,9 +384,9 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
             </div>
 
             <div className="relative" ref={municipalityDropdownRef}>
-              <label className="text-xs font-medium text-gray-600 mb-1 block">Občina</label>
-              <div className="flex items-center border rounded-md px-3 py-1.5 bg-white focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary">
-                <MapPin className="w-3.5 h-3.5 text-gray-400 mr-2" />
+              <label className="text-xs font-medium text-gray-600 mb-1 block">Občina kupca</label>
+              <div className="flex items-center border rounded-md px-3 py-2 bg-white focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-shadow">
+                <MapPin className="w-4 h-4 text-gray-400 mr-2" />
                 <input 
                   type="text" 
                   placeholder="Občina..." 
@@ -377,15 +396,19 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
                   onFocus={() => setIsMunicipalityDropdownOpen(true)} 
                 />
                 {selectedMunicipality ? (
-                  <X className="w-3.5 h-3.5 text-gray-400 ml-2 cursor-pointer hover:text-red-500" onClick={clearMunicipality} />
+                  <X className="w-4 h-4 text-gray-400 ml-2 cursor-pointer hover:text-red-500 transition-colors" onClick={clearMunicipality} />
                 ) : (
-                  <ChevronDown className={`w-3.5 h-3.5 text-gray-400 ml-2 transition-transform ${isMunicipalityDropdownOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-4 h-4 text-gray-400 ml-2 transition-transform ${isMunicipalityDropdownOpen ? 'rotate-180' : ''}`} />
                 )}
               </div>
               {isMunicipalityDropdownOpen && uniqueMunicipalities.length > 0 && (
                 <div className="absolute z-50 w-full mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-auto">
                   {uniqueMunicipalities.map(municipality => (
-                    <div key={municipality} className="p-2 hover:bg-gray-50 cursor-pointer text-sm border-b last:border-0" onClick={() => { setSelectedMunicipality(municipality); setSearchMunicipality(municipality); setIsMunicipalityDropdownOpen(false) }}>
+                    <div 
+                      key={municipality} 
+                      className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm border-b last:border-0 transition-colors"
+                      onClick={() => { setSelectedMunicipality(municipality); setSearchMunicipality(municipality); setIsMunicipalityDropdownOpen(false) }}
+                    >
                       {municipality}
                     </div>
                   ))}
@@ -394,15 +417,15 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
             </div>
 
             <div>
-              <label className="text-xs font-medium text-gray-600 mb-1 block">Št. postavk</label>
-              <div className="flex gap-1.5">
+              <label className="text-xs font-medium text-gray-600 mb-1 block">Št. postavk na računu</label>
+              <div className="flex gap-2">
                 <NumberInput 
                   placeholder="Od" 
                   value={itemsCountMin} 
                   onChange={setItemsCountMin} 
                   min={0} 
                   max={999}
-                  className="w-1/2"
+                  className="flex-1"
                 />
                 <NumberInput 
                   placeholder="Do" 
@@ -410,7 +433,7 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
                   onChange={setItemsCountMax} 
                   min={0} 
                   max={999}
-                  className="w-1/2"
+                  className="flex-1"
                 />
               </div>
             </div>
@@ -419,15 +442,15 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
           {/* Vrstica 2: Zneski */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div>
-              <label className="text-xs font-medium text-gray-600 mb-1 block">Bruto znesek</label>
-              <div className="flex gap-1.5">
+              <label className="text-xs font-medium text-gray-600 mb-1 block">Skupni znesek</label>
+              <div className="flex gap-2">
                 <NumberInput 
                   placeholder="Od €" 
                   value={priceMin} 
                   onChange={setPriceMin} 
                   min={0} 
                   max={999999999}
-                  className="w-1/2"
+                  className="flex-1"
                 />
                 <NumberInput 
                   placeholder="Do €" 
@@ -435,21 +458,21 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
                   onChange={setPriceMax} 
                   min={0} 
                   max={999999999}
-                  className="w-1/2"
+                  className="flex-1"
                 />
               </div>
             </div>
 
             <div>
               <label className="text-xs font-medium text-gray-600 mb-1 block">Plačano</label>
-              <div className="flex gap-1.5">
+              <div className="flex gap-2">
                 <NumberInput 
                   placeholder="Od €" 
                   value={paidMin} 
                   onChange={setPaidMin} 
                   min={0} 
                   max={999999999}
-                  className="w-1/2"
+                  className="flex-1"
                 />
                 <NumberInput 
                   placeholder="Do €" 
@@ -457,21 +480,21 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
                   onChange={setPaidMax} 
                   min={0} 
                   max={999999999}
-                  className="w-1/2"
+                  className="flex-1"
                 />
               </div>
             </div>
 
             <div>
               <label className="text-xs font-medium text-gray-600 mb-1 block">Preostanek</label>
-              <div className="flex gap-1.5">
+              <div className="flex gap-2">
                 <NumberInput 
                   placeholder="Od €" 
                   value={remainingMin} 
                   onChange={setRemainingMin} 
                   min={0} 
                   max={999999999}
-                  className="w-1/2"
+                  className="flex-1"
                 />
                 <NumberInput 
                   placeholder="Do €" 
@@ -479,21 +502,21 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
                   onChange={setRemainingMax} 
                   min={0} 
                   max={999999999}
-                  className="w-1/2"
+                  className="flex-1"
                 />
               </div>
             </div>
 
             <div>
               <label className="text-xs font-medium text-gray-600 mb-1 block">Dni zamude</label>
-              <div className="flex gap-1.5">
+              <div className="flex gap-2">
                 <NumberInput 
                   placeholder="Od dni" 
                   value={overdueDaysMin} 
                   onChange={setOverdueDaysMin} 
                   min={0} 
                   max={999}
-                  className="w-1/2"
+                  className="flex-1"
                 />
                 <NumberInput 
                   placeholder="Do dni" 
@@ -501,7 +524,7 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
                   onChange={setOverdueDaysMax} 
                   min={0} 
                   max={999}
-                  className="w-1/2"
+                  className="flex-1"
                 />
               </div>
             </div>
@@ -511,56 +534,60 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div>
               <label className="text-xs font-medium text-gray-600 mb-1 block">Datum izdaje</label>
-              <div className="flex gap-1.5">
+              <div className="flex gap-2">
                 <DatePicker
                   selected={dateFrom}
                   onChange={setDateFrom}
                   dateFormat="dd.MM.yyyy"
                   locale={sl}
+                  placeholderText="Od"
                   customInput={<CustomDateInput onClear={clearDateFrom} placeholder="Od" />}
                   isClearable={false}
-                  className="w-1/2"
+                  className="flex-1"
                 />
                 <DatePicker
                   selected={dateTo}
                   onChange={setDateTo}
                   dateFormat="dd.MM.yyyy"
                   locale={sl}
+                  placeholderText="Do"
                   customInput={<CustomDateInput onClear={clearDateTo} placeholder="Do" />}
                   isClearable={false}
-                  className="w-1/2"
+                  className="flex-1"
                 />
               </div>
             </div>
 
             <div>
               <label className="text-xs font-medium text-gray-600 mb-1 block">Datum zapadlosti</label>
-              <div className="flex gap-1.5">
+              <div className="flex gap-2">
                 <DatePicker
                   selected={dueDateFrom}
                   onChange={setDueDateFrom}
                   dateFormat="dd.MM.yyyy"
                   locale={sl}
+                  placeholderText="Od"
                   customInput={<CustomDateInput onClear={clearDueDateFrom} placeholder="Od" />}
                   isClearable={false}
-                  className="w-1/2"
+                  className="flex-1"
                 />
                 <DatePicker
                   selected={dueDateTo}
                   onChange={setDueDateTo}
                   dateFormat="dd.MM.yyyy"
                   locale={sl}
+                  placeholderText="DO"
                   customInput={<CustomDateInput onClear={clearDueDateTo} placeholder="Do" />}
                   isClearable={false}
-                  className="w-1/2"
+                  className="flex-1"
                 />
               </div>
             </div>
 
             <div>
               <label className="text-xs font-medium text-gray-600 mb-1 block">Išči v opombah</label>
-              <div className="flex items-center border rounded-md px-3 py-1.5 bg-white focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary">
-                <Search className="w-3.5 h-3.5 text-gray-400 mr-2" />
+              <div className="flex items-center border rounded-md px-3 py-2 bg-white focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-shadow">
+                <FileText className="w-4 h-4 text-gray-400 mr-2" />
                 <input 
                   type="text" 
                   placeholder="Besedilo..." 
@@ -568,14 +595,19 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
                   onChange={(e) => setNoteSearch(e.target.value)} 
                   className="flex-1 outline-none bg-transparent text-sm" 
                 />
-                {noteSearch && <X className="w-3.5 h-3.5 text-gray-400 ml-2 cursor-pointer hover:text-red-500" onClick={() => setNoteSearch('')} />}
+                {noteSearch && (
+                  <X 
+                    className="w-4 h-4 text-gray-400 ml-2 cursor-pointer hover:text-red-500 transition-colors" 
+                    onClick={() => setNoteSearch('')} 
+                  />
+                )}
               </div>
             </div>
 
             <div>
               <label className="text-xs font-medium text-gray-600 mb-1 block">Ime storitve</label>
-              <div className="flex items-center border rounded-md px-3 py-1.5 bg-white focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary">
-                <Search className="w-3.5 h-3.5 text-gray-400 mr-2" />
+              <div className="flex items-center border rounded-md px-3 py-2 bg-white focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-shadow">
+                <Tag className="w-4 h-4 text-gray-400 mr-2" />
                 <input 
                   type="text" 
                   placeholder="Ime storitve..." 
@@ -583,7 +615,12 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
                   onChange={(e) => setServiceName(e.target.value)} 
                   className="flex-1 outline-none bg-transparent text-sm" 
                 />
-                {serviceName && <X className="w-3.5 h-3.5 text-gray-400 ml-2 cursor-pointer hover:text-red-500" onClick={() => setServiceName('')} />}
+                {serviceName && (
+                  <X 
+                    className="w-4 h-4 text-gray-400 ml-2 cursor-pointer hover:text-red-500 transition-colors" 
+                    onClick={() => setServiceName('')} 
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -599,7 +636,7 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
               <select 
                 value={sortField} 
                 onChange={(e) => setSortField(e.target.value as SortField)}
-                className="w-full border rounded-md px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full border rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow"
               >
                 {sortOptions.map(opt => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -608,26 +645,26 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
             </div>
             <div>
               <label className="text-xs font-medium text-gray-600 mb-1 block">Smer</label>
-              <div className="flex gap-1.5">
+              <div className="flex gap-2">
                 <button
                   onClick={() => setSortDirection('asc')}
-                  className={`flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-colors ${
+                  className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
                     sortDirection === 'asc' 
-                      ? 'bg-primary text-white' 
+                      ? 'bg-blue-600 text-white shadow-sm' 
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  <SortAsc className="w-3.5 h-3.5 inline mr-1" /> Narašč.
+                  <SortAsc className="w-4 h-4 inline mr-1.5" /> Narašč.
                 </button>
                 <button
                   onClick={() => setSortDirection('desc')}
-                  className={`flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-colors ${
+                  className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
                     sortDirection === 'desc' 
-                      ? 'bg-primary text-white' 
+                      ? 'bg-blue-600 text-white shadow-sm' 
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  <SortDesc className="w-3.5 h-3.5 inline mr-1" /> Padajoče
+                  <SortDesc className="w-4 h-4 inline mr-1.5" /> Padajoče
                 </button>
               </div>
             </div>
@@ -636,9 +673,9 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
               <select 
                 value={secondarySortField || 'number'} 
                 onChange={(e) => setSecondarySortField(e.target.value as SortField)}
-                className="w-full border rounded-md px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full border rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow"
               >
-                <option value="number">Številka</option>
+                <option value="number">Številka računa</option>
                 {sortOptions.filter(opt => opt.value !== sortField).map(opt => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
@@ -646,34 +683,31 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
             </div>
             <div>
               <label className="text-xs font-medium text-gray-600 mb-1 block">Smer sekundarnega</label>
-              <div className="flex gap-1.5">
+              <div className="flex gap-2">
                 <button
                   onClick={() => setSecondarySortDirection('asc')}
-                  className={`flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-colors ${
+                  className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
                     secondarySortDirection === 'asc' 
-                      ? 'bg-purple-600 text-white' 
+                      ? 'bg-purple-600 text-white shadow-sm' 
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  <SortAsc className="w-3.5 h-3.5 inline mr-1" /> Narašč.
+                  <SortAsc className="w-4 h-4 inline mr-1.5" /> Narašč.
                 </button>
                 <button
                   onClick={() => setSecondarySortDirection('desc')}
-                  className={`flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-colors ${
+                  className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
                     secondarySortDirection === 'desc' 
-                      ? 'bg-purple-600 text-white' 
+                      ? 'bg-purple-600 text-white shadow-sm' 
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  <SortDesc className="w-3.5 h-3.5 inline mr-1" /> Padajoče
+                  <SortDesc className="w-4 h-4 inline mr-1.5" /> Padajoče
                 </button>
               </div>
             </div>
           </div>
-          <div className="mt-1.5 text-xs text-gray-400">
-            <span className="font-medium">Trenutno:</span> {sortOptions.find(s => s.value === sortField)?.label} ({sortDirection === 'asc' ? '↑' : '↓'})
-            {secondarySortField && ` → ${sortOptions.find(s => s.value === secondarySortField)?.label} (${secondarySortDirection === 'asc' ? '↑' : '↓'})`}
-          </div>
+          
         </div>
       )}
     </div>

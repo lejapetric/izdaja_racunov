@@ -707,14 +707,7 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
               </div>
             </div>
           </div>
-<<<<<<< HEAD
-          <div className="mt-1.5 text-xs text-gray-400">  
-            <span className="font-medium">Trenutno:</span> {sortOptions.find(s => s.value === sortField)?.label} ({sortDirection === 'asc' ? '↑' : '↓'})
-            {secondarySortField && ` → ${sortOptions.find(s => s.value === secondarySortField)?.label} (${secondarySortDirection === 'asc' ? '↑' : '↓'})`}
-          </div>
-=======
           
->>>>>>> 68c70bf009f77ff33b071de611b2d3f51a39a0af
         </div>
       )}
     </div>

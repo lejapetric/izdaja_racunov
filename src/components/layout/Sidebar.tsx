@@ -9,10 +9,6 @@ const navItems = [
   { id: 'estimates', label: 'Predračuni', icon: Receipt, roles: ['tajnistvo'] },
   { id: 'overdue', label: 'Zapadli računi', icon: AlertCircle, roles: ['tajnistvo'] },
   { id: 'confirmation', label: 'Potrditev računov', icon: CheckCircle, roles: ['direktor'] },
-<<<<<<< HEAD
-=======
-  { id: 'reports', label: 'Poročila in analize', icon: BarChart3, roles: ['tajnistvo', 'direktor'] },
->>>>>>> 68c70bf009f77ff33b071de611b2d3f51a39a0af
   { id: 'settings', label: 'Sistemske nastavitve', icon: Settings, roles: ['admin'] },
 ]
 

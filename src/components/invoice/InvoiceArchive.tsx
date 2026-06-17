@@ -280,6 +280,13 @@ export function InvoiceArchive({ onEditInvoice: _onEditInvoice }: InvoiceArchive
             <div className="flex gap-3">
               <Button 
                 variant="outline" 
+                className="flex items-center gap-2"
+              >
+                <div /> Počisti filtre
+              </Button>
+
+              <Button 
+                variant="outline" 
                 onClick={exportToExcel} 
                 disabled={getCurrentFilteredInvoices().length === 0}
                 className="flex items-center gap-2"

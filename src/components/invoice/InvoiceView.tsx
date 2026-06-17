@@ -1,3 +1,4 @@
+// src/components/invoice/InvoiceView.tsx
 import { useInvoices } from '@/hooks/useInvoices'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -16,8 +17,9 @@ interface InvoiceViewProps {
   onMarkAsPaid?: (invoiceId: string) => void
   onCancel?: (invoice: any) => void
   onAudit?: (invoice: any) => void
-  onDelete?: (invoiceId: string) => void  // <-- NOVO
+  onDelete?: (invoiceId: string) => void
   documentType?: 'invoice' | 'estimate' | 'draft'
+  hideActions?: boolean  // <-- NOVO: za skrivanje akcij
 }
 
 const getItemCode = (item: any) => {
@@ -57,8 +59,9 @@ export function InvoiceView({
   onMarkAsPaid, 
   onCancel, 
   onAudit,
-  onDelete,  // <-- NOVO
-  documentType = 'invoice'
+  onDelete,
+  documentType = 'invoice',
+  hideActions = false  // <-- NOVO
 }: InvoiceViewProps) {
   const { invoices, customers } = useInvoices()
   const invoice = invoices.find(inv => inv.id === invoiceId)
@@ -290,15 +293,20 @@ ${companyData.name}`)
   return (
     <>
       <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-        <DialogContent className="max-w-7xl w-[95vw] h-[90vh] bg-white p-0 flex flex-col [&>button:first-child]:hidden">
+        <DialogContent className={`max-w-7xl w-[95vw] h-[90vh] bg-white p-0 flex flex-col [&>button:first-child]:hidden ${hideActions ? 'max-w-5xl' : ''}`}>
           <DialogHeader className="flex flex-row justify-between items-center border-b pb-3 px-6 pt-6 shrink-0">
             <DialogTitle className="text-gray-700">
               {getDialogTitle()} {invoice.number}
             </DialogTitle>
+            {hideActions && (
+              <Button variant="ghost" size="sm" onClick={onClose} className="shrink-0">
+                <X className="w-4 h-4" />
+              </Button>
+            )}
           </DialogHeader>
           
-          <div className="flex flex-1 overflow-hidden p-6 pt-4 gap-6">
-            <div className="flex-1 overflow-y-auto pr-2">
+          <div className={`flex flex-1 overflow-hidden p-6 pt-4 gap-6 ${hideActions ? 'justify-center' : ''}`}>
+            <div className={`flex-1 overflow-y-auto pr-2 ${hideActions ? 'max-w-4xl' : ''}`}>
               <div ref={printRef} className="bg-white flex flex-col min-h-full relative">
                 {/* Watermark */}
                 <div className="watermark hidden print:hidden" style={{ 
@@ -498,70 +506,71 @@ ${companyData.name}`)
               </div>
             </div>
             
-            {/* Akcije - desna stran */}
-            <div className="w-72 shrink-0 border-l pl-6 action-buttons">
-              <div className="sticky top-0">
-                <h3 className="font-semibold text-lg mb-4">Akcije</h3>
-                <div className="space-y-2">
-                  <Button variant="outline" className="w-full justify-start" onClick={handlePrint}>
-                    <Printer className="w-4 h-4 mr-2" /> Natisni
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start" onClick={() => onEdit?.(invoice)}>
-                    <Edit className="w-4 h-4 mr-2" /> Uredi
-                  </Button>
-                  
-                  {/* Gumb za brisanje - samo za osnutke */}
-                  {documentType === 'draft' && (
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
-                      onClick={handleDelete}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" /> Izbriši
+            {/* Akcije - desna stran - SKRITO KO JE hideActions=true */}
+            {!hideActions && (
+              <div className="w-72 shrink-0 border-l pl-6 action-buttons">
+                <div className="sticky top-0">
+                  <h3 className="font-semibold text-lg mb-4">Akcije</h3>
+                  <div className="space-y-2">
+                    <Button variant="outline" className="w-full justify-start" onClick={handlePrint}>
+                      <Printer className="w-4 h-4 mr-2" /> Natisni
                     </Button>
-                  )}
-                  
-                  <Button variant="outline" className="w-full justify-start" onClick={() => onSendEmail?.(invoice)}>
-                    <Mail className="w-4 h-4 mr-2" /> Pošlji e-mail
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start" onClick={() => onSendPost?.(invoice)}>
-                    <Package className="w-4 h-4 mr-2" /> Pošlji po pošti
-                  </Button>
-                  {documentType === 'estimate' && invoice.status === 'issued' && (
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start" 
-                      onClick={() => {
-                        // Zapri trenutni pogled
-                        onClose()
-                        // Pokliči onEdit s podatki predračuna
-                        onEdit?.({
-                          ...invoice,
-                          _isEstimateConversion: true,  // oznaka da gre za pretvorbo iz predračuna
-                          _sourceType: 'estimate'
-                        })
-                      }}
-                    >
-                      <ArrowRight className="w-4 h-4 mr-2" /> Ustvari račun
+                    <Button variant="outline" className="w-full justify-start" onClick={() => onEdit?.(invoice)}>
+                      <Edit className="w-4 h-4 mr-2" /> Uredi
                     </Button>
-                  )}
-                  {invoice.status !== 'cancelled' && invoice.status !== 'draft' && (
-                    <Button variant="outline" className="w-full justify-start" onClick={() => onCancel?.(invoice)}>
-                      <Ban className="w-4 h-4 mr-2" /> Storniraj
+                    
+                    {/* Gumb za brisanje - samo za osnutke */}
+                    {documentType === 'draft' && (
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
+                        onClick={handleDelete}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" /> Izbriši
+                      </Button>
+                    )}
+                    
+                    <Button variant="outline" className="w-full justify-start" onClick={() => onSendEmail?.(invoice)}>
+                      <Mail className="w-4 h-4 mr-2" /> Pošlji e-mail
                     </Button>
-                  )}
-                  <Button variant="outline" className="w-full justify-start" onClick={() => onAudit?.(invoice)}>
-                    <FileText className="w-4 h-4 mr-2" /> Dnevnik sprememb
-                  </Button>
-                  {documentType === 'invoice' && invoice.status === 'overdue' && (
-                    <Button variant="outline" className="w-full justify-start" onClick={openReminderDialog}>
-                      <Send className="w-4 h-4 mr-2" /> Pošlji opomin
+                    <Button variant="outline" className="w-full justify-start" onClick={() => onSendPost?.(invoice)}>
+                      <Package className="w-4 h-4 mr-2" /> Pošlji po pošti
                     </Button>
-                  )}
+                    {documentType === 'estimate' && invoice.status === 'issued' && (
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start" 
+                        onClick={() => {
+                          // Zapri trenutni pogled
+                          onClose()
+                          // Pokliči onEdit s podatki predračuna
+                          onEdit?.({
+                            ...invoice,
+                            _isEstimateConversion: true,  // oznaka da gre za pretvorbo iz predračuna
+                            _sourceType: 'estimate'
+                          })
+                        }}
+                      >
+                        <ArrowRight className="w-4 h-4 mr-2" /> Ustvari račun
+                      </Button>
+                    )}
+                    {invoice.status !== 'cancelled' && invoice.status !== 'draft' && (
+                      <Button variant="outline" className="w-full justify-start" onClick={() => onCancel?.(invoice)}>
+                        <Ban className="w-4 h-4 mr-2" /> Storniraj
+                      </Button>
+                    )}
+                    <Button variant="outline" className="w-full justify-start" onClick={() => onAudit?.(invoice)}>
+                      <FileText className="w-4 h-4 mr-2" /> Dnevnik sprememb
+                    </Button>
+                    {documentType === 'invoice' && invoice.status === 'overdue' && (
+                      <Button variant="outline" className="w-full justify-start" onClick={openReminderDialog}>
+                        <Send className="w-4 h-4 mr-2" /> Pošlji opomin
+                      </Button>
+                    )}
+                  </div>
                 </div>
-
               </div>
-            </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -626,6 +635,7 @@ ${companyData.name}`)
           </div>
         </DialogContent>
       </Dialog>
+      
 
       {/* MODALNO OKNO ZA BRISANJE OSNUTKA */}
       <Dialog open={deleteDialogOpen} onOpenChange={(isOpen) => !isOpen && setDeleteDialogOpen(false)}>

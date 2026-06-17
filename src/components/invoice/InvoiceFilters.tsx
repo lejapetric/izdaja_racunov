@@ -288,7 +288,7 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
           <div className="flex items-center border rounded-md px-3 py-2 bg-white focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-shadow">
             <input 
               type="text" 
-              placeholder="Išči po številki računa..." 
+              placeholder="Išči po številki računa" 
               value={searchNumber} 
               onChange={(e) => { setSearchNumber(e.target.value); setIsNumberDropdownOpen(true); if (e.target.value === '') setSelectedNumber('') }} 
               className="flex-1 outline-none bg-transparent text-sm" 
@@ -321,7 +321,7 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
           <div className="flex items-center border rounded-md px-3 py-2 bg-white focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-shadow">
             <input 
               type="text" 
-              placeholder="Išči po nazivu kupcu..." 
+              placeholder="Išči po nazivu kupca ali davčni številki..." 
               value={searchCustomer} 
               onChange={(e) => { setSearchCustomer(e.target.value); setIsCustomerDropdownOpen(true); if (e.target.value === '') setSelectedCustomer(null) }} 
               className="flex-1 outline-none bg-transparent text-sm" 

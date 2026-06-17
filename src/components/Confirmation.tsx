@@ -10,21 +10,26 @@ import { InvoiceStatus } from '@/types'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { CheckCircle, Eye, AlertCircle, X } from 'lucide-react'
+import { CheckCircle, Eye, AlertCircle, X, ThumbsDown, AlertTriangle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
 
 // Status opcije za potrjevanje
 const confirmationStatusOptions: { value: InvoiceStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'Vsi' },
   { value: 'issued', label: 'Nepotrjeni' },
   { value: 'confirmed', label: 'Potrjeni' },
+  { value: 'rejected', label: 'Zavrnjeni' },
 ]
 
 export function Confirmation({ setActiveView }: ConfirmationProps) {
   const { invoices, customers, updateInvoice } = useInvoices()
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null)
   const [confirmModalOpen, setConfirmModalOpen] = useState(false)
+  const [rejectModalOpen, setRejectModalOpen] = useState(false)
   const [confirmInvoice, setConfirmInvoice] = useState<any>(null)
+  const [rejectReason, setRejectReason] = useState('')
+  const [rejectError, setRejectError] = useState('')
   
   // Filtri
   const [selectedNumber, setSelectedNumber] = useState('')
@@ -50,9 +55,9 @@ export function Confirmation({ setActiveView }: ConfirmationProps) {
   const [secondarySortField, setSecondarySortField] = useState<any>('number')
   const [secondarySortDirection, setSecondarySortDirection] = useState<'asc' | 'desc'>('asc')
 
-  // Pridobi samo račune s statusom 'issued' ali 'confirmed'
+  // Pridobi samo račune s statusom 'issued', 'confirmed' ali 'rejected'
   const confirmationInvoices = invoices.filter(inv => 
-    inv.status === 'issued' || inv.status === 'confirmed'
+    inv.status === 'issued' || inv.status === 'confirmed' || inv.status === 'rejected'
   )
 
   // Unique podatki za filtre
@@ -85,6 +90,7 @@ export function Confirmation({ setActiveView }: ConfirmationProps) {
   const filteredAll = filterInvoices()
   const filteredPending = filterInvoices('issued')
   const filteredConfirmed = filterInvoices('confirmed')
+  const filteredRejected = filterInvoices('rejected')
 
   const clearAllFilters = () => { 
     setSelectedNumber(''); setSearchNumber(''); setSelectedCustomer(null); setSearchCustomer('')
@@ -102,14 +108,24 @@ export function Confirmation({ setActiveView }: ConfirmationProps) {
     setConfirmModalOpen(true)
   }
 
+  const openRejectModal = (invoice: any) => {
+    setConfirmInvoice(invoice)
+    setRejectReason('')
+    setRejectError('')
+    setRejectModalOpen(true)
+  }
+
   const handleConfirmInvoice = () => {
     if (!confirmInvoice) return
     
+    // Dodaj opombo o potrditvi
+    const note = confirmInvoice.note 
+      ? `${confirmInvoice.note}\n\n[${new Date().toLocaleDateString('sl-SI')} ${new Date().toLocaleTimeString('sl-SI')}] Račun potrdil direktor.` 
+      : `[${new Date().toLocaleDateString('sl-SI')} ${new Date().toLocaleTimeString('sl-SI')}] Račun potrdil direktor.`
+    
     updateInvoice(confirmInvoice.id, {
       status: 'confirmed' as any,
-      note: confirmInvoice.note 
-        ? `${confirmInvoice.note}\n\n[${new Date().toLocaleDateString('sl-SI')}] Račun potrdil direktor.` 
-        : `[${new Date().toLocaleDateString('sl-SI')}] Račun potrdil direktor.`
+      note: note
     })
     
     setConfirmModalOpen(false)
@@ -117,10 +133,37 @@ export function Confirmation({ setActiveView }: ConfirmationProps) {
     setSelectedInvoiceId(null)
   }
 
+  const handleRejectInvoice = () => {
+    if (!confirmInvoice) return
+    
+    // Preveri ali je razlog za zavrnitev vpisan
+    if (!rejectReason.trim()) {
+      setRejectError('Prosimo, napišite razlog za zavrnitev računa.')
+      return
+    }
+    
+    // Dodaj opombo o zavrnitvi
+    const note = confirmInvoice.note 
+      ? `${confirmInvoice.note}\n\n[${new Date().toLocaleDateString('sl-SI')} ${new Date().toLocaleTimeString('sl-SI')}] RAČUN ZAVRNJEN!\nRazlog: ${rejectReason}` 
+      : `[${new Date().toLocaleDateString('sl-SI')} ${new Date().toLocaleTimeString('sl-SI')}] RAČUN ZAVRNJEN!\nRazlog: ${rejectReason}`
+    
+    updateInvoice(confirmInvoice.id, {
+      status: 'rejected' as any,
+      note: note
+    })
+    
+    setRejectModalOpen(false)
+    setConfirmInvoice(null)
+    setSelectedInvoiceId(null)
+    setRejectReason('')
+    setRejectError('')
+  }
+
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'issued': return 'Nepotrjen'
       case 'confirmed': return 'Potrjen'
+      case 'rejected': return 'Zavrnjen'
       default: return status
     }
   }
@@ -129,12 +172,14 @@ export function Confirmation({ setActiveView }: ConfirmationProps) {
     switch (status) {
       case 'issued': return 'bg-yellow-100 text-yellow-800'
       case 'confirmed': return 'bg-green-100 text-green-800'
+      case 'rejected': return 'bg-red-100 text-red-800'
       default: return 'bg-gray-100 text-gray-800'
     }
   }
 
   // Število čakajočih na potrditev
   const pendingCount = confirmationInvoices.filter(inv => inv.status === 'issued').length
+  const rejectedCount = confirmationInvoices.filter(inv => inv.status === 'rejected').length
 
   return (
     <div className="space-y-6">
@@ -145,6 +190,12 @@ export function Confirmation({ setActiveView }: ConfirmationProps) {
             <AlertCircle className="w-4 h-4 mr-1.5" />
             {pendingCount} Nepotrjen
           </Badge>
+          {rejectedCount > 0 && (
+            <Badge className="bg-red-100 text-red-800 px-3 py-1.5 text-sm animate-pulse">
+              <AlertTriangle className="w-4 h-4 mr-1.5" />
+              {rejectedCount} Zavrnjen
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -172,10 +223,13 @@ export function Confirmation({ setActiveView }: ConfirmationProps) {
           />
           
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="all">Vsi ({filteredAll.length})</TabsTrigger>
               <TabsTrigger value="pending">Čaka na potrditev ({filteredPending.length})</TabsTrigger>
               <TabsTrigger value="confirmed">Potrjeni ({filteredConfirmed.length})</TabsTrigger>
+              <TabsTrigger value="rejected" className="text-red-600">
+                Zavrnjeni ({filteredRejected.length})
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="all">
@@ -183,6 +237,7 @@ export function Confirmation({ setActiveView }: ConfirmationProps) {
                 invoices={filteredAll}
                 onInvoiceClick={handleInvoiceClick}
                 onConfirm={openConfirmModal}
+                onReject={openRejectModal}
                 getStatusLabel={getStatusLabel}
                 getStatusColor={getStatusColor}
               />
@@ -192,6 +247,7 @@ export function Confirmation({ setActiveView }: ConfirmationProps) {
                 invoices={filteredPending}
                 onInvoiceClick={handleInvoiceClick}
                 onConfirm={openConfirmModal}
+                onReject={openRejectModal}
                 getStatusLabel={getStatusLabel}
                 getStatusColor={getStatusColor}
               />
@@ -201,8 +257,20 @@ export function Confirmation({ setActiveView }: ConfirmationProps) {
                 invoices={filteredConfirmed}
                 onInvoiceClick={handleInvoiceClick}
                 onConfirm={openConfirmModal}
+                onReject={openRejectModal}
                 getStatusLabel={getStatusLabel}
                 getStatusColor={getStatusColor}
+              />
+            </TabsContent>
+            <TabsContent value="rejected">
+              <ConfirmationTable 
+                invoices={filteredRejected}
+                onInvoiceClick={handleInvoiceClick}
+                onConfirm={openConfirmModal}
+                onReject={openRejectModal}
+                getStatusLabel={getStatusLabel}
+                getStatusColor={getStatusColor}
+                isRejectedTab={true}
               />
             </TabsContent>
           </Tabs>
@@ -221,75 +289,21 @@ export function Confirmation({ setActiveView }: ConfirmationProps) {
         </CardContent>
       </Card>
 
-      {/* Potrditveni modal */}
-      <Dialog open={confirmModalOpen} onOpenChange={setConfirmModalOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-green-700">
-              <CheckCircle className="w-5 h-5 text-green-600" />
-              Potrditev računa
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-4 space-y-4">
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <p className="text-sm text-yellow-800">
-                S tem dejanjem potrjujete račun <span className="font-semibold">{confirmInvoice?.number}</span>
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <span className="text-gray-500">Kupec:</span>
-                <div className="font-medium">{confirmInvoice?.customerName}</div>
-              </div>
-              <div>
-                <span className="text-gray-500">Znesek:</span>
-                <div className="font-medium">{formatCurrency(confirmInvoice?.totalGross)}</div>
-              </div>
-              <div>
-                <span className="text-gray-500">Datum izdaje:</span>
-                <div className="font-medium">{formatDate(confirmInvoice?.issueDate)}</div>
-              </div>
-              <div>
-                <span className="text-gray-500">Datum zapadlosti:</span>
-                <div className="font-medium">{formatDate(confirmInvoice?.dueDate)}</div>
-              </div>
-            </div>
-            <p className="text-xs text-gray-500">
-              Potrditev računa pomeni, da ste preverili vse podatke in se strinjate z izdanim računom.
-            </p>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setConfirmModalOpen(false)
-                setConfirmInvoice(null)
-              }}
-            >
-              <X className="w-4 h-4 mr-2" /> Prekliči
-            </Button>
-            <Button 
-              onClick={handleConfirmInvoice} 
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <CheckCircle className="w-4 h-4 mr-2" /> Potrdi račun
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      
 
-      <InvoiceView 
-        invoiceId={selectedInvoiceId} 
-        open={!!selectedInvoiceId} 
-        onClose={() => setSelectedInvoiceId(null)}
-        onEdit={() => {}}
-        onSendEmail={() => {}}
-        onSendPost={() => {}}
-        onMarkAsPaid={() => {}}
-        onCancel={() => {}}
-        onAudit={() => {}}
-        documentType="invoice" 
-      />
+<InvoiceView 
+  invoiceId={selectedInvoiceId} 
+  open={!!selectedInvoiceId} 
+  onClose={() => setSelectedInvoiceId(null)}
+  onEdit={() => {}}
+  onSendEmail={() => {}}
+  onSendPost={() => {}}
+  onMarkAsPaid={() => {}}
+  onCancel={() => {}}
+  onAudit={() => {}}
+  documentType="invoice" 
+  hideActions={true}  // <-- DODANO
+/>
     </div>
   )
 }
@@ -299,11 +313,21 @@ interface ConfirmationTableProps {
   invoices: any[]
   onInvoiceClick: (invoice: any) => void
   onConfirm: (invoice: any) => void
+  onReject: (invoice: any) => void
   getStatusLabel: (status: string) => string
   getStatusColor: (status: string) => string
+  isRejectedTab?: boolean
 }
 
-function ConfirmationTable({ invoices, onInvoiceClick, onConfirm, getStatusLabel, getStatusColor }: ConfirmationTableProps) {
+function ConfirmationTable({ 
+  invoices, 
+  onInvoiceClick, 
+  onConfirm, 
+  onReject, 
+  getStatusLabel, 
+  getStatusColor,
+  isRejectedTab = false 
+}: ConfirmationTableProps) {
   return (
     <Table>
       <TableHeader>
@@ -315,55 +339,96 @@ function ConfirmationTable({ invoices, onInvoiceClick, onConfirm, getStatusLabel
           <TableHead className="px-4 py-3 text-right">DDV</TableHead>
           <TableHead className="px-4 py-3 text-right">Bruto</TableHead>
           <TableHead className="px-4 py-3 text-center w-[150px]">Status</TableHead>
-          <TableHead className="px-4 py-3 text-center w-[200px]"></TableHead>
+          <TableHead className="px-4 py-3 text-center w-[280px]">Akcije</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {invoices.map(inv => (
-          <TableRow 
-            key={inv.id} 
-            className={`${inv.status === 'issued' ? 'bg-yellow-50/50' : ''} cursor-pointer hover:bg-gray-50 transition-colors`}
-          >
-            <TableCell 
-              className="px-2 py-2"
-              onClick={() => onInvoiceClick(inv)}
+        {invoices.map(inv => {
+          const isRejected = inv.status === 'rejected'
+          const isPending = inv.status === 'issued'
+          
+          return (
+            <TableRow 
+              key={inv.id} 
+              className={`
+                ${isPending ? 'bg-yellow-50/50' : ''} 
+                ${isRejected ? 'bg-red-50/50' : ''} 
+                ${isRejected && isRejectedTab ? 'animate-pulse' : ''}
+                cursor-pointer hover:bg-gray-50 transition-colors
+              `}
             >
-              <span className="hover:font-bold hover:underline hover:text-blue-600 transition-all duration-200 cursor-pointer">
-                {inv.number}
-              </span>
-            </TableCell>
-            <TableCell className="px-4 py-2 text-center" onClick={() => onInvoiceClick(inv)}>{formatDate(inv.issueDate)}</TableCell>
-            <TableCell 
-              className="px-4 py-2"
-              onClick={() => onInvoiceClick(inv)}
-            >
-              <div className="font-medium">{inv.customerName}</div>
-              <div className="text-xs text-gray-500">{inv.customerTaxId}</div>
-            </TableCell>
-            <TableCell className="px-4 py-2 text-right" onClick={() => onInvoiceClick(inv)}>{formatCurrency(inv.totalNet)}</TableCell>
-            <TableCell className="px-4 py-2 text-right" onClick={() => onInvoiceClick(inv)}>{formatCurrency(inv.totalVat)}</TableCell>
-            <TableCell className="px-4 py-2 text-right font-semibold" onClick={() => onInvoiceClick(inv)}>{formatCurrency(inv.totalGross)}</TableCell>
-            <TableCell className="px-4 py-2 text-center" onClick={() => onInvoiceClick(inv)}>
-              <Badge className={getStatusColor(inv.status)}>
-                {getStatusLabel(inv.status)}
-              </Badge>
-            </TableCell>
-            <TableCell className="px-4 py-2 text-center" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-center gap-2">
-                {inv.status === 'issued' && (
-                  <Button 
-                    size="sm" 
-                    variant="default"
-                    className="text-xs h-7 px-2 bg-green-600 hover:bg-green-700"
-                    onClick={() => onConfirm(inv)}
-                  >
-                    <CheckCircle className="w-3.5 h-3.5 mr-1" /> Potrdi Račun
-                  </Button>
-                )}
-              </div>
-            </TableCell>
-          </TableRow>
-        ))}
+              <TableCell 
+                className="px-2 py-2"
+                onClick={() => onInvoiceClick(inv)}
+              >
+                <span className="hover:font-bold hover:underline hover:text-blue-600 transition-all duration-200 cursor-pointer">
+                  {inv.number}
+                </span>
+              </TableCell>
+              <TableCell className="px-4 py-2 text-center" onClick={() => onInvoiceClick(inv)}>{formatDate(inv.issueDate)}</TableCell>
+              <TableCell 
+                className="px-4 py-2"
+                onClick={() => onInvoiceClick(inv)}
+              >
+                <div className="font-medium">{inv.customerName}</div>
+                <div className="text-xs text-gray-500">{inv.customerTaxId}</div>
+              </TableCell>
+              <TableCell className="px-4 py-2 text-right" onClick={() => onInvoiceClick(inv)}>{formatCurrency(inv.totalNet)}</TableCell>
+              <TableCell className="px-4 py-2 text-right" onClick={() => onInvoiceClick(inv)}>{formatCurrency(inv.totalVat)}</TableCell>
+              <TableCell className="px-4 py-2 text-right font-semibold" onClick={() => onInvoiceClick(inv)}>{formatCurrency(inv.totalGross)}</TableCell>
+              <TableCell className="px-4 py-2 text-center" onClick={() => onInvoiceClick(inv)}>
+                <Badge className={`
+                  ${getStatusColor(inv.status)}
+                  ${isRejected && isRejectedTab ? 'animate-pulse border-2 border-red-400' : ''}
+                `}>
+                  {getStatusLabel(inv.status)}
+                </Badge>
+              </TableCell>
+              <TableCell className="px-4 py-2 text-center" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-center gap-2">
+                  {inv.status === 'issued' && (
+                    <>
+                      <Button 
+                        size="sm" 
+                        variant="default"
+                        className="text-xs h-7 px-2 bg-green-600 hover:bg-green-700"
+                        onClick={() => onConfirm(inv)}
+                      >
+                        <CheckCircle className="w-3.5 h-3.5 mr-1" /> Potrdi
+                      </Button>
+                     
+                    </>
+                  )}
+                  {inv.status === 'confirmed' && (
+                    <span className="text-xs text-gray-500 flex items-center gap-1">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      Potrjen
+                    </span>
+                  )}
+                  {inv.status === 'rejected' && (
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-xs text-red-600 flex items-center gap-1">
+                        <AlertTriangle className="w-4 h-4" />
+                        Zavrnjen - čaka na popravek
+                      </span>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        className="text-xs h-6 px-2 border-yellow-400 text-yellow-700 hover:bg-yellow-50"
+                        onClick={() => {
+                          // Odpri invoice view za pregled
+                          onInvoiceClick(inv)
+                        }}
+                      >
+                        <Eye className="w-3 h-3 mr-1" /> Poglej napako
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </TableCell>
+            </TableRow>
+          )
+        })}
         {invoices.length === 0 && (
           <TableRow>
             <TableCell colSpan={8} className="text-center text-gray-400 py-8">

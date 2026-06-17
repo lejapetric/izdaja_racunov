@@ -77,6 +77,13 @@ export function InvoiceArchiveTable({ invoices, customers, onInvoiceClick }: Inv
     return mockPayments[invoiceId] || { paid: 0, remaining: 0, percentage: 0 }
   }
 
+  // Preveri ali je račun izdan (vključno s poslanimi)
+  const isIssuedInvoice = (inv: Invoice) => {
+    const status = inv.status
+    // Izdani računi: sent (poslani), paid (plačani), partially_paid (delno plačani), overdue (zapadli)
+    return status === 'sent' || status === 'paid' || status === 'partially_paid' || status === 'overdue' || status === 'issued'
+  }
+
   return (
     <div className="overflow-x-auto">
       <Table>
@@ -102,28 +109,22 @@ export function InvoiceArchiveTable({ invoices, customers, onInvoiceClick }: Inv
             // Pridobi podatke o plačilu
             const paymentInfo = getPaymentInfo(inv.id)
             const isFullyPaid = paymentInfo.remaining <= 0 && paymentInfo.paid > 0
-            const isEstimate = inv.number?.startsWith('PR')
-            const isDraft = inv.status === 'draft' || inv.number === 'OSNUTEK'
             
-            // Za predračune in osnutke prikažemo 0
-            const displayPaid = isEstimate || isDraft ? 0 : paymentInfo.paid
-            const displayRemaining = isEstimate || isDraft ? inv.totalGross : paymentInfo.remaining
+            // Ali naj prikažemo podatke o plačilu?
+            const showPaymentData = isIssuedInvoice(inv)
             
             return (
               <TableRow 
                 key={inv.id} 
-                className={`${inv.status === 'overdue' ? 'bg-red-50' : ''} cursor-pointer hover:bg-gray-100 transition-colors`}
+                className={`${inv.status === 'overdue' ? 'bg-red-50' : ''} cursor-pointer hover:bg-blue-100 transition-colors`}
                 onClick={() => onInvoiceClick(inv)}
               >
                 <TableCell className="px-2 py-1 whitespace-nowrap text-xs lg:text-sm">
-                 <span 
-  className={`
-    hover:font-bold hover:underline hover:text-black-600 transition-all duration-200 cursor-pointer
-    ${inv.number && inv.number !== 'OSNUTEK' ? 'text-gray-900' : 'text-gray-500 italic'}
-  `}
->
-  {inv.number || 'Osnutek'}
-</span>
+                  <span 
+                    className="text-blue-600 underline hover:text-blue-800 hover:font-semibold transition-all duration-200 cursor-pointer"
+                  >
+                    {inv.number || 'Osnutek'}
+                  </span>
                 </TableCell>
                 <TableCell className="px-2 py-1 text-center whitespace-nowrap text-xs lg:text-sm">{formatDate(inv.issueDate)}</TableCell>
                 <TableCell className="px-2 py-1 whitespace-nowrap text-xs lg:text-sm">
@@ -134,42 +135,40 @@ export function InvoiceArchiveTable({ invoices, customers, onInvoiceClick }: Inv
                 <TableCell className="px-2 py-1 text-right whitespace-nowrap text-xs lg:text-sm">{formatCurrency(inv.totalVat)}</TableCell>
                 <TableCell className="px-2 py-1 text-right font-semibold whitespace-nowrap text-xs lg:text-sm">{formatCurrency(inv.totalGross)}</TableCell>
                 
-{/* Stolpec Plačano */}
-<TableCell className="px-2 py-1 text-right whitespace-nowrap text-xs lg:text-sm">
-  {isEstimate || isDraft ? (
-    <span className="text-gray-400">/</span>
-  ) : (
-    <div className="flex flex-col items-end">
-      <span className={`font-medium ${isFullyPaid ? 'text-green-600' : ''}`}>
-        {formatCurrency(displayPaid)}
-      </span>
-      {paymentInfo.percentage > 0 && paymentInfo.percentage < 100 && (
-        <span className="text-[10px] text-gray-400">
-          {paymentInfo.percentage}% plačano
-        </span>
-      )}
-
-    </div>
-  )}
-</TableCell>
-                
-                {/* Stolpec Preostanek */}
+                {/* Stolpec Plačano - prikaži za vse izdane račune (vključno s poslanimi) */}
                 <TableCell className="px-2 py-1 text-right whitespace-nowrap text-xs lg:text-sm">
-                  {isEstimate || isDraft ? (
-                    <span className="text-gray-400">/</span>
+                  {showPaymentData ? (
+                    <div className="flex flex-col items-end">
+                      <span className={`font-medium ${isFullyPaid ? 'text-green-600' : ''}`}>
+                        {formatCurrency(paymentInfo.paid)}
+                      </span>
+                      {paymentInfo.percentage > 0 && paymentInfo.percentage < 100 && (
+                        <span className="text-[10px] text-gray-400">
+                          {paymentInfo.percentage}% plačano
+                        </span>
+                      )}
+                    </div>
                   ) : (
-                    <span className={`font-medium ${displayRemaining > 0 ? 'text-red-600' : 'text-black-600'}`}>
-                      {formatCurrency(displayRemaining)}
-                    </span>
+                    <span className="text-gray-400">/</span>
                   )}
                 </TableCell>
                 
-
-<TableCell className="px-2 py-1 text-center whitespace-nowrap text-xs lg:text-sm">
-  <Badge className={`${statusColors[inv.status]} text-[10px] lg:text-xs`}>
-    {statusLabels[inv.status] || inv.status}
-  </Badge>
-</TableCell>
+                {/* Stolpec Preostanek - prikaži za vse izdane račune (vključno s poslanimi) */}
+                <TableCell className="px-2 py-1 text-right whitespace-nowrap text-xs lg:text-sm">
+                  {showPaymentData ? (
+                    <span className={`font-medium ${paymentInfo.remaining > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {formatCurrency(paymentInfo.remaining)}
+                    </span>
+                  ) : (
+                    <span className="text-gray-400">/</span>
+                  )}
+                </TableCell>
+                
+                <TableCell className="px-2 py-1 text-center whitespace-nowrap text-xs lg:text-sm">
+                  <Badge className={`${statusColors[inv.status]} text-[10px] lg:text-xs`}>
+                    {statusLabels[inv.status] || inv.status}
+                  </Badge>
+                </TableCell>
                 <TableCell className="px-2 py-1 text-center whitespace-nowrap text-xs lg:text-sm">
                   {inv.dueDate && inv.dueDate !== 'null' ? (
                     <>

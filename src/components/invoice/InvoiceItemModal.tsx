@@ -242,7 +242,7 @@ export function InvoiceItemModal({ open, onOpenChange, editingItem, onSave, serv
                 <div className="text-md font-medium">{formatCurrency(vatAmount)}</div>
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block">Bruto znesek</label>
+                <label className="text-sm font-medium mb-1 block">Skupni znesek</label>
                 <div className="text-md font-bold text-blue-600">{formatCurrency(gross)}</div>
               </div>
             </div>

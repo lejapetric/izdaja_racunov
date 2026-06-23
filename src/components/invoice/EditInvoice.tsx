@@ -612,13 +612,15 @@ export function EditInvoice({ editingInvoice, onClose, onSaved }: EditInvoicePro
               >
                 <Save className="w-4 h-4 mr-2" /> Shrani predračun
               </Button>
+
               <Button 
-                onClick={handleConvertToInvoice} 
-                disabled={!selectedCustomer || items.length === 0 || !issueDate || !serviceDateFrom || !serviceDateTo || !dueDate || !!dateError}
+                onClick={handleSave} 
+                disabled={!selectedCustomer || items.length === 0 || !issueDate || !serviceDateFrom || !serviceDateTo || !!dateError}
                 variant="default"
               >
-                <CheckCircle className="w-4 h-4 mr-2" /> Izdaj račun
+                <Save className="w-4 h-4 mr-2" /> Izdaj račun
               </Button>
+
             </>
           )}
           

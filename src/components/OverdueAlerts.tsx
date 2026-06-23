@@ -372,13 +372,8 @@ export function OverdueInvoices() {
             clearAllFilters={clearAllFilters}
           />
           
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="all">Vsi ({filteredAll.length})</TabsTrigger>
-              <TabsTrigger value="overdue">Zapadli ({filteredOverdue.length})</TabsTrigger>
-              <TabsTrigger value="paid">Plačani ({filteredPaid.length})</TabsTrigger>
-              <TabsTrigger value="cancelled">Stornirani ({filteredCancelled.length})</TabsTrigger>
-            </TabsList>
+<Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4 border">
+
             
             <TabsContent value="all">
               <OverdueTable 
@@ -735,16 +730,16 @@ function OverdueTable({ invoices, customers, reminders, onInvoiceClick, onSendEm
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="px-1 py-3 text-left w-[110px]">Številka</TableHead>
+          
+          <TableHead className="px-1 py-3 text-left w-[110px]">Številka računa</TableHead>
           <TableHead className="px-4 py-3 text-center">Datum izdaje</TableHead>
           <TableHead className="px-4 py-3 text-left w-[240px]">Kupec</TableHead>
           <TableHead className="px-4 py-3 text-right">Neto</TableHead>
           <TableHead className="px-4 py-3 text-right">DDV</TableHead>
-          <TableHead className="px-4 py-3 text-right">Bruto</TableHead>
+          <TableHead className="px-4 py-3 text-right">Skupni znesek</TableHead>
           <TableHead className="px-4 py-3 text-center w-[150px]">Status</TableHead>
           <TableHead className="px-4 py-3 text-center w-[140px]">Zapadlost</TableHead>
-          <TableHead className="px-4 py-3 text-center w-[100px]">Opomini</TableHead>
-          <TableHead className="px-4 py-3 text-center w-[150px]">Akcije</TableHead>
+          <TableHead className="px-4 py-3 w-[220px] text-center w-[100px]">Opomini</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -759,9 +754,14 @@ function OverdueTable({ invoices, customers, reminders, onInvoiceClick, onSendEm
               className="cursor-pointer hover:bg-gray-50 transition-colors"
               onClick={() => onInvoiceClick(inv)}
             >
-              <TableCell className="px-2 py-2">
-                <span>{inv.number}</span>
-              </TableCell>
+                           <TableCell 
+  className="px-2 py-2"
+  onClick={() => onInvoiceClick(inv)}
+>
+  <span className="text-blue-600 hover:text-blue-800 underline hover:no-underline transition-all duration-200 cursor-pointer font-medium">
+    {inv.number}
+  </span>
+</TableCell>
               <TableCell className="px-4 py-2 text-center">{formatDate(inv.issueDate)}</TableCell>
               <TableCell className="px-4 py-2">
                 <div className="font-medium">{inv.customerName}</div>
@@ -804,17 +804,7 @@ function OverdueTable({ invoices, customers, reminders, onInvoiceClick, onSendEm
                 </div>
               </TableCell>
               
-              {/* Stolpec Akcije - SAMO gumb "Več o računu" */}
-              <TableCell className="px-4 py-2 text-center" onClick={(e) => e.stopPropagation()}>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  className="text-xs h-7 px-2"
-                  onClick={() => onInvoiceClick(inv)}
-                >
-                  Več o računu
-                </Button>
-              </TableCell>
+
             </TableRow>
           )
         })}

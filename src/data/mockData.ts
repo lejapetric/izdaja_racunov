@@ -54,19 +54,21 @@ export const statusLabels: Record<string, string> = {
   paid: 'Plačan',
   partially_paid: 'Delno plačan',
   cancelled: 'Storniran',
-  converted: 'Spremenjen v račun'
+  converted: 'Pretvorjen',
+  rejected: 'Zavrnjen',
 }
 
 export const statusColors: Record<string, string> = {
-  draft: 'bg-gray-300 text-gray-800',
-  issued: 'bg-blue-100 text-blue-800',
-  confirmed: 'bg-yellow-100 text-yellow-800',
-  sent: 'bg-green-100 text-green-800',
-  overdue: 'bg-red-100 text-red-800',
-  paid: 'bg-green-300 text-emerald-800',
-  partially_paid: 'bg-orange-100 text-orange-800',
-  cancelled: 'bg-red-400 text-red-800',
-  converted: 'bg-purple-100 text-purple-800',
+  draft: 'bg-gray-300 text-gray-800',           // siva
+  issued: 'bg-blue-100 text-blue-800',          // modra
+  unconfirmed: 'bg-yellow-100 text-yellow-800', // rumena
+  sent: 'bg-green-100 text-green-800',          // nežna zelena
+  overdue: 'bg-red-100 text-red-800',           // rdeča (zapadel)
+  paid: 'bg-green-300 text-emerald-800',        // močna zelena
+  partially_paid: 'bg-amber-700 text-white',    // rjava
+  cancelled: 'bg-red-400 text-red-800',         // rdeča (storniran)
+  converted: 'bg-purple-100 text-purple-800',   // vijolična
+  rejected: 'bg-orange-100 text-orange-800',    // oranžna
 }
 
 export const actionIcons: Record<string, { icon: any; color: string; bgColor: string }> = {
@@ -266,7 +268,7 @@ export const initialEstimates: Invoice[] = [
       const totals = calculateTotalsForInvoice(items, 0)
       return { totalNet: totals.totalNetAfterItemDiscounts, totalVat: totals.totalVat, totalGross: totals.totalGross, vatBreakdown: totals.vatBreakdown, totalNetBeforeDiscount: totals.totalNetBeforeDiscount, totalItemDiscounts: totals.totalItemDiscounts, invoiceDiscountAmount: totals.invoiceDiscountAmount, finalNetBase: totals.finalNetBase }
     })(),
-    status: 'sent',
+    status: 'issued',
     sentAt: '2026-05-16T09:00:00Z',
     note: 'Predračun za parcelacijo.',
     createdAt: '2026-05-15T14:00:00Z',
@@ -292,7 +294,7 @@ export const initialEstimates: Invoice[] = [
       const totals = calculateTotalsForInvoice(items, 5)
       return { totalNet: totals.totalNetAfterItemDiscounts, totalVat: totals.totalVat, totalGross: totals.totalGross, vatBreakdown: totals.vatBreakdown, totalNetBeforeDiscount: totals.totalNetBeforeDiscount, totalItemDiscounts: totals.totalItemDiscounts, invoiceDiscountAmount: totals.invoiceDiscountAmount, finalNetBase: totals.finalNetBase }
     })(),
-    status: 'issued',
+    status: 'paid',
     note: 'Predračun za katastrsko izmero.',
     createdAt: '2026-05-20T10:30:00Z',
     updatedAt: '2026-05-20T10:30:00Z',
@@ -610,6 +612,8 @@ export const initialOverdueInvoices: Invoice[] = [
 export const initialInvoices: Invoice[] = [
   // Obstoječi računi
   {
+
+    
     id: 'inv1',
     number: 'R-2025-0047',
     customerId: 'c1',
@@ -653,6 +657,249 @@ export const initialInvoices: Invoice[] = [
     updatedAt: '2025-07-10T14:00:00Z',
     paidAt: '2025-07-10T14:00:00Z',
   } as Invoice,
+  // DODATNI RAČUNI ZA BOLJŠO PREGLEDNOST (vsaj 2 primera vsakega statusa)
+
+// 1. DODATNI OSNUTKI (draft)
+{
+  id: 'draft2',
+  number: 'OSNUTEK-002',
+  customerId: 'c3',
+  customerName: 'Stanislav Horvat',
+  customerTaxId: 'SI11223344',
+  customerRegistrationNumber: '',
+  customerAddress: 'Cesta v Mestni log 8, 1000 Ljubljana',
+  issueDate: '2026-06-15',
+  serviceDateFrom: '2026-06-10',
+  serviceDateTo: '2026-06-14',
+  dueDate: '2026-07-15',
+  paymentTermDays: 30,
+  items: createItems([{ serviceId: 's1', quantity: 2, parcelNumber: '555/2', cadastralMunicipality: '1434 Šiška' }]),
+  discountPercent: 0,
+  ...(() => {
+    const items = createItems([{ serviceId: 's1', quantity: 2, parcelNumber: '555/2', cadastralMunicipality: '1434 Šiška' }])
+    const totals = calculateTotalsForInvoice(items, 0)
+    return { totalNet: totals.totalNetAfterItemDiscounts, totalVat: totals.totalVat, totalGross: totals.totalGross, vatBreakdown: totals.vatBreakdown }
+  })(),
+  status: 'draft',
+  note: 'Osnutek - čaka na dokončanje.',
+  createdAt: '2026-06-15T08:00:00Z',
+  updatedAt: '2026-06-15T08:00:00Z',
+} as Invoice,
+
+// 2. DODATNI NEPOTRJENI (unconfirmed)
+{
+  id: 'unconf1',
+  number: 'R-2026-0001',
+  customerId: 'c1',
+  customerName: 'Občina Kranj',
+  customerTaxId: '12345678',
+  customerRegistrationNumber: '99887123',
+  customerAddress: 'Slovenski trg 1, 4000 Kranj',
+  issueDate: '2026-06-01',
+  serviceDateFrom: '2026-05-25',
+  serviceDateTo: '2026-05-30',
+  dueDate: '2026-07-01',
+  paymentTermDays: 30,
+  items: createItems([{ serviceId: 's2', quantity: 1, parcelNumber: '325/5', cadastralMunicipality: '1434 Šiška' }]),
+  discountPercent: 0,
+  ...(() => {
+    const items = createItems([{ serviceId: 's2', quantity: 1, parcelNumber: '325/5', cadastralMunicipality: '1434 Šiška' }])
+    const totals = calculateTotalsForInvoice(items, 0)
+    return { totalNet: totals.totalNetAfterItemDiscounts, totalVat: totals.totalVat, totalGross: totals.totalGross, vatBreakdown: totals.vatBreakdown }
+  })(),
+  status: 'unconfirmed',
+  note: 'Čaka na potrditev direktorja.',
+  createdAt: '2026-06-01T09:00:00Z',
+  updatedAt: '2026-06-01T09:00:00Z',
+} as Invoice,
+
+{
+  id: 'unconf2',
+  number: 'R-2026-0002',
+  customerId: 'c4',
+  customerName: 'Občina Ljubljana',
+  customerTaxId: '56789012',
+  customerRegistrationNumber: '3456789',
+  customerAddress: 'Mestni trg 1, 1000 Ljubljana',
+  issueDate: '2026-06-05',
+  serviceDateFrom: '2026-06-01',
+  serviceDateTo: '2026-06-04',
+  dueDate: '2026-07-05',
+  paymentTermDays: 30,
+  items: createItems([{ serviceId: 's4', quantity: 3, parcelNumber: '1000/2', cadastralMunicipality: '1000 Ljubljana' }]),
+  discountPercent: 5,
+  ...(() => {
+    const items = createItems([{ serviceId: 's4', quantity: 3, parcelNumber: '1000/2', cadastralMunicipality: '1000 Ljubljana' }])
+    const totals = calculateTotalsForInvoice(items, 5)
+    return { totalNet: totals.totalNetAfterItemDiscounts, totalVat: totals.totalVat, totalGross: totals.totalGross, vatBreakdown: totals.vatBreakdown }
+  })(),
+  status: 'unconfirmed',
+  note: 'Čaka na potrditev.',
+  createdAt: '2026-06-05T10:00:00Z',
+  updatedAt: '2026-06-05T10:00:00Z',
+} as Invoice,
+
+// 3. DODATNI IZDANI (issued) - poleg obstoječih
+{
+  id: 'issued1',
+  number: 'R-2026-0003',
+  customerId: 'c5',
+  customerName: 'Gradnja Marles d.o.o.',
+  customerTaxId: 'SI44332211',
+  customerRegistrationNumber: '8765432',
+  customerAddress: 'Poslovna cona A 12, 2000 Maribor',
+  issueDate: '2026-06-10',
+  serviceDateFrom: '2026-06-05',
+  serviceDateTo: '2026-06-09',
+  dueDate: '2026-07-10',
+  paymentTermDays: 30,
+  items: createItems([{ serviceId: 's3', quantity: 2, parcelNumber: '333/8', cadastralMunicipality: '2000 Maribor' }]),
+  discountPercent: 0,
+  ...(() => {
+    const items = createItems([{ serviceId: 's3', quantity: 2, parcelNumber: '333/8', cadastralMunicipality: '2000 Maribor' }])
+    const totals = calculateTotalsForInvoice(items, 0)
+    return { totalNet: totals.totalNetAfterItemDiscounts, totalVat: totals.totalVat, totalGross: totals.totalGross, vatBreakdown: totals.vatBreakdown }
+  })(),
+  status: 'rejected',
+  note: 'Izdan račun - pripravljen za pošiljanje.',
+  createdAt: '2026-06-10T11:00:00Z',
+  updatedAt: '2026-06-10T11:00:00Z',
+} as Invoice,
+
+// 4. DODATNI ZAVRNJENI (rejected)
+{
+  id: 'rej1',
+  number: 'R-2026-0004',
+  customerId: 'c6',
+  customerName: 'Geodetski zavod Slovenije',
+  customerTaxId: 'SI99887766',
+  customerRegistrationNumber: '12345678',
+  customerAddress: 'Dimičeva ulica 12, 1000 Ljubljana',
+  issueDate: '2026-06-12',
+  serviceDateFrom: '2026-06-08',
+  serviceDateTo: '2026-06-11',
+  dueDate: '2026-07-12',
+  paymentTermDays: 30,
+  items: createItems([{ serviceId: 's1', quantity: 4, parcelNumber: '888/3', cadastralMunicipality: '1000 Ljubljana' }]),
+  discountPercent: 0,
+  ...(() => {
+    const items = createItems([{ serviceId: 's1', quantity: 4, parcelNumber: '888/3', cadastralMunicipality: '1000 Ljubljana' }])
+    const totals = calculateTotalsForInvoice(items, 0)
+    return { totalNet: totals.totalNetAfterItemDiscounts, totalVat: totals.totalVat, totalGross: totals.totalGross, vatBreakdown: totals.vatBreakdown }
+  })(),
+  status: 'rejected',
+  note: 'Zavrnjen - potrebne popravke.',
+  createdAt: '2026-06-12T08:00:00Z',
+  updatedAt: '2026-06-14T09:00:00Z',
+} as Invoice,
+
+{
+  id: 'rej2',
+  number: 'R-2026-0005',
+  customerId: 'c7',
+  customerName: 'Miran Kobal',
+  customerTaxId: 'SI55667788',
+  customerRegistrationNumber: '',
+  customerAddress: 'Prešernova 5, 4000 Kranj',
+  issueDate: '2026-06-14',
+  serviceDateFrom: '2026-06-10',
+  serviceDateTo: '2026-06-13',
+  dueDate: '2026-07-14',
+  paymentTermDays: 30,
+  items: createItems([{ serviceId: 's2', quantity: 1, parcelNumber: '555/3', cadastralMunicipality: '1434 Šiška' }]),
+  discountPercent: 10,
+  ...(() => {
+    const items = createItems([{ serviceId: 's2', quantity: 1, parcelNumber: '555/3', cadastralMunicipality: '1434 Šiška' }])
+    const totals = calculateTotalsForInvoice(items, 10)
+    return { totalNet: totals.totalNetAfterItemDiscounts, totalVat: totals.totalVat, totalGross: totals.totalGross, vatBreakdown: totals.vatBreakdown }
+  })(),
+  status: 'rejected',
+  note: 'Zavrnjen - neskladje v cenah.',
+  createdAt: '2026-06-14T10:00:00Z',
+  updatedAt: '2026-06-16T11:00:00Z',
+} as Invoice,
+
+// 5. DODATNI STORNIRANI (cancelled) - poleg obstoječih
+{
+  id: 'canc1',
+  number: 'R-2026-0006',
+  customerId: 'c2',
+  customerName: 'Gradbena družba Zlato d.o.o.',
+  customerTaxId: 'SI98765432',
+  customerRegistrationNumber: '7654321',
+  customerAddress: 'Cesta 24. junija 15, 4000 Kranj',
+  issueDate: '2026-05-15',
+  serviceDateFrom: '2026-05-10',
+  serviceDateTo: '2026-05-14',
+  dueDate: '2026-06-15',
+  paymentTermDays: 30,
+  items: createItems([{ serviceId: 's4', quantity: 2, parcelNumber: '125/3', cadastralMunicipality: '1434 Šiška' }]),
+  discountPercent: 0,
+  ...(() => {
+    const items = createItems([{ serviceId: 's4', quantity: 2, parcelNumber: '125/3', cadastralMunicipality: '1434 Šiška' }])
+    const totals = calculateTotalsForInvoice(items, 0)
+    return { totalNet: totals.totalNetAfterItemDiscounts, totalVat: totals.totalVat, totalGross: totals.totalGross, vatBreakdown: totals.vatBreakdown }
+  })(),
+  status: 'cancelled',
+  cancelledReason: 'Naročilo preklicano s strani kupca.',
+  note: 'Stornirano na zahtevo kupca.',
+  createdAt: '2026-05-15T09:00:00Z',
+  updatedAt: '2026-05-20T08:00:00Z',
+} as Invoice,
+
+// 6. DODATNI IZBRISANI (deleted) - če imaš ta status
+{
+  id: 'del1',
+  number: 'R-2026-0007',
+  customerId: 'c8',
+  customerName: 'Občina Škofja Loka',
+  customerTaxId: '12345678',
+  customerRegistrationNumber: '87654321',
+  customerAddress: 'Stari trg 1, 4220 Škofja Loka',
+  issueDate: '2026-05-20',
+  serviceDateFrom: '2026-05-15',
+  serviceDateTo: '2026-05-19',
+  dueDate: '2026-06-20',
+  paymentTermDays: 30,
+  items: createItems([{ serviceId: 's3', quantity: 1, parcelNumber: '777/4', cadastralMunicipality: '2000 Škofja Loka' }]),
+  discountPercent: 0,
+  ...(() => {
+    const items = createItems([{ serviceId: 's3', quantity: 1, parcelNumber: '777/4', cadastralMunicipality: '2000 Škofja Loka' }])
+    const totals = calculateTotalsForInvoice(items, 0)
+    return { totalNet: totals.totalNetAfterItemDiscounts, totalVat: totals.totalVat, totalGross: totals.totalGross, vatBreakdown: totals.vatBreakdown }
+  })(),
+  status: 'cancelled', // Če nimaš statusa 'deleted', uporabi 'cancelled'
+  note: 'Izbrisan - podvojen vnos.',
+  createdAt: '2026-05-20T11:00:00Z',
+  updatedAt: '2026-05-22T09:00:00Z',
+} as Invoice,
+
+// 7. DODATNI SPREMENJEN V RAČUN (converted) - poleg obstoječih
+{
+  id: 'conv1',
+  number: 'PR-2026-0011',
+  customerId: 'c1',
+  customerName: 'Občina Kranj',
+  customerTaxId: '12345678',
+  customerRegistrationNumber: '99887123',
+  customerAddress: 'Slovenski trg 1, 4000 Kranj',
+  issueDate: '2026-06-20',
+  serviceDateFrom: '2026-06-15',
+  serviceDateTo: '2026-06-19',
+  dueDate: '2026-07-20',
+  paymentTermDays: 30,
+  items: createEstimateItems([{ serviceId: 's1', quantity: 3, parcelNumber: '325/6', cadastralMunicipality: '1434 Šiška' }]),
+  discountPercent: 5,
+  ...(() => {
+    const items = createEstimateItems([{ serviceId: 's1', quantity: 3, parcelNumber: '325/6', cadastralMunicipality: '1434 Šiška' }])
+    const totals = calculateTotalsForInvoice(items, 5)
+    return { totalNet: totals.totalNetAfterItemDiscounts, totalVat: totals.totalVat, totalGross: totals.totalGross, vatBreakdown: totals.vatBreakdown }
+  })(),
+  status: 'converted',
+  note: 'Predračun spremenjen v račun R-2026-0048.',
+  createdAt: '2026-06-20T08:00:00Z',
+  updatedAt: '2026-07-01T10:00:00Z',
+} as Invoice,
   {
     id: 'inv2',
     number: 'R-2025-0048',

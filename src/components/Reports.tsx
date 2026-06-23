@@ -578,27 +578,29 @@ export function Reports() {
               </CardContent>
             </Card>
 
-            {/* Top kupci */}
-            <Card className="shadow-md">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-primary" />
-                  Top 5 kupcev po prihodkih
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {stats.topCustomers.map((customer, idx) => (
-                    <div key={customer.name} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold text-lg text-gray-500 w-6">{idx + 1}</span>
-                      </div>
-                      <p className="font-semibold text-primary">{formatCurrency(customer.amount)}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+{/* Top kupci */}
+<Card className="shadow-md">
+  <CardHeader>
+    <CardTitle className="flex items-center gap-2">
+      <TrendingUp className="w-5 h-5 text-primary" />
+      Top 5 kupcev po prihodkih
+    </CardTitle>
+  </CardHeader>
+  <CardContent>
+    <div className="space-y-3">
+      {stats.topCustomers.map((customer, idx) => (
+        <div key={customer.name} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+          <div className="flex items-center gap-3">
+            <span className="font-bold text-lg text-gray-500 w-6">{idx + 1}</span>
+            <span className="font-medium text-gray-700">{customer.name}</span>
+            <span className="text-sm text-gray-400">({customer.count} računov)</span>
+          </div>
+          <p className="font-semibold text-primary">{formatCurrency(customer.amount)}</p>
+        </div>
+      ))}
+    </div>
+  </CardContent>
+</Card>
 
             {/* Dodatna analiza - črtni graf trenda */}
             {stats.monthlyChartData.length >= 2 && (

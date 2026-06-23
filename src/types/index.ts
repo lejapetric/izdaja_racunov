@@ -1,5 +1,3 @@
-// src/types.ts
-
 export type VatRate = 22 | 9.5 | 5 | 0
 
 export interface Customer {
@@ -56,7 +54,8 @@ export type InvoiceStatus =
   | 'cancelled'
   | 'converted'
   | 'estimate'
-  | 'confirmed'
+  | 'rejected'
+  | 'unconfirmed'
 
 export interface Invoice {
   id: string
@@ -109,7 +108,7 @@ export interface AuditLogEntry {
   id: string
   invoiceId: string
   invoiceNumber: string
-  action: 'created' | 'overdue' | 'issued' | 'edited' | 'sent' | 'paid' | 'cancelled' | 'status_changed' | 'printed' | 'converted' | 'emailed' | 'posted' | 'viewed' | 'overdue_set' | 'alert_sent' | 'item_added' | 'item_removed' | 'saved' | 'drafted' | 'partially_paid'
+  action: 'created' | 'edited' | 'unconfirmed' | 'rejected' | 'sent' | 'paid' | 'cancelled' | 'status_changed' | 'printed' | 'converted' | 'emailed' | 'posted' | 'viewed' | 'overdue_set' | 'alert_sent' | 'item_added' | 'item_removed' | 'saved' | 'drafted' | 'partially_paid'
   user: string
   userRole: string
   timestamp: string

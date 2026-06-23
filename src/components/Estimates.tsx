@@ -8,7 +8,6 @@ import { InvoiceView } from './invoice/InvoiceView'
 import { InvoiceFilters } from './invoice/InvoiceFilters'
 import { InvoiceStatus } from '@/types'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -16,18 +15,79 @@ import { Send, Ban, History, Package, Mail, X, FileText, AlertTriangle } from 'l
 import { EditInvoice } from './invoice/EditInvoice'
 import { mockAuditLogs, statusLabels, statusColors } from '@/data/mockData'
 import { Badge } from '@/components/ui/badge'
+import { InvoiceArchiveTable } from './invoice/InvoiceArchiveTable'
+import { SortField } from '@/components/invoice/InvoiceFilters' // or wherever it's defined
 
 // Status opcije samo za predračune
 const estimateStatusOptions: { value: string; label: string }[] = [
   { value: 'all', label: 'Vsi' },
   { value: 'issued', label: 'Izdani' },
   { value: 'sent', label: 'Poslani' },
-  { value: 'paid', label: 'Plačani' }, //
+  { value: 'paid', label: 'Plačani' },
   { value: 'overdue', label: 'Potečeni' },
   { value: 'converted', label: 'Spremenjeni v račun' },
   { value: 'cancelled', label: 'Stornirani' },
   { value: 'partially_paid', label: 'Delno plačani' },
 ]
+
+// Podatki o plačilih za predračune
+// src/components/invoice/InvoiceArchiveTable.tsx
+// ... (vse ostalo ostane isto, samo mockPayments posodobi)
+
+// Mock podatki za plačila - v realni aplikaciji bi to prišlo iz baze
+const mockPayments: Record<string, { paid: number; remaining: number; percentage: number }> = {
+  // Računi
+  'inv1': { paid: 291.00, remaining: 0, percentage: 100 },
+  'inv2': { paid: 0, remaining: 1197.00, percentage: 0 },
+  'inv3': { paid: 1100.00, remaining: 0, percentage: 100 },
+  'inv4': { paid: 0, remaining: 1705.00, percentage: 0 },
+  'inv5': { paid: 0, remaining: 900.00, percentage: 0 },
+  'inv6': { paid: 0, remaining: 291.00, percentage: 0 },
+  'inv7': { paid: 1232.00, remaining: 0, percentage: 100 },
+  'inv8': { paid: 750.00, remaining: 750.00, percentage: 50 },
+  'inv9': { paid: 300.00, remaining: 700.00, percentage: 30 },
+  'inv10': { paid: 800.00, remaining: 533.00, percentage: 60 },
+  
+  // Predračuni - VSI predračuni morajo biti tukaj
+  'est1': { paid: 0, remaining: 285.00, percentage: 0 },
+  'est2': { paid: 0, remaining: 405.00, percentage: 0 },
+  'est3': { paid: 0, remaining: 500.00, percentage: 0 },
+  'est4': { paid: 950.00, remaining: 0, percentage: 100 }, // ⬅️ PLAČAN
+  'est5': { paid: 0, remaining: 300.00, percentage: 0 },
+  'est6': { paid: 0, remaining: 552.00, percentage: 0 },
+  'est7': { paid: 0, remaining: 750.00, percentage: 0 },
+  'est8': { paid: 0, remaining: 300.00, percentage: 0 },
+  'est9': { paid: 0, remaining: 300.00, percentage: 0 },
+  'est10': { paid: 0, remaining: 660.00, percentage: 0 },
+  'est11': { paid: 0, remaining: 855.00, percentage: 0 }, // ⬅️ NOV
+  'est12': { paid: 0, remaining: 1539.00, percentage: 0 }, // ⬅️ NOV
+  'est13': { paid: 0, remaining: 1100.00, percentage: 0 }, // ⬅️ NOV
+  'est14': { paid: 0, remaining: 1200.00, percentage: 0 }, // ⬅️ NOV
+  'est15': { paid: 0, remaining: 300.00, percentage: 0 }, // ⬅️ NOV
+  
+  // Zapadli računi
+  'overdue1': { paid: 0, remaining: 552.00, percentage: 0 },
+  'overdue2': { paid: 0, remaining: 285.00, percentage: 0 },
+  'overdue3': { paid: 0, remaining: 300.00, percentage: 0 },
+  'overdue4': { paid: 0, remaining: 475.00, percentage: 0 },
+  'overdue5': { paid: 0, remaining: 800.00, percentage: 0 },
+  'overdue6': { paid: 0, remaining: 150.00, percentage: 0 },
+  'overdue7': { paid: 0, remaining: 750.00, percentage: 0 }, // ⬅️ NOV
+  'overdue8': { paid: 0, remaining: 855.00, percentage: 0 }, // ⬅️ NOV
+  'overdue9': { paid: 0, remaining: 1520.00, percentage: 0 }, // ⬅️ NOV
+  'overdue10': { paid: 0, remaining: 660.00, percentage: 0 }, // ⬅️ NOV
+  
+  // Nepotrjeni računi
+  'unconf1': { paid: 0, remaining: 291.00, percentage: 0 },
+  'unconf2': { paid: 0, remaining: 855.00, percentage: 0 },
+  'unconf3': { paid: 0, remaining: 950.00, percentage: 0 },
+  'unconf4': { paid: 0, remaining: 450.00, percentage: 0 },
+  'unconf5': { paid: 0, remaining: 1425.00, percentage: 0 },
+  'unconf6': { paid: 0, remaining: 300.00, percentage: 0 },
+  'unconf7': { paid: 0, remaining: 828.00, percentage: 0 },
+  'unconf8': { paid: 0, remaining: 950.00, percentage: 0 },
+}
+
 interface EstimatesProps { 
   onNewEstimate?: () => void
   setActiveView?: (view: string) => void 
@@ -95,7 +155,7 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
   const uniqueCustomers = Array.from(new Map(estimates.map(inv => [inv.customerId, { id: inv.customerId, name: inv.customerName, taxId: inv.customerTaxId }])).entries()).map(([_, customer]) => customer).filter(c => c.name.toLowerCase().includes(searchCustomer.toLowerCase()) || c.taxId.toLowerCase().includes(searchCustomer.toLowerCase()))
   const uniqueMunicipalities = Array.from(new Set(estimates.map(inv => { const customer = customers.find(c => c.id === inv.customerId); const address = customer?.address || ''; const parts = address.split(','); return parts.length > 1 ? parts[parts.length - 1].trim() : address.trim(); }))).filter(m => m.toLowerCase().includes(searchMunicipality.toLowerCase()))
 
-  const filterInvoices = (statusFilter?: string) => estimates.filter(inv => {
+  const cvfilterInvoices = (statusFilter?: string) => estimates.filter(inv => {
     if (selectedNumber && inv.number !== selectedNumber) return false
     if (selectedCustomer && inv.customerId !== selectedCustomer.id) return false
     if (selectedMunicipality) { const customer = customers.find(c => c.id === inv.customerId); const address = customer?.address || ''; const parts = address.split(','); const municipality = parts.length > 1 ? parts[parts.length - 1].trim() : address.trim(); if (!municipality.toLowerCase().includes(selectedMunicipality.toLowerCase())) return false }
@@ -121,11 +181,13 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
     return true
   })
 
-  const filteredAll = filterInvoices()
-  const filteredIssued = filterInvoices('issued')
-  const filteredSent = filterInvoices('sent')
-  const filteredConverted = filterInvoices('converted')
-  const filteredExpired = filterInvoices('overdue')
+const filteredAll = cvfilterInvoices()
+const filteredIssued = cvfilterInvoices('issued')
+const filteredSent = cvfilterInvoices('sent')
+const filteredConverted = cvfilterInvoices('converted')
+const filteredExpired = cvfilterInvoices('overdue')
+const [sortField, setSortField] = useState<SortField>('issueDate')
+const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
 
   const clearAllFilters = () => { 
     setSelectedNumber(''); setSearchNumber(''); setSelectedCustomer(null); setSearchCustomer('')
@@ -285,65 +347,74 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
 
       <Card>
         <CardContent className="pt-6">
-          <InvoiceFilters 
-            searchNumber={searchNumber} setSearchNumber={setSearchNumber} selectedNumber={selectedNumber} setSelectedNumber={setSelectedNumber}
-            searchCustomer={searchCustomer} setSearchCustomer={setSearchCustomer} selectedCustomer={selectedCustomer} setSelectedCustomer={setSelectedCustomer}
-            searchMunicipality={searchMunicipality} setSearchMunicipality={setSearchMunicipality} selectedMunicipality={selectedMunicipality} setSelectedMunicipality={setSelectedMunicipality}
-            priceMin={priceMin} setPriceMin={setPriceMin} priceMax={priceMax} setPriceMax={setPriceMax}
-            dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo}
-            dueDateFrom={dueDateFrom} setDueDateFrom={setDueDateFrom} dueDateTo={dueDateTo} setDueDateTo={setDueDateTo}
-            selectedStatus={selectedStatus as any} setSelectedStatus={setSelectedStatus as any}
-            uniqueNumbers={uniqueNumbers} uniqueCustomers={uniqueCustomers} uniqueMunicipalities={uniqueMunicipalities} statusOptions={estimateStatusOptions as any}
-            clearAllFilters={clearAllFilters}
-          />
+<InvoiceFilters 
+  searchNumber={searchNumber} setSearchNumber={setSearchNumber} selectedNumber={selectedNumber} setSelectedNumber={setSelectedNumber}
+  searchCustomer={searchCustomer} setSearchCustomer={setSearchCustomer} selectedCustomer={selectedCustomer} setSelectedCustomer={setSelectedCustomer}
+  searchMunicipality={searchMunicipality} setSearchMunicipality={setSearchMunicipality} selectedMunicipality={selectedMunicipality} setSelectedMunicipality={setSelectedMunicipality}
+  priceMin={priceMin} setPriceMin={setPriceMin} priceMax={priceMax} setPriceMax={setPriceMax}
+  dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo}
+  dueDateFrom={dueDateFrom} setDueDateFrom={setDueDateFrom} dueDateTo={dueDateTo} setDueDateTo={setDueDateTo}
+  selectedStatus={selectedStatus as any} setSelectedStatus={setSelectedStatus as any}
+  uniqueNumbers={uniqueNumbers} uniqueCustomers={uniqueCustomers} uniqueMunicipalities={uniqueMunicipalities} statusOptions={estimateStatusOptions as any}
+  clearAllFilters={clearAllFilters}
+  sortField={sortField}
+  setSortField={setSortField}
+  sortDirection={sortDirection}
+  setSortDirection={setSortDirection}
+/>
           
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-5 text-xs lg:text-sm">
-              <TabsTrigger value="all">Vsi ({filteredAll.length})</TabsTrigger>
-              <TabsTrigger value="issued">Izdani ({filteredIssued.length})</TabsTrigger>
-              <TabsTrigger value="sent">Poslani ({filteredSent.length})</TabsTrigger>
-              <TabsTrigger value="converted">Spremenjeni v račun ({filteredConverted.length})</TabsTrigger>
-              <TabsTrigger value="expired">Zapadli ({filteredExpired.length})</TabsTrigger>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
+            <TabsList className="grid w-full grid-cols-9 text-xs lg:text-sm">
+              <TabsTrigger value="all">Vsi (11)</TabsTrigger>
+              <TabsTrigger value="issued">Nepotrjeni (0)</TabsTrigger>
+              <TabsTrigger value="issued">Zavrnjeni (0)</TabsTrigger>
+              <TabsTrigger value="issued">Izdani (2)</TabsTrigger>
+              <TabsTrigger value="sent">Poslani (2)</TabsTrigger>
+              <TabsTrigger value="expired">Zapadli (1)</TabsTrigger>              
+              <TabsTrigger value="expired">Plačani (2)</TabsTrigger>
+              <TabsTrigger value="converted">Spremenjeni v račun (4) </TabsTrigger>
+              <TabsTrigger value="converted">Stornirani (0) </TabsTrigger>
             </TabsList>
             
+            {/* UPORABI InvoiceArchiveTable Z documentType="estimate" */}
             <TabsContent value="all">
-              <EstimatesTable 
-                estimates={filteredAll}
-                onEstimateClick={handleInvoiceClick}
-                getStatusLabel={getStatusLabelForEstimate}
-                getStatusColor={getStatusColorForEstimate}
+              <InvoiceArchiveTable 
+                invoices={filteredAll}
+                customers={customers}
+                onInvoiceClick={handleInvoiceClick}
+                documentType="estimate"
               />
             </TabsContent>
             <TabsContent value="issued">
-              <EstimatesTable 
-                estimates={filteredIssued}
-                onEstimateClick={handleInvoiceClick}
-                getStatusLabel={getStatusLabelForEstimate}
-                getStatusColor={getStatusColorForEstimate}
+              <InvoiceArchiveTable 
+                invoices={filteredIssued}
+                customers={customers}
+                onInvoiceClick={handleInvoiceClick}
+                documentType="estimate"
               />
             </TabsContent>
             <TabsContent value="sent">
-              <EstimatesTable 
-                estimates={filteredSent}
-                onEstimateClick={handleInvoiceClick}
-                getStatusLabel={getStatusLabelForEstimate}
-                getStatusColor={getStatusColorForEstimate}
+              <InvoiceArchiveTable 
+                invoices={filteredSent}
+                customers={customers}
+                onInvoiceClick={handleInvoiceClick}
+                documentType="estimate"
               />
             </TabsContent>
             <TabsContent value="converted">
-              <EstimatesTable 
-                estimates={filteredConverted}
-                onEstimateClick={handleInvoiceClick}
-                getStatusLabel={getStatusLabelForEstimate}
-                getStatusColor={getStatusColorForEstimate}
+              <InvoiceArchiveTable 
+                invoices={filteredConverted}
+                customers={customers}
+                onInvoiceClick={handleInvoiceClick}
+                documentType="estimate"
               />
             </TabsContent>
             <TabsContent value="expired">
-              <EstimatesTable 
-                estimates={filteredExpired}
-                onEstimateClick={handleInvoiceClick}
-                getStatusLabel={getStatusLabelForEstimate}
-                getStatusColor={getStatusColorForEstimate}
+              <InvoiceArchiveTable 
+                invoices={filteredExpired}
+                customers={customers}
+                onInvoiceClick={handleInvoiceClick}
+                documentType="estimate"
               />
             </TabsContent>
           </Tabs>
@@ -720,98 +791,6 @@ export function Estimates({ onNewEstimate, setActiveView }: EstimatesProps) {
         onAudit={openAuditModal}
         documentType="estimate" 
       />
-    </div>
-  )
-}
-
-// Tabela za predračune
-interface EstimatesTableProps {
-  estimates: any[]
-  onEstimateClick: (estimate: any) => void
-  getStatusLabel: (status: string) => string
-  getStatusColor: (status: string) => string
-}
-
-function EstimatesTable({ estimates, onEstimateClick, getStatusLabel, getStatusColor }: EstimatesTableProps) {
-  const getDaysUntilExpiry = (dueDate: string) => {
-    if (!dueDate || dueDate === 'null') return null
-    const today = new Date()
-    const expiry = new Date(dueDate)
-    const diffTime = expiry.getTime() - today.getTime()
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return diffDays
-  }
-
-  return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="px-1 py-3 text-left w-[110px] text-xs lg:text-sm">Številka</TableHead>
-            <TableHead className="px-4 py-3 text-center text-xs lg:text-sm">Datum izdaje</TableHead>
-            <TableHead className="px-4 py-3 text-left w-[240px] text-xs lg:text-sm">Kupec</TableHead>
-            <TableHead className="px-4 py-3 text-right text-xs lg:text-sm">Neto</TableHead>
-            <TableHead className="px-4 py-3 text-right text-xs lg:text-sm">DDV</TableHead>
-            <TableHead className="px-4 py-3 text-right text-xs lg:text-sm">Bruto</TableHead>
-            <TableHead className="px-4 py-3 text-center w-[150px] text-xs lg:text-sm">Status</TableHead>
-            <TableHead className="px-4 py-3 text-center w-[140px] text-xs lg:text-sm">Velja do</TableHead>
-            <TableHead className="px-4 py-3 text-center w-[150px] text-xs lg:text-sm"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {estimates.map(est => {
-            const daysUntilExpiry = getDaysUntilExpiry(est.dueDate)
-            const isExpired = daysUntilExpiry !== null && daysUntilExpiry < 0
-            
-            return (
-              <TableRow 
-                key={est.id} 
-                className={`${isExpired ? 'bg-red-50' : ''} cursor-pointer hover:bg-gray-50 transition-colors`}
-                onClick={() => onEstimateClick(est)}
-              >
-                <TableCell className="px-2 py-2 text-xs lg:text-sm font-left">{est.number}</TableCell>
-                <TableCell className="px-4 py-2 text-center text-xs lg:text-sm">{formatDate(est.issueDate)}</TableCell>
-                <TableCell className="px-4 py-2 text-xs lg:text-sm">
-                  <div className="font-medium">{est.customerName}</div>
-                  <div className="text-[10px] lg:text-xs text-gray-500">{est.customerTaxId}</div>
-                </TableCell>
-                <TableCell className="px-4 py-2 text-right text-xs lg:text-sm">{formatCurrency(est.totalNet)}</TableCell>
-                <TableCell className="px-4 py-2 text-right text-xs lg:text-sm">{formatCurrency(est.totalVat)}</TableCell>
-                <TableCell className="px-4 py-2 text-right font-semibold text-xs lg:text-sm">{formatCurrency(est.totalGross)}</TableCell>
-                <TableCell className="px-4 py-2 text-center text-xs lg:text-sm">
-                  <Badge className={`${getStatusColor(est.status)} text-[10px] lg:text-xs`}>
-                    {getStatusLabel(est.status)}
-                  </Badge>
-                </TableCell>
-                <TableCell className="px-4 py-2 text-center text-xs lg:text-sm">
-                  {est.dueDate && est.dueDate !== 'null' ? formatDate(est.dueDate) : '-'}
-                  {!isExpired && daysUntilExpiry !== null && daysUntilExpiry <= 7 && daysUntilExpiry > 0 && (
-                    <div className="text-[10px] lg:text-xs text-orange-500">Zapade čez {daysUntilExpiry} dni</div>
-                  )}
-                  {isExpired && <div className="text-[10px] lg:text-xs text-red-500">Zapadel</div>}
-                </TableCell>
-                <TableCell className="px-4 py-2 text-center" onClick={(e) => e.stopPropagation()}>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    className="text-[10px] lg:text-xs h-6 lg:h-7 px-1.5 lg:px-2"
-                    onClick={() => onEstimateClick(est)}
-                  >
-                    Več o računu
-                  </Button>
-                </TableCell>
-              </TableRow>
-            )
-          })}
-          {estimates.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={10} className="text-center text-gray-400 py-8 text-xs lg:text-sm">
-                Ni predračunov
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
     </div>
   )
 }

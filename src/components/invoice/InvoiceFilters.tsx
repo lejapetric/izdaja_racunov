@@ -240,11 +240,7 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <h3 className="text-lg font-semibold text-gray-700">Filtri</h3>
-          {activeFilterCount > 0 && (
-            <span className="text-xs bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full font-medium">
-              {activeFilterCount} aktivnih filtrov
-            </span>
-          )}
+
         </div>
         <div className="flex gap-2 flex-wrap">
           <Button 
@@ -267,16 +263,7 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
             Sortiranje
             {showSorting ? <ChevronUp className="w-3.5 h-3.5 ml-1.5" /> : <ChevronDown className="w-3.5 h-3.5 ml-1.5" />}
           </Button>
-          {activeFilterCount > 0 && (
-            <Button 
-              size="sm" 
-              variant="ghost" 
-              onClick={clearAllFilters} 
-              className="text-sm text-red-500 hover:text-red-700 hover:bg-red-50"
-            >
-              <X className="w-4 h-4 mr-1" /> Počisti vse
-            </Button>
-          )}
+
         </div>
       </div>
 
@@ -317,7 +304,7 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
 
         {/* Filter: Kupec */}
         <div className="relative" ref={customerDropdownRef}>
-          <label className="text-xs font-medium text-gray-600 mb-1 block">Naziv kupeca</label>
+          <label className="text-xs font-medium text-gray-600 mb-1 block">Naziv kupca</label>
           <div className="flex items-center border rounded-md px-3 py-2 bg-white focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-shadow">
             <input 
               type="text" 
@@ -349,7 +336,7 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
           )}
         </div>
 
-
+        
       </div>
 
       {/* Dodatni filtri */}
@@ -576,7 +563,7 @@ export const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
                   onChange={setDueDateTo}
                   dateFormat="dd.MM.yyyy"
                   locale={sl}
-                  placeholderText="DO"
+                  placeholderText="Do"
                   customInput={<CustomDateInput onClear={clearDueDateTo} placeholder="Do" />}
                   isClearable={false}
                   className="flex-1"

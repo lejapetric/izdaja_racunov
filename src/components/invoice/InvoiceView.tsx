@@ -1,11 +1,11 @@
 // src/components/invoice/InvoiceView.tsx
 import { useInvoices } from '@/hooks/useInvoices'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { useRef, useState } from 'react'
 import { companyData, statusColors, statusLabels, mockServices } from '@/data/mockData'
-import { Printer, Edit, Mail, Ban, FileText, Package, ArrowRight, Calendar, Clock, Send, X, Trash2 } from 'lucide-react'
+import { Printer, Edit, Mail, Ban, FileText, Package, ArrowRight, Calendar, Clock, Send, X, Trash2, Building2, CheckCircle, Eye, ThumbsDown } from 'lucide-react'
 
 interface InvoiceViewProps {
   invoiceId: string | null
@@ -19,7 +19,10 @@ interface InvoiceViewProps {
   onAudit?: (invoice: any) => void
   onDelete?: (invoiceId: string) => void
   documentType?: 'invoice' | 'estimate' | 'draft'
-  hideActions?: boolean  // <-- NOVO: za skrivanje akcij
+  hideActions?: boolean
+  onConfirm?: (invoice: any) => void
+  onReject?: (invoice: any, reason: string) => void
+  showConfirmationActions?: boolean
 }
 
 const getItemCode = (item: any) => {
@@ -61,7 +64,10 @@ export function InvoiceView({
   onAudit,
   onDelete,
   documentType = 'invoice',
-  hideActions = false  // <-- NOVO
+  hideActions = false,
+  onConfirm,
+  onReject,
+  showConfirmationActions = false
 }: InvoiceViewProps) {
   const { invoices, customers } = useInvoices()
   const invoice = invoices.find(inv => inv.id === invoiceId)
@@ -78,6 +84,38 @@ export function InvoiceView({
   // State za modalno okno brisanja
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  // State za modalno okno pošiljanja e-pošte
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false)
+  const [emailTo, setEmailTo] = useState('')
+  const [emailSubject, setEmailSubject] = useState('')
+  const [emailMessage, setEmailMessage] = useState('')
+  const [isSendingEmail, setIsSendingEmail] = useState(false)
+
+  // State za modalno okno pošiljanja po navadni pošti
+  const [postDialogOpen, setPostDialogOpen] = useState(false)
+  const [postAddress, setPostAddress] = useState('')
+  const [postNote, setPostNote] = useState('')
+  const [isSendingPost, setIsSendingPost] = useState(false)
+
+  // State za modalno okno označevanja kot plačano
+  const [markPaidDialogOpen, setMarkPaidDialogOpen] = useState(false)
+  const [isMarkingPaid, setIsMarkingPaid] = useState(false)
+
+  // State za modalno okno potrditve storniranja
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false)
+  const [cancelReason, setCancelReason] = useState('')
+  const [isCancelling, setIsCancelling] = useState(false)
+
+  // State za modalno okno potrditve računa
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false)
+  const [isConfirming, setIsConfirming] = useState(false)
+
+  // State za modalno okno zavrnitve računa
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false)
+  const [rejectReason, setRejectReason] = useState('')
+  const [rejectError, setRejectError] = useState('')
+  const [isRejecting, setIsRejecting] = useState(false)
 
   if (!invoice) return null
 
@@ -148,19 +186,168 @@ ${companyData.name}`)
   const handleSendReminder = async () => {
     setIsSending(true)
     
-    // Simulacija pošiljanja (tu bi klical tvoj API)
     console.log('Pošiljam opomin:', {
       to: reminderEmail,
       subject: reminderSubject,
       message: reminderMessage
     })
     
-    // Počakaj 1 sekundo za simulacijo
     await new Promise(resolve => setTimeout(resolve, 1000))
     
     alert(`Opomin uspešno poslan na naslov: ${reminderEmail}`)
     setIsSending(false)
     setReminderDialogOpen(false)
+  }
+
+  // Funkcija za odpiranje modalnega okna za pošiljanje e-pošte
+  const openEmailDialog = () => {
+    setEmailTo(customerEmail)
+    setEmailSubject(`${getDocumentTitle()} št. ${invoice.number}`)
+    setEmailMessage(`Spoštovani,
+
+v priponki vam pošiljamo ${getDocumentTitle().toLowerCase()} št. ${invoice.number} v znesku ${formattedAmount} EUR.
+
+${invoice.note ? `Opomba: ${invoice.note}\n\n` : ''}
+Lep pozdrav,
+${companyData.name}`)
+    setEmailDialogOpen(true)
+  }
+
+  // Funkcija za pošiljanje e-pošte
+  const handleSendEmail = async () => {
+    setIsSendingEmail(true)
+    
+    console.log('Pošiljam e-pošto:', {
+      to: emailTo,
+      subject: emailSubject,
+      message: emailMessage
+    })
+    
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    alert(`E-pošta uspešno poslana na naslov: ${emailTo}`)
+    setIsSendingEmail(false)
+    setEmailDialogOpen(false)
+    
+    if (onSendEmail) {
+      onSendEmail(invoice)
+    }
+  }
+
+  // Funkcija za odpiranje modalnega okna za pošiljanje po navadni pošti
+  const openPostDialog = () => {
+    setPostAddress(customerAddress || '')
+    setPostNote(`Pošiljamo ${getDocumentTitle().toLowerCase()} št. ${invoice.number} na naslov: ${customerAddress || 'ni znan'}`)
+    setPostDialogOpen(true)
+  }
+
+  // Funkcija za pošiljanje po navadni pošti
+  const handleSendPost = async () => {
+    setIsSendingPost(true)
+    
+    console.log('Pošiljam po navadni pošti:', {
+      address: postAddress,
+      note: postNote
+    })
+    
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    alert(`Pošta uspešno oddana za pošiljanje na naslov: ${postAddress}`)
+    setIsSendingPost(false)
+    setPostDialogOpen(false)
+    
+    if (onSendPost) {
+      onSendPost(invoice)
+    }
+  }
+
+  // Funkcija za odpiranje modalnega okna za označevanje kot plačano
+  const openMarkPaidDialog = () => {
+    setMarkPaidDialogOpen(true)
+  }
+
+  // Funkcija za označevanje kot plačano
+  const handleMarkAsPaid = async () => {
+    setIsMarkingPaid(true)
+    
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
+    if (onMarkAsPaid) {
+      onMarkAsPaid(invoice.id)
+    }
+    
+    setIsMarkingPaid(false)
+    setMarkPaidDialogOpen(false)
+  }
+
+  // Funkcija za odpiranje modalnega okna za storniranje
+  const openCancelDialog = () => {
+    setCancelReason('')
+    setCancelDialogOpen(true)
+  }
+
+  // Funkcija za storniranje
+  const handleCancel = async () => {
+    setIsCancelling(true)
+    
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
+    if (onCancel) {
+      onCancel({
+        ...invoice,
+        cancelledReason: cancelReason || 'Stornirano na zahtevo uporabnika'
+      })
+    }
+    
+    setIsCancelling(false)
+    setCancelDialogOpen(false)
+  }
+
+  // Funkcija za odpiranje modalnega okna za potrditev
+  const openConfirmDialog = () => {
+    setConfirmDialogOpen(true)
+  }
+
+  // Funkcija za potrditev računa
+  const handleConfirm = async () => {
+    setIsConfirming(true)
+    
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
+    if (onConfirm) {
+      onConfirm(invoice)
+    }
+    
+    setIsConfirming(false)
+    setConfirmDialogOpen(false)
+    onClose()
+  }
+
+  // Funkcija za odpiranje modalnega okna za zavrnitev
+  const openRejectDialog = () => {
+    setRejectReason('')
+    setRejectError('')
+    setRejectDialogOpen(true)
+  }
+
+  // Funkcija za zavrnitev računa
+  const handleReject = async () => {
+    if (!rejectReason.trim()) {
+      setRejectError('Prosimo, napišite razlog za zavrnitev računa.')
+      return
+    }
+    
+    setIsRejecting(true)
+    
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
+    if (onReject) {
+      onReject(invoice, rejectReason)
+    }
+    
+    setIsRejecting(false)
+    setRejectDialogOpen(false)
+    onClose()
   }
 
   // Funkcija za brisanje osnutka
@@ -172,7 +359,6 @@ ${companyData.name}`)
   const confirmDelete = () => {
     setIsDeleting(true)
     
-    // Simulacija brisanja
     setTimeout(() => {
       if (onDelete) {
         onDelete(invoice.id)
@@ -289,6 +475,45 @@ ${companyData.name}`)
       }, 500)
     }, 500)
   }
+
+  // Handlerji za gumbe
+  const handleEdit = () => {
+    console.log('🔵 Edit clicked for invoice:', invoice.number)
+    if (onEdit) {
+      onEdit(invoice)
+    } else {
+      console.warn('⚠️ onEdit function is not provided')
+    }
+  }
+
+  const handleSendEmailClick = () => {
+    console.log('📧 Send email clicked for invoice:', invoice.number)
+    openEmailDialog()
+  }
+
+  const handleSendPostClick = () => {
+    console.log('📬 Send post clicked for invoice:', invoice.number)
+    openPostDialog()
+  }
+
+  const handleCancelClick = () => {
+    console.log('🚫 Cancel clicked for invoice:', invoice.number)
+    openCancelDialog()
+  }
+
+  const handleAuditClick = () => {
+    console.log('📋 Audit clicked for invoice:', invoice.number)
+    if (onAudit) {
+      onAudit(invoice)
+    } else {
+      console.warn('⚠️ onAudit function is not provided')
+    }
+  }
+
+  // Preveri, ali je račun plačan ali storniran
+  const isPaid = invoice.status === 'paid'
+  const isCancelled = invoice.status === 'cancelled'
+  const isUnconfirmed = invoice.status === 'unconfirmed'
 
   return (
     <>
@@ -506,7 +731,7 @@ ${companyData.name}`)
               </div>
             </div>
             
-            {/* Akcije - desna stran - SKRITO KO JE hideActions=true */}
+            {/* Akcije - desna stran */}
             {!hideActions && (
               <div className="w-72 shrink-0 border-l pl-6 action-buttons">
                 <div className="sticky top-0">
@@ -515,55 +740,151 @@ ${companyData.name}`)
                     <Button variant="outline" className="w-full justify-start" onClick={handlePrint}>
                       <Printer className="w-4 h-4 mr-2" /> Natisni
                     </Button>
-                    <Button variant="outline" className="w-full justify-start" onClick={() => onEdit?.(invoice)}>
+                    
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={handleEdit}
+                    >
                       <Edit className="w-4 h-4 mr-2" /> Uredi
                     </Button>
-                    
-                    {/* Gumb za brisanje - samo za osnutke */}
-                    {documentType === 'draft' && (
+
+                    {/* Gumb za urejanje - samo za nepotrjene račune */}
+                    {showConfirmationActions && isUnconfirmed && (
+                      <>
+                        <Button 
+                          variant="default" 
+                          className="w-full justify-start bg-green-600 hover:bg-green-700 text-white"
+                          onClick={openConfirmDialog}
+                        >
+                          <CheckCircle className="w-4 h-4 mr-2" /> Potrdi račun
+                        </Button>
+                        <Button 
+                          variant="destructive" 
+                          className="w-full justify-start"
+                          onClick={openRejectDialog}
+                        >
+                          <ThumbsDown className="w-4 h-4 mr-2" /> Zavrni račun
+                        </Button>
+                      </>
+                    )}
+
+                    {/* Gumb za potrditev - samo za nepotrjene račune */}
+                    {showConfirmationActions && isUnconfirmed && (
+                      <>
+                        <Button 
+                          variant="default" 
+                          className="w-full justify-start bg-green-600 hover:bg-green-700 text-white"
+                          onClick={openConfirmDialog}
+                        >
+                          <CheckCircle className="w-4 h-4 mr-2" /> Potrdi račun
+                        </Button>
+                        <Button 
+                          variant="destructive" 
+                          className="w-full justify-start"
+                          onClick={openRejectDialog}
+                        >
+                          <ThumbsDown className="w-4 h-4 mr-2" /> Zavrni račun
+                        </Button>
+                      </>
+                    )}
+
+                    {/* Gumb za pošiljanje e-pošte */}
+                    {documentType !== 'draft' && invoice.status === 'issued' && (
                       <Button 
                         variant="outline" 
-                        className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
+                        className="w-full justify-start"
+                        onClick={handleSendEmailClick}
+                      >
+                        <Mail className="w-4 h-4 mr-2" /> Pošlji e-pošto
+                      </Button>
+                    )}
+
+                    {/* Gumb za pošiljanje po navadni pošti */}
+                    {documentType !== 'draft' && invoice.status === 'issued'  && (
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start"
+                        onClick={handleSendPostClick}
+                      >
+                        <Building2 className="w-4 h-4 mr-2" /> Pošlji po pošti
+                      </Button>
+                    )}
+
+                    {/* Gumb za zavrnitev */}
+                    {invoice.status === 'unconfirmed' && (
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start"
+                        onClick={openRejectDialog}
+                      >
+                        <CheckCircle className="w-4 h-4 mr-2" /> Zavrni račun
+                      </Button>
+                    )}
+
+                    {/* Gumb za potrditec */}
+                    {invoice.status === 'unconfirmed' && (
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start"
+                        onClick={openConfirmDialog}
+                      >
+                        <CheckCircle className="w-4 h-4 mr-2" /> Potrid račun
+                      </Button>
+                    )}
+
+                    {/* Gumb za brisanje - samo za osnutke */}
+                    {invoice.status === 'draft' && (
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start text-red-600 border-red-300 hover:bg-red-50"
                         onClick={handleDelete}
                       >
                         <Trash2 className="w-4 h-4 mr-2" /> Izbriši
                       </Button>
                     )}
-                    
-                    <Button variant="outline" className="w-full justify-start" onClick={() => onSendEmail?.(invoice)}>
-                      <Mail className="w-4 h-4 mr-2" /> Pošlji e-mail
-                    </Button>
-                    <Button variant="outline" className="w-full justify-start" onClick={() => onSendPost?.(invoice)}>
-                      <Package className="w-4 h-4 mr-2" /> Pošlji po pošti
-                    </Button>
+                  
                     {documentType === 'estimate' && invoice.status === 'issued' && (
                       <Button 
                         variant="outline" 
                         className="w-full justify-start" 
                         onClick={() => {
-                          // Zapri trenutni pogled
                           onClose()
-                          // Pokliči onEdit s podatki predračuna
-                          onEdit?.({
-                            ...invoice,
-                            _isEstimateConversion: true,  // oznaka da gre za pretvorbo iz predračuna
-                            _sourceType: 'estimate'
-                          })
+                          if (onEdit) {
+                            onEdit({
+                              ...invoice,
+                              _isEstimateConversion: true,
+                              _sourceType: 'estimate'
+                            })
+                          }
                         }}
                       >
                         <ArrowRight className="w-4 h-4 mr-2" /> Ustvari račun
                       </Button>
                     )}
-                    {invoice.status !== 'cancelled' && invoice.status !== 'draft' && (
-                      <Button variant="outline" className="w-full justify-start" onClick={() => onCancel?.(invoice)}>
+                    
+                    {/* Gumb za storniranje */}
+                    {!isCancelled && invoice.status !== 'draft' && (
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start"
+                        onClick={handleCancelClick}
+                      >
                         <Ban className="w-4 h-4 mr-2" /> Storniraj
                       </Button>
                     )}
-                    <Button variant="outline" className="w-full justify-start" onClick={() => onAudit?.(invoice)}>
+                    
+                    <Button variant="outline" className="w-full justify-start" onClick={handleAuditClick}>
                       <FileText className="w-4 h-4 mr-2" /> Dnevnik sprememb
                     </Button>
+                    
+                    {/* Gumb za opomin - samo za zapadle račune */}
                     {documentType === 'invoice' && invoice.status === 'overdue' && (
-                      <Button variant="outline" className="w-full justify-start" onClick={openReminderDialog}>
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start" 
+                        onClick={openReminderDialog}
+                      >
                         <Send className="w-4 h-4 mr-2" /> Pošlji opomin
                       </Button>
                     )}
@@ -572,6 +893,114 @@ ${companyData.name}`)
               </div>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* MODALNO OKNO ZA POTRDITEV RAČUNA */}
+      <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-green-700">
+              <CheckCircle className="w-5 h-5" />
+              Potrdi račun
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <p className="text-sm text-green-800">
+                Ali ste prepričani, da želite potrditi račun <strong>{invoice.number}</strong>?
+              </p>
+              <p className="text-xs text-green-600 mt-2">
+                S tem dejanjem potrjujete, da so vsi podatki na računu pravilni in da je račun pripravljen za pošiljanje.
+              </p>
+            </div>
+          </div>
+          
+          <DialogFooter className="flex gap-3">
+            <Button variant="outline" onClick={() => setConfirmDialogOpen(false)}>
+              Prekliči
+            </Button>
+            <Button 
+              variant="default" 
+              className="bg-green-600 hover:bg-green-700"
+              onClick={handleConfirm}
+              disabled={isConfirming}
+            >
+              {isConfirming ? (
+                <>Obdelava...</>
+              ) : (
+                <>
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Potrdi račun
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* MODALNO OKNO ZA ZAVRNITEV RAČUNA */}
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <ThumbsDown className="w-5 h-5" />
+              Zavrni račun
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-sm text-red-800">
+                Ali ste prepričani, da želite zavrniti račun <strong>{invoice.number}</strong>?
+              </p>
+              <p className="text-xs text-red-600 mt-2">
+                Račun bo označen kot zavrnjen in bo poslan nazaj v pregled.
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                Razlog za zavrnitev <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={rejectReason}
+                onChange={(e) => {
+                  setRejectReason(e.target.value)
+                  setRejectError('')
+                }}
+                rows={4}
+                placeholder="Napišite razlog za zavrnitev računa..."
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-sm ${
+                  rejectError ? 'border-red-500' : 'border-gray-300'
+                }`}
+              />
+              {rejectError && (
+                <p className="text-xs text-red-500">{rejectError}</p>
+              )}
+            </div>
+          </div>
+          
+          <DialogFooter className="flex gap-3">
+            <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>
+              Prekliči
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleReject}
+              disabled={isRejecting}
+            >
+              {isRejecting ? (
+                <>Obdelava...</>
+              ) : (
+                <>
+                  <ThumbsDown className="w-4 h-4 mr-2" />
+                  Zavrni račun
+                </>
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -635,80 +1064,305 @@ ${companyData.name}`)
           </div>
         </DialogContent>
       </Dialog>
-      
 
-      {/* MODALNO OKNO ZA BRISANJE OSNUTKA */}
-      <Dialog open={deleteDialogOpen} onOpenChange={(isOpen) => !isOpen && setDeleteDialogOpen(false)}>
-        <DialogContent className="max-w-md">
+      {/* MODALNO OKNO ZA POŠILJANJE E-POŠTE */}
+      <Dialog open={emailDialogOpen} onOpenChange={(isOpen) => !isOpen && setEmailDialogOpen(false)}>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-red-600">
-              <Trash2 className="w-5 h-5" />
-              Izbriši osnutek
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="w-5 h-5" />
+              Pošlji e-pošto - {getDocumentTitle()} {invoice.number}
             </DialogTitle>
           </DialogHeader>
           
-          <div className="py-6 space-y-4">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-5">
-              <div className="flex items-start gap-3">
-                <Trash2 className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-base font-semibold text-red-800">OPOZORILO!</p>
-                  <p className="text-sm text-red-700 mt-2 leading-relaxed">
-                    Ali ste prepričani, da želite izbrisati osnutek{' '}
-                    <span className="font-semibold">{invoice.number}</span>?
-                  </p>
-                  <p className="text-sm text-red-600 mt-2">
-                    To dejanje bo trajno izbrisalo osnutek iz sistema in{' '}
-                    <span className="font-semibold underline">ga ne bo mogoče razveljaviti</span>.
-                  </p>
-                </div>
-              </div>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">E-poštni naslov prejemnika</label>
+              <input
+                type="email"
+                value={emailTo}
+                onChange={(e) => setEmailTo(e.target.value)}
+                placeholder="email@example.com"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
             
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <span className="text-gray-500">Kupec:</span>
-                  <div className="font-medium">{invoice.customerName}</div>
-                </div>
-                <div>
-                  <span className="text-gray-500">Znesek:</span>
-                  <div className="font-medium">{formatCurrency(invoice.totalGross)}</div>
-                </div>
-                <div>
-                  <span className="text-gray-500">Datum izdaje:</span>
-                  <div className="font-medium">{formatDate(invoice.issueDate)}</div>
-                </div>
-                <div>
-                  <span className="text-gray-500">Št. postavk:</span>
-                  <div className="font-medium">{invoice.items.length}</div>
-                </div>
-              </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Zadeva</label>
+              <input
+                type="text"
+                value={emailSubject}
+                onChange={(e) => setEmailSubject(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Sporočilo</label>
+              <textarea
+                value={emailMessage}
+                onChange={(e) => setEmailMessage(e.target.value)}
+                rows={10}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+              />
+            </div>
+            
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-sm text-blue-700">
+                <strong>Opomba:</strong> V priponki bo priložen PDF dokument {getDocumentTitle().toLowerCase()} št. {invoice.number}.
+              </p>
             </div>
           </div>
           
           <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setEmailDialogOpen(false)}>
               Prekliči
             </Button>
-            <Button 
-              variant="destructive" 
-              onClick={confirmDelete} 
-              disabled={isDeleting}
-              className="gap-2"
-            >
-              {isDeleting ? (
-                <>Brisanje...</>
+            <Button onClick={handleSendEmail} disabled={isSendingEmail} className="gap-2">
+              {isSendingEmail ? (
+                <>Pošiljanje...</>
               ) : (
                 <>
-                  <Trash2 className="w-4 h-4" />
-                  Izbriši osnutek
+                  <Mail className="w-4 h-4" />
+                  Pošlji e-pošto
                 </>
               )}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* MODALNO OKNO ZA POŠILJANJE PO NAVADNI POŠTI */}
+      <Dialog open={postDialogOpen} onOpenChange={(isOpen) => !isOpen && setPostDialogOpen(false)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Building2 className="w-5 h-5" />
+              Pošlji po navadni pošti - {getDocumentTitle()} {invoice.number}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Naslov prejemnika</label>
+              <textarea
+                value={postAddress}
+                onChange={(e) => setPostAddress(e.target.value)}
+                rows={4}
+                placeholder="Vnesite naslov za pošiljanje..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Opomba za pošiljanje</label>
+              <textarea
+                value={postNote}
+                onChange={(e) => setPostNote(e.target.value)}
+                rows={3}
+                placeholder="Dodatne opombe..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
+            </div>
+            
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <p className="text-sm text-green-700">
+                <strong>Opomba:</strong> Dokument bo natisnjen in poslan po navadni pošti na zgornji naslov.
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button variant="outline" onClick={() => setPostDialogOpen(false)}>
+              Prekliči
+            </Button>
+            <Button onClick={handleSendPost} disabled={isSendingPost} className="gap-2">
+              {isSendingPost ? (
+                <>Pošiljanje...</>
+              ) : (
+                <>
+                  <Building2 className="w-4 h-4" />
+                  Pošlji po pošti
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* MODALNO OKNO ZA OZNAČEVANJE KOT PLAČANO */}
+      <Dialog open={markPaidDialogOpen} onOpenChange={(isOpen) => !isOpen && setMarkPaidDialogOpen(false)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-green-700">
+              <CheckCircle className="w-5 h-5" />
+              Označi kot plačano
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <p className="text-sm text-green-800">
+                Ali ste prepričani, da želite račun <strong>{invoice.number}</strong> v znesku{' '}
+                <strong>{formatCurrency(invoice.totalGross)}</strong> označiti kot <strong>plačan</strong>?
+              </p>
+              <p className="text-xs text-green-600 mt-2">
+                To dejanje bo spremenilo status računa in ga odstranilo iz seznama neplačanih računov.
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button variant="outline" onClick={() => setMarkPaidDialogOpen(false)}>
+              Prekliči
+            </Button>
+            <Button 
+              variant="default" 
+              className="bg-green-600 hover:bg-green-700"
+              onClick={handleMarkAsPaid} 
+              disabled={isMarkingPaid}
+            >
+              {isMarkingPaid ? (
+                <>Obdelava...</>
+              ) : (
+                <>
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Potrdi plačilo
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* MODALNO OKNO ZA STORNIRANJE */}
+      <Dialog open={cancelDialogOpen} onOpenChange={(isOpen) => !isOpen && setCancelDialogOpen(false)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <Ban className="w-5 h-5" />
+              Storniraj {getDocumentTitle().toLowerCase()}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-sm text-red-800">
+                Ali ste prepričani, da želite stornirati {getDocumentTitle().toLowerCase()} <strong>{invoice.number}</strong>?
+              </p>
+              <p className="text-xs text-red-600 mt-2">
+                To dejanje bo trajno spremenilo status dokumenta v <strong>storniran</strong>.
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Razlog za storniranje</label>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                rows={3}
+                placeholder="Vnesite razlog za storniranje..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button variant="outline" onClick={() => setCancelDialogOpen(false)}>
+              Prekliči
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleCancel} 
+              disabled={isCancelling}
+            >
+              {isCancelling ? (
+                <>Obdelava...</>
+              ) : (
+                <>
+                  <Ban className="w-4 h-4 mr-2" />
+                  Potrdi storniranje
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* MODALNO OKNO ZA BRISANJE OSNUTKA */}
+      {invoice.status === 'draft' && (
+        <Dialog open={deleteDialogOpen} onOpenChange={(isOpen) => !isOpen && setDeleteDialogOpen(false)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-red-600">
+                <Trash2 className="w-5 h-5" />
+                Izbriši osnutek
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="py-6 space-y-4">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-5">
+                <div className="flex items-start gap-3">
+                  <Trash2 className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-base font-semibold text-red-800">OPOZORILO!</p>
+                    <p className="text-sm text-red-700 mt-2 leading-relaxed">
+                      Ali ste prepričani, da želite izbrisati osnutek{' '}
+                      <span className="font-semibold">{invoice.number}</span>?
+                    </p>
+                    <p className="text-sm text-red-600 mt-2">
+                      To dejanje bo trajno izbrisalo osnutek iz sistema in{' '}
+                      <span className="font-semibold underline">ga ne bo mogoče razveljaviti</span>.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <span className="text-gray-500">Kupec:</span>
+                    <div className="font-medium">{invoice.customerName}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Znesek:</span>
+                    <div className="font-medium">{formatCurrency(invoice.totalGross)}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Datum izdaje:</span>
+                    <div className="font-medium">{formatDate(invoice.issueDate)}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Št. postavk:</span>
+                    <div className="font-medium">{invoice.items.length}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                Prekliči
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={confirmDelete} 
+                disabled={isDeleting}
+                className="gap-2"
+              >
+                {isDeleting ? (
+                  <>Brisanje...</>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    Izbriši osnutek
+                  </>
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   )
 }

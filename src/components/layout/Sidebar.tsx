@@ -9,6 +9,7 @@ const navItems = [
   { id: 'estimates', label: 'Predračuni', icon: Receipt, roles: ['tajnistvo'] },
   { id: 'overdue', label: 'Zapadli računi', icon: AlertCircle, roles: ['tajnistvo'] },
   { id: 'confirmation', label: 'Potrditev računov', icon: CheckCircle, roles: ['direktor'] },
+  { id: 'reports', label: 'Poročila in analize', icon: BarChart3, roles: ['tajnistvo', 'direktor'] },
   { id: 'settings', label: 'Sistemske nastavitve', icon: Settings, roles: ['admin'] },
 ]
 
@@ -97,7 +98,7 @@ export function Sidebar({ activeView, setActiveView, userRole, onLogout }: Sideb
                     <span className="ml-auto bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">3</span>
                   )}
                   {item.id === 'confirmation' && (
-                    <span className="ml-auto bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded-full">5</span>
+                    <span className="ml-auto bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded-full">8</span>
                   )}
                 </button>
               )
@@ -146,10 +147,10 @@ export function Sidebar({ activeView, setActiveView, userRole, onLogout }: Sideb
               <item.icon className="w-4 h-4" />
               {item.label}
               {item.id === 'overdue' && (
-                <span className="ml-auto bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">3</span>
+                <span className="ml-auto bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">8</span>
               )}
               {item.id === 'confirmation' && (
-                <span className="ml-auto bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded-full">5</span>
+                <span className="ml-auto bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded-full">9</span>
               )}
             </button>
           )

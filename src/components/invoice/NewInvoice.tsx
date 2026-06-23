@@ -241,7 +241,7 @@ export function NewInvoice({ editingInvoice, clearEditing }: NewInvoiceProps) {
     switch (invoiceType) {
       case 'draft': return 'Shrani osnutek'
       case 'estimate': return 'Ustvari predračun'
-      case 'invoice': return 'Izdaj račun'
+      case 'invoice': return 'Ustvari račun'
       default: return 'Shrani'
     }
   }
@@ -403,7 +403,7 @@ export function NewInvoice({ editingInvoice, clearEditing }: NewInvoiceProps) {
               onClick={() => setInvoiceType('invoice')}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${invoiceType === 'invoice' ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:bg-gray-100'}`}
             >
-              <CheckCircle className="w-4 h-4" /> Izdaj račun
+              <CheckCircle className="w-4 h-4" /> Ustvari račun
             </button>
           </div>
         </div>
@@ -581,23 +581,31 @@ export function NewInvoice({ editingInvoice, clearEditing }: NewInvoiceProps) {
             <TableBody>
               {items.map(item => (
                 <TableRow key={item.id}>
-                  <TableCell>
-                    <div className="font-medium">{item.description}</div>
-                    {(item.parcelNumber || item.cadastralMunicipality || item.cadastreName || item.landRegisterId) && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        {[
-                          item.parcelNumber && `št. parcele: ${item.parcelNumber}`,
-                          item.cadastralMunicipality && `kat. občina: ${item.cadastralMunicipality}`,
-                          item.cadastreName && `ime katastra: ${item.cadastreName}`,
-                          item.landRegisterId && `ID zaznambe: ${item.landRegisterId}`
-                        ].filter(Boolean).join(' | ')}
-                      </div>
-                    )}
-                    {item.itemNote && <div className="text-xs text-gray-500 mt-1">{item.itemNote}</div>}
-                    {item.vatRate === 0 && item.vatExemptionReason && (
-                      <div className="text-xs text-gray-500 mt-1">{item.vatExemptionReason}</div>
-                    )}
-                  </TableCell>
+<TableCell>
+  <div className="font-medium">{item.description}</div>
+  
+  {/* 1. VRSTICA: Geodetski podatki - ločeni z vejico */}
+  {(item.parcelNumber || item.cadastralMunicipality || item.cadastreName || item.landRegisterId) && (
+    <div className="text-xs text-gray-500 mt-1">
+      {[
+        item.parcelNumber && `št. parcele: ${item.parcelNumber}`,
+        item.cadastralMunicipality && `kat. občina: ${item.cadastralMunicipality}`,
+        item.cadastreName && `ime katastra: ${item.cadastreName}`,
+        item.landRegisterId && `ID zaznambe: ${item.landRegisterId}`
+      ].filter(Boolean).join(', ')}
+    </div>
+  )}
+  
+  {/* 2. VRSTICA: Opomba (itemNote) */}
+  {item.itemNote && (
+    <div className="text-xs text-gray-500 mt-1">{item.itemNote}</div>
+  )}
+  
+  {/* 3. VRSTICA: Davčna oprostitev */}
+  {item.vatRate === 0 && item.vatExemptionReason && (
+    <div className="text-xs text-gray-500 mt-1">{item.vatExemptionReason}</div>
+  )}
+</TableCell>
                   <TableCell className="text-right">{item.quantity}</TableCell>
                   <TableCell className="text-right">{item.unit}</TableCell>
                   <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
